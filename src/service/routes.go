@@ -22,29 +22,8 @@ import (
 
 const TOKEN = "e609d00404645feed1c1733835b8c127"
 
-func TOKEN_VALIDATE(ctx *gin.Context) {
-	s := ctx.Request.Header.Get("token")
-	if s != TOKEN {
-		if strings.HasPrefix(ctx.Request.URL.Path, "/simpserver/web") {
-			ctx.Next()
-			return
-		}
-		if strings.Contains(ctx.Request.URL.Path, "static/source") {
-			ctx.Next()
-			return
-		}
-		ctx.Redirect(http.StatusTemporaryRedirect, "/simpserver/web/login")
-		return
-	} else {
-		ctx.Next()
-		return
-	}
-}
-
 func Registry(ctx *handlers.SimpHttpServerCtx) {
 	GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
-
-	// GROUP.Use(TOKEN_VALIDATE)
 
 	GROUP.POST("/login", func(c *gin.Context) {
 		token := c.PostForm("token")
@@ -710,6 +689,13 @@ func Registry(ctx *handlers.SimpHttpServerCtx) {
 		gv := storage.QueryGrid(&dto.PageBasicReq{})
 		c.JSON(200, handlers.Resp(0, "ok", gv))
 	})
+
+	GROUP.GET("/main/queryServantGroup", func(c *gin.Context) {
+		gv := storage.QueryServantGroup(&dto.PageBasicReq{})
+		vgbs := storage.ConvertToVoGroupByServant(gv)
+		c.JSON(200, handlers.Resp(0, "ok", vgbs))
+	})
+
 	ctx.Engine.Use(GROUP.Handlers...)
 
 }

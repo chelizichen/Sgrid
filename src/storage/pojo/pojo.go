@@ -24,6 +24,8 @@ type Servant struct {
 	ServerName     string // 服务名称
 	CreateTime     string `gorm:"autoCreateTime"` // 创建时间
 	Language       string // 语言
+	UpStreamName   string // 转发名称
+	Location       string // 路径
 	ServantGroupId int    `gorm:"foreignKey:ServantGroupId"` // 服务组ID
 }
 
@@ -36,15 +38,6 @@ type Grid struct {
 	UpdateTime int `gorm:"autoCreateTime"`            // 更新时间
 	NodeId     int `gorm:"foreignKey:NodeId"`         // 网格所属节点ID
 	ServantId  int `gorm:"foreignKey:ServantGroupId"` // 网格容纳服务ID
-}
-
-// 扩容服务
-type ExpansionGrid struct {
-	Id           int
-	ServantId    int    // 服务Id
-	Location     string // Nginx Location
-	ProxyPass    string // 转发地址
-	UpStreamName string // Nginx UpStreamName
 }
 
 // 服务包

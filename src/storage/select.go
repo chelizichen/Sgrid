@@ -22,8 +22,8 @@ func QueryNodes() []pojo.Node {
 	return dataList
 }
 
-func QueryServants() []vo.ServantVo {
-	var dataList []vo.ServantVo
+func QueryServants() []vo.VoServant {
+	var dataList []vo.VoServant
 	c.GORM.Model(dataList).Find(&dataList)
 	return dataList
 }
@@ -54,12 +54,51 @@ func QueryGrid(req *dto.PageBasicReq) (resp []vo.Grid) {
 		Joins("LEFT JOIN grid_node gn ON gn.id = gg.node_id").
 		Where(where, utils.Removenullvalue(args)...).
 		Find(&resp)
+	return
+}
+
+func QueryServantGroup(req *dto.PageBasicReq) (resp []vo.VoServantGroup) {
+	c.GORM.Table("grid_servant_group gsg").
+		Select(`
+		gsg.*,
+		gs.create_time AS gs_create_time,
+		gs.id AS gs_id,
+		gs.language gs_language,
+		gs.servant_group_id AS gs_servant_group_id,
+		gs.server_name AS gs_server_name,
+		gs.location AS gs_location,
+		gs.up_stream_name AS gs_up_stream_name
+	`).
+		Joins("LEFT JOIN grid_servant gs ON gs.servant_group_id = gsg.id").
+		Find(&resp)
 
 	return
 }
 
-func ServantPackage(ServantId int) []vo.Grid {
-	var dataList []vo.Grid
-	c.GORM.Model(dataList).Find(&dataList)
-	return dataList
+// 转换函数
+func ConvertToVoGroupByServant(voServantGroups []vo.VoServantGroup) []vo.VoGroupByServant {
+	resultMap := make(map[int]vo.VoGroupByServant)
+	for _, group := range voServantGroups {
+		var servants []vo.VoServant
+		if existingGroup, ok := resultMap[group.Id]; ok {
+			servants = existingGroup.Servants
+		}
+
+		servants = append(servants, group.VoServant)
+
+		resultMap[group.Id] = vo.VoGroupByServant{
+			Id:             group.Id,
+			TagName:        group.TagName,
+			TagEnglishName: group.TagEnglishName,
+			Servants:       servants,
+		}
+	}
+
+	// 将 map 中的结果转换为切片
+	var result []vo.VoGroupByServant
+	for _, value := range resultMap {
+		result = append(result, value)
+	}
+
+	return result
 }

@@ -2,15 +2,31 @@ package vo
 
 import "Sgrid/src/storage/pojo"
 
-// 节点
+type VoGroupByServant struct {
+	Id             int         `json:"id,omitempty"`
+	TagName        string      `json:"tagName,omitempty"`        // 服务标签
+	TagEnglishName string      `json:"tagEnglishName,omitempty"` // 英文
+	CreateTime     string      `json:"createTime,omitempty"`     // 创建时间
+	Servants       []VoServant `json:"servants"`                 // 服务组
+}
 
-type ServantVo struct {
-	Id           int
-	ServerName   string            // 服务名称
-	CreateTime   string            `gorm:"autoCreateTime"` // 创建时间
-	Language     string            // 语言
-	ServantGroup pojo.ServantGroup // 服务组ID
-	Node         pojo.Node         // 服务节点
+// 节点
+type VoServantGroup struct {
+	Id             int       `gorm:"column:id" json:"id,omitempty"`
+	TagName        string    `gorm:"column:tag_name" json:"tagName,omitempty"`                 // 服务标签
+	TagEnglishName string    `gorm:"column:tag_english_name" json:"tagEnglish_name,omitempty"` // 英文
+	CreateTime     string    `gorm:"autoCreateTime" json:"creatTime,omitempty"`                // 创建时间
+	VoServant      VoServant `gorm:"embedded" json:"servantGroup,omitempty"`
+}
+
+type VoServant struct {
+	Id             int    `gorm:"column:gs_id" json:"id,omitempty"`
+	ServerName     string `gorm:"column:gs_server_name" json:"serverName,omitempty"`      // 服务名称
+	CreateTime     string `gorm:"column:gs_create_time" json:"createTime,omitempty"`      // 创建时间
+	Language       string `gorm:"column:gs_language" json:"language,omitempty"`           // 语言
+	UpStreamName   string `gorm:"column:gs_up_stream_name" json:"upStreamName,omitempty"` // 转发名称
+	Location       string `gorm:"column:gs_location"  json:"location,omitempty"`          // 路径
+	ServantGroupId int    `gorm:"column:gs_groupId" json:"servant_group,omitempty"`       // 服务组ID
 }
 
 type ServantPackageVo struct {

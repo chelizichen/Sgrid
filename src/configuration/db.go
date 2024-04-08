@@ -36,7 +36,6 @@ func InitStorage(ctx *http.SimpHttpServerCtx) {
 	sqlDB.SetConnMaxLifetime(time.Hour)
 	db.Debug().AutoMigrate(&pojo.Node{})
 	db.Debug().AutoMigrate(&pojo.Grid{})
-	db.Debug().AutoMigrate(&pojo.ExpansionGrid{})
 	db.Debug().AutoMigrate(&pojo.ServantPackage{})
 	db.Debug().AutoMigrate(&pojo.ServantGroup{})
 	db.Debug().AutoMigrate(&pojo.Servant{})
