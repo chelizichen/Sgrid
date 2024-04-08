@@ -2,11 +2,13 @@ package service
 
 import (
 	"Sgrid/src/config"
+	"Sgrid/src/grid"
 	handlers "Sgrid/src/http"
 	"Sgrid/src/storage"
 	"Sgrid/src/storage/dto"
 	utils "Sgrid/src/utils"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -20,11 +22,14 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const TOKEN = "e609d00404645feed1c1733835b8c127"
+const (
+	TOKEN           = "e609d00404645feed1c1733835b8c127"
+	CLUSTER_REQUEST = "CLUSTER_REQUEST"
+	SINGLE_REQUEST  = "SINGLE_REQUEST"
+)
 
 func Registry(ctx *handlers.SimpHttpServerCtx) {
 	GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
-
 	GROUP.POST("/login", func(c *gin.Context) {
 		token := c.PostForm("token")
 		if token == TOKEN {
@@ -33,9 +38,26 @@ func Registry(ctx *handlers.SimpHttpServerCtx) {
 		}
 		c.JSON(http.StatusBadRequest, handlers.Resp(-1, "Error", nil))
 	})
-
+	// 上传服务，并且判断是不是集群请求
 	GROUP.POST("/uploadServer", func(c *gin.Context) {
 		serverName := c.PostForm("serverName")
+		isCluster := c.PostForm("SgridRequestType")
+		if isCluster != CLUSTER_REQUEST {
+			body, err := io.ReadAll(c.Request.Body)
+			// 替换请求方式为单点
+			if err != nil {
+				fmt.Println("err", err.Error())
+				c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, err.Error(), nil))
+				return
+			}
+			err = grid.SyncPackage(body, *ctx)
+			if err != nil {
+				fmt.Println("err", err.Error())
+				c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, err.Error(), nil))
+				return
+			}
+		}
+
 		cwd, err := os.Getwd()
 		if err != nil {
 			fmt.Println("Error To GetWd", err.Error())
@@ -81,10 +103,15 @@ func Registry(ctx *handlers.SimpHttpServerCtx) {
 	})
 
 	GROUP.POST("/restartServer", func(c *gin.Context) {
+		// event-stream 返回数据
+		c.Request.Response.Header.Set("Content-Type", "text/event-stream")
+		c.Request.Response.Header.Set("Cache-Control", "no-cache")
+		c.Request.Response.Header.Set("Connection", "keep-alive")
+		releaseType := c.DefaultPostForm("releaseType", utils.RELEASE_SINGLENODE) // 集群模式下需要指定Type 默认普通单节点发布
 		fileName := c.PostForm("fileName")                                        // 文件名称
 		serverName := c.PostForm("serverName")                                    // 服务名称
 		targetPort := c.PostForm("targetPort")                                    // 集群模式下需要指定端口
-		releaseType := c.DefaultPostForm("releaseType", utils.RELEASE_SINGLENODE) // 集群模式下需要指定Type 默认普通单节点发布
+		isCluster := c.PostForm("SgridRequestType")
 		isSame := utils.ConfirmFileName(serverName, fileName)
 		if !isSame {
 			msg := "Error File!" + fileName + "  | " + serverName
@@ -94,7 +121,23 @@ func Registry(ctx *handlers.SimpHttpServerCtx) {
 		}
 
 		svr := utils.GetServant(serverName, targetPort)
-		// svr.Language = Language
+		// 集群
+		if isCluster == CLUSTER_REQUEST {
+			body, err := io.ReadAll(c.Request.Body)
+			// 替换请求方式为单点
+			if err != nil {
+				fmt.Println("err", err.Error())
+				c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, err.Error(), nil))
+				return
+			}
+			err = grid.SyncPostRequest(body, *ctx, c)
+			if err != nil {
+				fmt.Println("err", err.Error())
+				c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, err.Error(), nil))
+				return
+			}
+		}
+
 		err := svr.StopServant()
 		if err != nil {
 			msg := "Error StopServant!" + fileName + "  | " + serverName
@@ -686,7 +729,8 @@ func Registry(ctx *handlers.SimpHttpServerCtx) {
 	})
 
 	GROUP.GET("/main/queryGrid", func(c *gin.Context) {
-		gv := storage.QueryGrid(&dto.PageBasicReq{})
+		pbr := utils.NewPageBaiscReq(c)
+		gv := storage.QueryGrid(pbr)
 		c.JSON(200, handlers.Resp(0, "ok", gv))
 	})
 

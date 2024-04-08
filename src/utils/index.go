@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"Sgrid/src/storage/dto"
 	"archive/tar"
 	"compress/gzip"
 	"crypto/md5"
@@ -10,10 +11,12 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	p "github.com/shirou/gopsutil/process"
 
 	"github.com/c4milo/unpackit"
@@ -378,4 +381,18 @@ func Removenullvalue(slice []interface{}) []interface{} {
 		}
 	}
 	return output //slice with no nil-values
+}
+
+func NewPageBaiscReq(ctx *gin.Context) *dto.PageBasicReq {
+	size, _ := strconv.Atoi(ctx.DefaultQuery("size", "10"))
+	offset, _ := strconv.Atoi(ctx.DefaultQuery("offset", "0"))
+	id, _ := strconv.Atoi(ctx.DefaultQuery("id", "0"))
+
+	keyword := ctx.DefaultQuery("keyword", "")
+	return &dto.PageBasicReq{
+		Size:    size,
+		Offset:  offset,
+		Keyword: keyword,
+		Id:      id,
+	}
 }

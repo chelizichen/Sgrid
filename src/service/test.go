@@ -1,8 +1,8 @@
 package service
 
 import (
-	"Sgrid/src/grid"
 	handlers "Sgrid/src/http"
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,20 +13,21 @@ import (
 
 func TestRoute(ctx *handlers.SimpHttpServerCtx) {
 	GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
-	GROUP.GET("/test/sync", func(c *gin.Context) {
+	GROUP.POST("/test/sync", func(c *gin.Context) {
 		body, err := io.ReadAll(c.Request.Body)
 		if err != nil {
 			fmt.Println("err", err.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read request body"})
 			return
 		}
-		err = grid.SyncPackage(body, *ctx)
+		// err = grid.SyncPackage(body, *ctx)
 		if err != nil {
 			fmt.Println("err", err.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read request body"})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"message": "ok"})
+		body = bytes.Replace(body, []byte("CLUSTER_REQUEST"), []byte("SINGLE_REQUEST"), -1)
+		c.JSON(http.StatusOK, gin.H{"message": string(body)})
 
 	})
 	ctx.Engine.Use(GROUP.Handlers...)

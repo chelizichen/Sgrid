@@ -41,13 +41,13 @@ func QueryServants() []vo.VoServant {
 }
 
 func QueryGrid(req *dto.PageBasicReq) (resp []vo.Grid) {
-	where := "1 = 1"
 	args := make([]interface{}, 10)
-	if req.Keyword != "" {
-		where += "and ( gn.ip like '%?%' or gs.server_name like '%?%')"
-		args = append(args, req.Keyword, req.Keyword)
+	where := "1 = 1"
+	if req.Id != 0 {
+		where += " and gs.id  = ?"
+		args = append(args, req.Id)
 	}
-	c.GORM.Table("grid_grid gg").
+	c.GORM.Debug().Table("grid_grid gg").
 		Select(`
 	gg.*,
 	gs.id AS gs_id,

@@ -1,0 +1,65 @@
+<template>
+  <div>
+    <el-container>
+      <el-aside width="200px">
+        <el-card>
+          <aside-component
+            :server-list="state.serverList"
+            @handle-open="handleOpen"
+          ></aside-component>
+        </el-card>
+      </el-aside>
+      <el-main>
+        <el-card>
+          <gridsComponent
+            :grids-list="state.gridsList"
+            :server-name="state.serverName"
+          ></gridsComponent>
+        </el-card>
+      </el-main>
+    </el-container>
+  </div>
+</template>
+
+<script setup lang="ts">
+import asideComponent from "@/components/aside.vue";
+import gridsComponent from "@/components/grids.vue";
+import { onMounted, reactive, ref } from "vue";
+import API from "../api/server";
+import type { Item } from "@/dto/dto";
+const state = reactive({
+  serverName: <string>"",
+  serverList: [],
+  gridsList: [],
+});
+
+const uploadForm = ref({
+  serverName: "",
+  file: null,
+  doc: "",
+});
+
+async function handleOpen(item: Item) {
+  console.log("item", item);
+  const grids = await API.queryGrid({ id: item.id });
+  state.gridsList = grids.Data;
+  console.log("state.grids", state.gridsList);
+  state.serverName = item.serverName;
+  uploadForm.value.serverName = item.serverName;
+}
+
+async function fetchServerList() {
+  const resp = await API.GetServerList();
+  state.serverList = resp.Data || [];
+}
+
+onMounted(() => {
+  fetchServerList();
+});
+</script>
+
+<style scoped>
+.el-container {
+  min-height: 100vh;
+}
+</style>
