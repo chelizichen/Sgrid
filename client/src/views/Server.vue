@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-container>
-      <el-aside width="200px">
+      <el-aside width="200px" class="aside">
         <el-card>
           <aside-component
             :server-list="state.serverList"
@@ -61,5 +61,9 @@ onMounted(() => {
 <style scoped>
 .el-container {
   min-height: 100vh;
+}
+.aside >>> .el-card__body {
+  padding: 10px 0;
+  height: 100vh;
 }
 </style>

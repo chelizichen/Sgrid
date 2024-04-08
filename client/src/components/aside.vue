@@ -22,7 +22,7 @@ function toGit() {
   <div>
     <div class="app-bigger-size title" @click="toGit()">
       <el-icon style="color: rgb(207, 90, 124); font-size: 36px"><Help /></el-icon>
-      Simp
+      Sgrid
     </div>
     <el-menu
       class="el-menu-vertical-demo"
