@@ -3,6 +3,8 @@ package service
 import (
 	"Sgrid/src/config"
 	handlers "Sgrid/src/http"
+	"Sgrid/src/storage"
+	"Sgrid/src/storage/dto"
 	utils "Sgrid/src/utils"
 	"fmt"
 	"net/http"
@@ -42,7 +44,7 @@ func TOKEN_VALIDATE(ctx *gin.Context) {
 func Registry(ctx *handlers.SimpHttpServerCtx) {
 	GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
 
-	GROUP.Use(TOKEN_VALIDATE)
+	// GROUP.Use(TOKEN_VALIDATE)
 
 	GROUP.POST("/login", func(c *gin.Context) {
 		token := c.PostForm("token")
@@ -702,6 +704,11 @@ func Registry(ctx *handlers.SimpHttpServerCtx) {
 		c.JSON(200, handlers.Resp(0, "ok", s))
 		return
 
+	})
+
+	GROUP.GET("/main/queryGrid", func(c *gin.Context) {
+		gv := storage.QueryGrid(&dto.PageBasicReq{})
+		c.JSON(200, handlers.Resp(0, "ok", gv))
 	})
 	ctx.Engine.Use(GROUP.Handlers...)
 
