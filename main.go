@@ -14,6 +14,7 @@ func main() {
 	ctx.Use(service.InitService)
 	ctx.Use(service.Registry)
 	ctx.Use(service.Static)
+	ctx.Use(service.TestRoute)
 	h.NewSimpHttpServer(ctx, func(port string) {
 		ctx.Engine.Run(port)
 		fmt.Println("Server started on " + port)

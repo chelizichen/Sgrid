@@ -696,6 +696,11 @@ func Registry(ctx *handlers.SimpHttpServerCtx) {
 		c.JSON(200, handlers.Resp(0, "ok", vgbs))
 	})
 
+	GROUP.GET("/main/queryNodes", func(c *gin.Context) {
+		nodes := storage.QueryNodes()
+		c.JSON(200, handlers.Resp(0, "ok", nodes))
+	})
+
 	ctx.Engine.Use(GROUP.Handlers...)
 
 }

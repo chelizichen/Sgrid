@@ -4,10 +4,11 @@ package pojo
 type Node struct {
 	Id         int
 	Ip         string // IP地址
-	Status     string // 状态
+	Status     int    // 状态
 	CreateTime string `gorm:"autoCreateTime"` // 创建时间
 	PlatForm   string // 平台
 	Main       string // 是否为主机
+	UploadPath string // 上传路径
 }
 
 // 服务组
@@ -47,5 +48,12 @@ type ServantPackage struct {
 	Hash       string // Hash值
 	FilePath   string // 文件路径
 	Content    string // 上传内容
+	CreateTime string `gorm:"autoCreateTime"` // 创建时间
+}
+
+type Properties struct {
+	Id         int
+	Key        string
+	Value      string
 	CreateTime string `gorm:"autoCreateTime"` // 创建时间
 }

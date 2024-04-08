@@ -1,7 +1,7 @@
 server:
   main: true
-  host: 0.0.0.0
   name: SgirdCloud
+  host: 47.98.174.10
   port: 12111
   type: main
   staticPath: static # 静态资源

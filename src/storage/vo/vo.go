@@ -59,8 +59,8 @@ type GridServant struct {
 }
 
 type GridNode struct {
-	NodeID         int    `gorm:"column:gn_id" json:"nodeId,omitempty"`
-	NodeIP         string `gorm:"column:gn_ip" json:"nodeIp,omitempty"`
+	NodeID         int    `gorm:"column:gn_id" json:"id,omitempty"`
+	NodeIP         string `gorm:"column:gn_ip" json:"ip,omitempty"`
 	Main           string `gorm:"column:gn_main" json:"main,omitempty"`
 	Platform       string `gorm:"column:gn_pslat_form" json:"platform,omitempty"`
 	NodeStatus     int    `gorm:"column:gn_status" json:"nodeStatus,omitempty"`

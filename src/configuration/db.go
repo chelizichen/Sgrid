@@ -39,6 +39,7 @@ func InitStorage(ctx *http.SimpHttpServerCtx) {
 	db.Debug().AutoMigrate(&pojo.ServantPackage{})
 	db.Debug().AutoMigrate(&pojo.ServantGroup{})
 	db.Debug().AutoMigrate(&pojo.Servant{})
+	db.Debug().AutoMigrate(&pojo.Properties{})
 	GORM = db
 
 }

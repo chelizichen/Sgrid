@@ -370,7 +370,6 @@ func DeleteDirectory(path string) error {
 
 	return nil
 }
-
 func Removenullvalue(slice []interface{}) []interface{} {
 	var output []interface{}
 	for _, element := range slice {

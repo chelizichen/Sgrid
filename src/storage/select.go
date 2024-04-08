@@ -16,10 +16,22 @@ func QueryTags() []pojo.ServantGroup {
 }
 
 // 查询节点组
-func QueryNodes() []pojo.Node {
+func QueryNodes() []*vo.GridNode {
 	var dataList []pojo.Node
-	c.GORM.Model(dataList).Find(&dataList)
-	return dataList
+	c.GORM.Model(&pojo.Node{}).Find(&dataList)
+	var respList []*vo.GridNode
+	for _, v := range dataList {
+		V := v
+		respList = append(respList, &vo.GridNode{
+			NodeID:         V.Id,
+			NodeIP:         V.Ip,
+			NodeStatus:     V.Status,
+			NodeCreateTime: V.CreateTime,
+			Platform:       V.PlatForm,
+			Main:           V.Main,
+		})
+	}
+	return respList
 }
 
 func QueryServants() []vo.VoServant {

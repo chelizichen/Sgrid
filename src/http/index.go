@@ -25,6 +25,7 @@ type SimpHttpServerCtx struct {
 	isMain      bool
 	StoragePath string
 	StaticPath  string
+	Host        string
 	MapConf     map[string]interface{}
 }
 
@@ -190,6 +191,7 @@ func NewSimpHttpCtx(G *gin.Engine) (ctx *SimpHttpServerCtx) {
 		StaticPath:  conf.Server.StaticPath,
 		Storage:     Storage,
 		MapConf:     conf.Server.MapConf,
+		Host:        conf.Server.Host,
 	}
 	return ctx
 }
