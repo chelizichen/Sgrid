@@ -1,0 +1,8 @@
+server:
+  main: true
+  name: SgridTheadLockServer
+  host: 47.98.174.10
+  port: 12049
+  type: gin-http
+  staticPath: static # 静态资源
+  storage:  root:123456@tcp(127.0.0.1:3306)/sgrid?charset=utf8&parseTime=true # 存储

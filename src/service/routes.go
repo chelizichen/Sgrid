@@ -39,68 +39,6 @@ func Registry(ctx *handlers.SimpHttpServerCtx) {
 		c.JSON(http.StatusBadRequest, handlers.Resp(-1, "Error", nil))
 	})
 	// 上传服务，并且判断是不是集群请求
-	GROUP.POST("/uploadServer", func(c *gin.Context) {
-		serverName := c.PostForm("serverName")
-		isCluster := c.PostForm("SgridRequestType")
-		if isCluster != CLUSTER_REQUEST {
-			body, err := io.ReadAll(c.Request.Body)
-			// 替换请求方式为单点
-			if err != nil {
-				fmt.Println("err", err.Error())
-				c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, err.Error(), nil))
-				return
-			}
-			err = grid.SyncPackage(body, *ctx)
-			if err != nil {
-				fmt.Println("err", err.Error())
-				c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, err.Error(), nil))
-				return
-			}
-		}
-
-		cwd, err := os.Getwd()
-		if err != nil {
-			fmt.Println("Error To GetWd", err.Error())
-		}
-		F, err := c.FormFile("file")
-		storagePath := filepath.Join(cwd, utils.PublishPath, serverName, F.Filename)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, handlers.Resp(-1, "接受文件失败", nil))
-			return
-		}
-		// 保存上传的文件到服务器临时目录
-		tempPath := filepath.Join(cwd, "temp", F.Filename)
-		if err := c.SaveUploadedFile(F, tempPath); err != nil {
-			c.JSON(http.StatusInternalServerError, handlers.Resp(-1, "保存上传的文件到服务器临时目录失败", nil))
-			return
-		}
-		// 校验文件完整性（这里使用MD5哈希值作为示例）
-		actualHash, err := utils.CalculateFileHash(tempPath)
-		utils.AddHashToPackageName(&storagePath, actualHash)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, handlers.Resp(-1, "计算哈希值失败", nil))
-			return
-		}
-		// 移动文件到目标目录
-		fmt.Println("tempPath", tempPath)
-		fmt.Println("storagePath", storagePath)
-
-		if err := utils.MoveAndRemove(tempPath, storagePath); err != nil {
-			fmt.Println("Error To Rename", err.Error())
-			c.JSON(http.StatusInternalServerError, handlers.Resp(-1, "移动文件失败", nil))
-			return
-		}
-		releaseDoc := c.PostForm("doc")
-		storageDocPath := filepath.Join(cwd, utils.PublishPath, serverName, "doc.txt")
-		E, err := utils.IFNotExistThenCreate(storageDocPath)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, handlers.Resp(-1, "打开或创建文件失败"+err.Error(), nil))
-		}
-		defer E.Close()
-		content := storagePath + "\n" + releaseDoc + "\n"
-		E.WriteString(content)
-		c.JSON(http.StatusOK, handlers.Resp(0, "上传成功", nil))
-	})
 
 	GROUP.POST("/restartServer", func(c *gin.Context) {
 		// event-stream 返回数据

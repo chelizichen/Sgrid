@@ -12,6 +12,7 @@ func main() {
 	ctx := h.NewSimpHttpCtx(gin.Default())
 	ctx.DefineMain()
 	ctx.Use(service.InitService)
+	ctx.Use(service.UploadService)
 	ctx.Use(service.Registry)
 	ctx.Use(service.Static)
 	ctx.Use(service.TestRoute)
