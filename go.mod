@@ -7,6 +7,7 @@ require github.com/gin-gonic/gin v1.9.1
 require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240227224415-6ceb2ff114de // indirect
 	gorm.io/gorm v1.25.9 // indirect
 )
 
@@ -59,7 +60,8 @@ require (
 	golang.org/x/tools v0.18.1-0.20240311201521-78fbdeb61842 // indirect
 	golang.org/x/tools/gopls v0.15.2 // indirect
 	golang.org/x/vuln v1.0.1 // indirect
-	google.golang.org/protobuf v1.30.0 // indirect
+	google.golang.org/grpc v1.63.2
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/mysql v1.5.6

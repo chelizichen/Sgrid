@@ -2,64 +2,140 @@ package service
 
 import (
 	handlers "Sgrid/src/http"
-	utils "Sgrid/src/utils"
+	file_gen "Sgrid/src/proto/file.gen"
+	"Sgrid/src/storage"
+	"Sgrid/src/storage/pojo"
+	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
-	"os"
-	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/gin-gonic/gin"
 )
 
 func UploadService(ctx *handlers.SimpHttpServerCtx) {
 	GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
-	// 通过 nginx 代理转发到不同的地址
-	// 比如节点 Noded1 Node2 ，服务包上传时直接通过 nginx代理上传 至两个节点上的主控的 uploadServer 即可
-	GROUP.POST("/upload/uploadServer", func(c *gin.Context) {
-		serverName := c.PostForm("serverName")
-		cwd, err := os.Getwd()
+	addresses := []string{"http://47.98.174.10:24283", "http://150.158.120.244/:24283"}
+	clients := []*file_gen.FileTransferServiceClient{}
+	for _, v := range addresses {
+		add := v
+		conn, err := grpc.Dial(add, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
-			fmt.Println("Error To GetWd", err.Error())
+			log.Fatalf("无法连接: %v", err)
 		}
-		F, err := c.FormFile("file")
-		storagePath := filepath.Join(cwd, utils.PublishPath, serverName, F.Filename)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, handlers.Resp(-1, "接受文件失败", nil))
-			return
-		}
-		// 保存上传的文件到服务器临时目录
-		tempPath := filepath.Join(cwd, "temp", F.Filename)
-		if err := c.SaveUploadedFile(F, tempPath); err != nil {
-			c.JSON(http.StatusInternalServerError, handlers.Resp(-1, "保存上传的文件到服务器临时目录失败", nil))
-			return
-		}
-		// 校验文件完整性（这里使用MD5哈希值作为示例）
-		actualHash, err := utils.CalculateFileHash(tempPath)
-		utils.AddHashToPackageName(&storagePath, actualHash)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, handlers.Resp(-1, "计算哈希值失败", nil))
-			return
-		}
-		// 移动文件到目标目录
-		fmt.Println("tempPath", tempPath)
-		fmt.Println("storagePath", storagePath)
+		client := file_gen.NewFileTransferServiceClient(conn)
+		clients = append(clients, &client)
+		defer conn.Close()
+	}
 
-		if err := utils.MoveAndRemove(tempPath, storagePath); err != nil {
-			fmt.Println("Error To Rename", err.Error())
-			c.JSON(http.StatusInternalServerError, handlers.Resp(-1, "移动文件失败", nil))
+	GROUP.POST("/upload/uploadServer", func(c *gin.Context) {
+		c.Header("Content-Type", "text/event-stream")
+		c.Header("Cache-Control", "no-cache")
+		c.Header("Connection", "keep-alive")
+		// 从请求中获取服务器名、文件哈希和文件
+		serverName := c.PostForm("serverName")
+		fileHash := c.PostForm("fileHash")
+		servantId, _ := strconv.Atoi(c.PostForm("servantId"))
+		F, err := c.FormFile("file")
+		contetnt := c.PostForm("content")
+		if err != nil {
+			c.Writer.WriteString(string(err.Error()))
 			return
 		}
-		releaseDoc := c.PostForm("doc")
-		storageDocPath := filepath.Join(cwd, utils.PublishPath, serverName, "doc.txt")
-		E, err := utils.IFNotExistThenCreate(storageDocPath)
+
+		// 打开文件
+		file, err := F.Open()
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, handlers.Resp(-1, "打开或创建文件失败"+err.Error(), nil))
+			c.Writer.WriteString(string(err.Error()))
+			return
 		}
-		defer E.Close()
-		content := storagePath + "\n" + releaseDoc + "\n"
-		E.WriteString(content)
-		c.JSON(http.StatusOK, handlers.Resp(0, "上传成功", nil))
+		defer file.Close()
+		dateTime := time.Now().Format(time.DateTime)
+		fileName := fmt.Sprintf("%v_%v_%v.tgz", serverName, dateTime, fileHash)
+		META := metadata.Pairs("filename", fileName)
+		ctx := metadata.NewOutgoingContext(context.Background(), META)
+		for _, client := range clients {
+			CLIENT := client
+			// 设置 gRPC 客户端
+			stream, err := (*CLIENT).StreamFile(ctx)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			defer func() {
+				if err := stream.CloseSend(); err != nil {
+					log.Fatalf("无法关闭流: %v", err)
+				}
+			}()
+			// 缓冲区大小，即每次发送的文件块大小
+			bufferSize := 1024 * 10
+			buffer := make([]byte, bufferSize)
+
+			// 逐个发送文件块
+			for {
+				// 从文件中读取数据到缓冲区
+				n, err := file.Read(buffer)
+				if err != nil {
+					// 如果读取到文件末尾，则跳出循环
+					if err == io.EOF {
+						break
+					}
+					c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+					return
+				}
+
+				// 构造文件块
+				chunk := &file_gen.FileChunk{
+					Data:       buffer[:n],
+					Offset:     int64(n), // 当前文件块在文件中的偏移量
+					ServerName: serverName,
+					FileHash:   fileHash,
+				}
+
+				// 发送文件块
+				if err := stream.Send(chunk); err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+					return
+				}
+				log.Printf("已发送带有偏移量的文件块: %d", chunk.Offset)
+			}
+			response, err := stream.Recv()
+			if err != nil {
+				c.Writer.WriteString(string(err.Error()))
+				continue
+			}
+			b, err := json.Marshal(response)
+			if err != nil {
+				c.Writer.WriteString(string(b))
+				continue
+			}
+			c.Writer.WriteString(string(b))
+		}
+
+		// 接收服务器的响应
+		if err != nil {
+			c.Writer.WriteString(string(err.Error()))
+			return
+		}
+		storage.SaveHashPackage(pojo.ServantPackage{
+			ServantId:  servantId,
+			Hash:       fileHash,
+			FilePath:   fileName,
+			Content:    contetnt,
+			CreateTime: dateTime,
+		})
+		c.Writer.WriteString("done!")
+
 	})
+
 	ctx.Engine.Use(GROUP.Handlers...)
 }

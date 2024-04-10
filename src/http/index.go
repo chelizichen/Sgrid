@@ -88,13 +88,6 @@ func (c *SimpHttpServerCtx) DefineMain() {
 	}()
 	c.isMain = true
 }
-func (c *SimpHttpServerCtx) Post(realPath string, handle gin.HandlerFunc) {
-	c.Engine.POST(realPath, handle)
-}
-
-func (c *SimpHttpServerCtx) Get(realPath string, handle gin.HandlerFunc) {
-	c.Engine.GET(realPath, handle)
-}
 
 func (c *SimpHttpServerCtx) UseSPA(path string, root string) {
 	wd, _ := os.Getwd()
