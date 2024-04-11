@@ -12,11 +12,6 @@ import (
 	"time"
 )
 
-const (
-	STATUS_ONLINE  = 1
-	STATUS_OFFLINE = 2
-)
-
 type Job func()
 
 type RoutinePool struct {
@@ -99,7 +94,6 @@ func (p *RoutinePool) RunningCount() int {
 
 // func main() {
 // 	pool := NewRoutinePool(10)
-
 // 	for i := 0; i < 100; i++ {
 // 		pool.Add(func() {
 // 			fmt.Println("i", i)
@@ -110,8 +104,6 @@ func (p *RoutinePool) RunningCount() int {
 // 		time.Sleep(time.Second * 3)
 // 		pool.Stop()
 // 	}()
-
 // 	pool.Run()
 // 	fmt.Println("cancel")
-
 // }

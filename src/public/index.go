@@ -11,6 +11,8 @@ import (
 
 const (
 	ENV_PRODUCTION = "SgridProduction"
+	DEV_CONF_NAME  = "sgrid.yaml"
+	PROD_CONF_NAME = "sgridProd.yaml"
 )
 
 func SgridProduction() bool {
@@ -40,14 +42,30 @@ func Join(args ...string) string {
 	return filepath.Join(arr...)
 }
 
-func NewConfig() (conf config.SimpConfig, err error) {
-	devConfName := "simp.yaml"
-	prodConfName := "simpProd.yaml"
+type ConfOpt func(*withConf)
+
+func WithTargetPath(targetPath string) ConfOpt {
+	return func(conf *withConf) {
+		conf.targetPath = targetPath
+	}
+}
+
+type withConf struct {
+	targetPath string
+}
+
+func NewConfig(opts ...ConfOpt) (conf *config.SgridConf, err error) {
+	wc := &withConf{}
+	for _, opt := range opts {
+		opt(wc)
+	}
 	var path string
-	if SgridProduction() {
-		path = Join(prodConfName)
+	if len(wc.targetPath) != 0 {
+		path = wc.targetPath
+	} else if SgridProduction() {
+		path = Join(PROD_CONF_NAME)
 	} else {
-		path = Join(devConfName)
+		path = Join(DEV_CONF_NAME)
 	}
 	// 读取 YAML 文件
 	yamlFile, err := os.ReadFile(path)

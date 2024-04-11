@@ -2,13 +2,12 @@ package service
 
 import (
 	"Sgrid/src/config"
-	"Sgrid/src/grid"
 	handlers "Sgrid/src/http"
+	"Sgrid/src/public"
 	"Sgrid/src/storage"
 	"Sgrid/src/storage/dto"
 	utils "Sgrid/src/utils"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -49,7 +48,6 @@ func Registry(ctx *handlers.SimpHttpServerCtx) {
 		fileName := c.PostForm("fileName")                                        // 文件名称
 		serverName := c.PostForm("serverName")                                    // 服务名称
 		targetPort := c.PostForm("targetPort")                                    // 集群模式下需要指定端口
-		isCluster := c.PostForm("SgridRequestType")
 		isSame := utils.ConfirmFileName(serverName, fileName)
 		if !isSame {
 			msg := "Error File!" + fileName + "  | " + serverName
@@ -59,23 +57,6 @@ func Registry(ctx *handlers.SimpHttpServerCtx) {
 		}
 
 		svr := utils.GetServant(serverName, targetPort)
-		// 集群
-		if isCluster == CLUSTER_REQUEST {
-			body, err := io.ReadAll(c.Request.Body)
-			// 替换请求方式为单点
-			if err != nil {
-				fmt.Println("err", err.Error())
-				c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, err.Error(), nil))
-				return
-			}
-			err = grid.SyncPostRequest(body, *ctx, c)
-			if err != nil {
-				fmt.Println("err", err.Error())
-				c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, err.Error(), nil))
-				return
-			}
-		}
-
 		err := svr.StopServant()
 		if err != nil {
 			msg := "Error StopServant!" + fileName + "  | " + serverName
@@ -108,7 +89,7 @@ func Registry(ctx *handlers.SimpHttpServerCtx) {
 			if err != nil {
 				fmt.Println("Error To CopyProdYml", err.Error())
 			}
-			sc, err := config.NewConfig(storageYmlProdPath) // 引入配置文件
+			sc, err := public.NewConfig(public.WithTargetPath(storageYmlProdPath)) // 引入配置文件
 			if err != nil {
 				fmt.Println("Error To NewConfig", err.Error())
 			}
@@ -135,13 +116,13 @@ func Registry(ctx *handlers.SimpHttpServerCtx) {
 				}
 			}
 		} else if releaseType == utils.RELEASE_SINGLENODE {
-			var clearScript func(sc config.SimpConfig)
-			sc, err := config.NewConfig(storageYmlProdPath)
+			var clearScript func(sc config.SgridConf)
+			sc, err := public.NewConfig(public.WithTargetPath(storageYmlProdPath))
 			svr.Language = sc.Server.Type
 
 			if svr.Language == utils.RELEASE_TYPE_NODEJS {
 				storageNodePath := utils.GetFilePath(cwd, serverName, utils.NodeJsEntry)
-				clearScript = func(sc config.SimpConfig) {
+				clearScript = func(sc config.SgridConf) {
 					confPort = sc.Server.Port
 					storageStaticPath := utils.GetFilePath(cwd, serverName, sc.Server.StaticPath)
 					err = utils.IFExistThenRemove(storageStaticPath, true)
@@ -163,7 +144,7 @@ func Registry(ctx *handlers.SimpHttpServerCtx) {
 				}
 			} else if svr.Language == utils.RELEASE_TYPE_GO {
 				storageExEPath := utils.GetFilePath(cwd, serverName, utils.GoEntry)
-				clearScript = func(sc config.SimpConfig) {
+				clearScript = func(sc config.SgridConf) {
 					confPort = sc.Server.Port
 					storageStaticPath := utils.GetFilePath(cwd, serverName, sc.Server.StaticPath)
 					err = utils.IFExistThenRemove(storageStaticPath, true)
@@ -184,7 +165,7 @@ func Registry(ctx *handlers.SimpHttpServerCtx) {
 					return cmd
 				}
 			} else if svr.Language == utils.RELEASE_TYPE_JAVA {
-				clearScript = func(sc config.SimpConfig) {
+				clearScript = func(sc config.SgridConf) {
 					confPort = sc.Server.Port
 					storageStaticPath := utils.GetFilePath(cwd, serverName, sc.Server.StaticPath)
 					err = utils.IFExistThenRemove(storageStaticPath, true)
@@ -211,9 +192,9 @@ func Registry(ctx *handlers.SimpHttpServerCtx) {
 			if err != nil {
 				fmt.Println("remove File Error storageYmlEPath "+storageYmlEPath, err.Error())
 			}
-			clearScript(sc) // 执行清除
+			clearScript(*sc) // 执行清除
 		} else if releaseType == utils.RELEASE_CLUSTER {
-			sc, err := config.NewConfig(storageYmlProdPath)
+			sc, err := public.NewConfig(public.WithTargetPath(storageYmlProdPath))
 			if err != nil {
 				fmt.Println("err NewConfig", err.Error())
 			}
@@ -443,8 +424,8 @@ func Registry(ctx *handlers.SimpHttpServerCtx) {
 		serverName := c.PostForm("serverName")
 		configPath := filepath.Join(utils.PublishPath, serverName, "simp.yaml")
 		configProdPath := filepath.Join(utils.PublishPath, serverName, "simpProd.yaml")
-		sc, err := config.NewConfig(configPath)
-		prod, err := config.NewConfig(configProdPath)
+		sc, err := public.NewConfig(public.WithTargetPath(configPath))
+		prod, err := public.NewConfig(public.WithTargetPath(configProdPath))
 		mergeConf := config.MergeYAML(prod, sc)
 		if err != nil {
 			fmt.Println("Error To Get NewConfig", err.Error())

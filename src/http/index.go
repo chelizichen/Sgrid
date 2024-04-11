@@ -1,7 +1,7 @@
 package http
 
 import (
-	"Sgrid/src/config"
+	"Sgrid/src/public"
 	"Sgrid/src/utils"
 	"fmt"
 	"net"
@@ -158,8 +158,8 @@ func (c *SimpHttpServerCtx) Static(realPath string, args ...string) {
 	c.Engine.Static(target, staticPath)
 }
 
-func NewSimpHttpCtx(G *gin.Engine) (ctx *SimpHttpServerCtx) {
-	conf, err := config.NewConfig("simp.yaml")
+func NewSgridHttpServerCtx(G *gin.Engine) (ctx *SimpHttpServerCtx) {
+	conf, err := public.NewConfig()
 	if err != nil {
 		fmt.Println("NewConfig Error:", err.Error())
 		panic(err.Error())
@@ -189,7 +189,7 @@ func NewSimpHttpCtx(G *gin.Engine) (ctx *SimpHttpServerCtx) {
 	return ctx
 }
 
-func NewSimpHttpServer(ctx *SimpHttpServerCtx, callback func(port string)) {
+func NewSgridHttpServer(ctx *SimpHttpServerCtx, callback func(port string)) {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		fmt.Println("Error:", err)
