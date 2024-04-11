@@ -5,6 +5,6 @@ import (
 	handlers "Sgrid/src/http"
 )
 
-func InitService(ctx *handlers.SimpHttpServerCtx) {
+func InitService(ctx *handlers.SgridServerCtx) {
 	configuration.InitStorage(ctx)
 }

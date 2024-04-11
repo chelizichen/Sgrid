@@ -9,20 +9,21 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/jmoiron/sqlx"
 	"github.com/robfig/cron"
 )
 
-type SimpHttpServerCtx struct {
+const (
+	GRPC_SERVER = iota
+	GIN_HTTP_SERVER
+)
+
+type SgridServerCtx struct {
 	Port        string
 	Name        string
 	Engine      *gin.Engine
-	Storage     *sqlx.DB
-	isMain      bool
 	StoragePath string
 	StaticPath  string
 	Host        string
@@ -37,12 +38,12 @@ func Resp(code int, message string, data interface{}) *gin.H {
 	}
 }
 
-func (c *SimpHttpServerCtx) Use(callback func(engine *SimpHttpServerCtx)) {
+func (c *SgridServerCtx) Use(callback func(engine *SgridServerCtx)) {
 	callback(c)
 }
 
 // 主控服务需要做日志系统与监控
-func (c *SimpHttpServerCtx) DefineMain() {
+func (c *SgridServerCtx) InitController() {
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -86,110 +87,103 @@ func (c *SimpHttpServerCtx) DefineMain() {
 		// 启动Cron调度器
 		go c.Start()
 	}()
-	c.isMain = true
 }
 
-func (c *SimpHttpServerCtx) UseSPA(path string, root string) {
-	wd, _ := os.Getwd()
-	SIMP_PRODUCTION := os.Getenv("SIMP_PRODUCTION")
-	s := c.Name
-	pre := strings.ToLower(s)
-	f := utils.Join(pre)
-
-	// 设置缓存
-	setCacheHeaders := func(ctx *gin.Context, fileInfo os.FileInfo) {
-		ctx.Header("Cache-Control", "public, max-age=2592000")
-		expires := time.Now().Add(time.Hour * 24 * 30)
-		ctx.Header("Expires", expires.Format(time.RFC1123))
-		lastModified := fileInfo.ModTime()
-		ctx.Header("Last-Modified", lastModified.Format(time.RFC1123))
-	}
-
-	c.Engine.GET(f(path)+"/*path", func(ctx *gin.Context) {
-		requestPath := ctx.Param("path")
-		var webRoot, targetPath string
-
-		if SIMP_PRODUCTION == "Yes" {
-			SIMP_SERVER_PATH := os.Getenv("SIMP_SERVER_PATH")
-			webRoot = filepath.Join(SIMP_SERVER_PATH, root)
-			targetPath = filepath.Join(SIMP_SERVER_PATH, root, requestPath)
-		} else {
-			webRoot = filepath.Join(wd, root)
-			targetPath = filepath.Join(wd, root, requestPath)
-		}
-
-		if _, err := os.Stat(targetPath); os.IsNotExist(err) {
-			targetPath = filepath.Join(webRoot, "index.html")
-		} else if fileInfo, err := os.Stat(targetPath); err == nil {
-			if strings.HasSuffix(targetPath, ".js") || strings.HasSuffix(targetPath, ".css") {
-				setCacheHeaders(ctx, fileInfo)
-			}
-		}
-
-		ctx.File(targetPath)
-	})
-}
-
-func (c *SimpHttpServerCtx) Static(realPath string, args ...string) {
+func (c *SgridServerCtx) Static(realPath string, args ...string) {
 	s := c.Name
 	pre := strings.ToLower(s)
 	f := utils.Join(pre)
 	target := f(realPath)
 
-	wd, _ := os.Getwd()
-	SIMP_PRODUCTION := os.Getenv("SIMP_PRODUCTION")
-	var staticPath string
-	if SIMP_PRODUCTION == "Yes" {
-		SIMP_SERVER_PATH := os.Getenv("SIMP_SERVER_PATH")
-		if len(args) > 0 {
-			otherPath := filepath.Join(args...)
-			staticPath = filepath.Join(SIMP_SERVER_PATH, otherPath)
-		} else {
-			staticPath = filepath.Join(SIMP_SERVER_PATH, c.StaticPath)
-		}
-	} else {
-		if len(args) > 0 {
-			otherPath := filepath.Join(args...)
-			staticPath = filepath.Join(wd, otherPath)
-		} else {
-			staticPath = filepath.Join(wd, c.StaticPath)
-		}
-	}
+	staticPath := public.Join(args...)
 	c.Engine.Static(target, staticPath)
 }
 
-func NewSgridHttpServerCtx(G *gin.Engine) (ctx *SimpHttpServerCtx) {
-	conf, err := public.NewConfig()
+type InitConf struct {
+	SgridController    bool
+	ServerType         int
+	SgridConfPath      string
+	SgridGinStaticPath string
+	SgridGinWithCors   bool
+}
+type NewSgrid func(conf *InitConf)
+
+func WithSgridController() NewSgrid {
+	return func(conf *InitConf) {
+		conf.SgridController = true
+	}
+}
+
+func WithSgridServerType(T int) NewSgrid {
+	return func(conf *InitConf) {
+		conf.ServerType = T
+	}
+}
+
+func WithConfPath(P string) NewSgrid {
+	return func(conf *InitConf) {
+		conf.SgridConfPath = P
+	}
+}
+
+func WithSgridGinStatic(P string) NewSgrid {
+	return func(conf *InitConf) {
+		conf.SgridGinStaticPath = P
+	}
+}
+
+func WithCors() NewSgrid {
+	return func(conf *InitConf) {
+		conf.SgridGinWithCors = true
+	}
+}
+
+func NewSgridServerCtx(opt ...NewSgrid) (ctx *SgridServerCtx) {
+	initConf := &InitConf{}
+	for _, fn := range opt {
+		fn(initConf)
+	}
+	conf, err := public.NewConfig(public.WithTargetPath(initConf.SgridConfPath))
 	if err != nil {
 		fmt.Println("NewConfig Error:", err.Error())
 		panic(err.Error())
 	}
-	if err != nil {
-		fmt.Println("get Config Error :", err.Error())
+	if initConf.ServerType == GIN_HTTP_SERVER {
+		ctx.Engine = gin.Default()
+		ctx.Port = ":" + strconv.Itoa(conf.Server.Port)
+		ctx.StoragePath = conf.Server.Storage
+		ctx.StaticPath = conf.Server.StaticPath
+		ctx.MapConf = conf.Server.MapConf
+		ctx.Host = conf.Server.Host
+		ctx.Name = conf.Server.Name
 	}
-	database, err := sqlx.Open("mysql", conf.Server.Storage)
+	// 初始化控制器
+	if initConf.SgridController {
+		ctx.InitController()
+	}
+	if len(initConf.SgridGinStaticPath) != 0 {
+		GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
+		staticRoot := public.Join(ctx.StaticPath)
+		GROUP.Static(initConf.SgridGinStaticPath, staticRoot)
+		ctx.Engine.Use(GROUP.Handlers...)
+	}
+
+	if initConf.SgridGinWithCors {
+		GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
+		GROUP.Use(withCORSMiddleware())
+		ctx.Engine.Use(GROUP.Handlers...)
+	}
+
 	if err != nil {
 		fmt.Println("init db error", err.Error())
 	}
-	Storage := database
-	err = database.Ping()
 	if err != nil {
 		fmt.Println("Error! database ping ", err.Error())
-	}
-	ctx = &SimpHttpServerCtx{
-		Name:        conf.Server.Name,
-		Port:        ":" + strconv.Itoa(conf.Server.Port),
-		Engine:      G,
-		StoragePath: conf.Server.Storage,
-		StaticPath:  conf.Server.StaticPath,
-		Storage:     Storage,
-		MapConf:     conf.Server.MapConf,
-		Host:        conf.Server.Host,
 	}
 	return ctx
 }
 
-func NewSgridHttpServer(ctx *SimpHttpServerCtx, callback func(port string)) {
+func NewSgridServer(ctx *SgridServerCtx, callback func(port string)) {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -205,14 +199,12 @@ func NewSgridHttpServer(ctx *SimpHttpServerCtx, callback func(port string)) {
 			}
 		}
 	}
-	SIMP_PRODUCTION := os.Getenv("SIMP_PRODUCTION")
-	fmt.Println("SIMP_PRODUCTION", SIMP_PRODUCTION)
-	// 子服务生产时需要提供对应的API路由
-	if SIMP_PRODUCTION == "Yes" {
-		fmt.Println("CreateAPIFile |", ctx.Name)
+
+	if public.SgridProduction() {
 		utils.CreateAPIFile(ctx.Engine, ctx.Name)
 	}
-	SIMP_TARGET_PORT := os.Getenv("SIMP_TARGET_PORT")
+
+	SIMP_TARGET_PORT := os.Getenv(public.ENV_TARGET_PORT)
 	SIMP_CONF_PORT := ctx.Port
 	var CallBackPort string = ""
 	if SIMP_TARGET_PORT != "" {
@@ -220,5 +212,20 @@ func NewSgridHttpServer(ctx *SimpHttpServerCtx, callback func(port string)) {
 	} else {
 		CallBackPort = SIMP_CONF_PORT
 	}
+
 	callback(CallBackPort)
+}
+
+func withCORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+		c.Next()
+	}
 }

@@ -10,9 +10,10 @@ import (
 )
 
 const (
-	ENV_PRODUCTION = "SgridProduction"
-	DEV_CONF_NAME  = "sgrid.yaml"
-	PROD_CONF_NAME = "sgridProd.yaml"
+	ENV_PRODUCTION  = "SGRID_PRODUCTION"
+	ENV_TARGET_PORT = "SGRID_TARGET_PORT"
+	DEV_CONF_NAME   = "sgrid.yaml"
+	PROD_CONF_NAME  = "sgridProd.yaml"
 )
 
 func SgridProduction() bool {

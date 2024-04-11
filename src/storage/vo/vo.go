@@ -1,6 +1,9 @@
 package vo
 
-import "Sgrid/src/storage/pojo"
+import (
+	"Sgrid/src/config"
+	"Sgrid/src/storage/pojo"
+)
 
 type VoGroupByServant struct {
 	Id             int         `json:"id,omitempty"`
@@ -65,4 +68,9 @@ type GridNode struct {
 	Platform       string `gorm:"column:gn_pslat_form" json:"platform,omitempty"`
 	NodeStatus     int    `gorm:"column:gn_status" json:"nodeStatus,omitempty"`
 	NodeCreateTime string `gorm:"column:gn_create_time" json:"nodeCreateTime,omitempty"`
+}
+
+type CoverConfigVo struct {
+	Conf       config.SgridConf
+	ServerName string
 }

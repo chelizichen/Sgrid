@@ -15,7 +15,7 @@ import (
 var GORM *gorm.DB
 var RDBContext = context.Background()
 
-func InitStorage(ctx *http.SimpHttpServerCtx) {
+func InitStorage(ctx *http.SgridServerCtx) {
 
 	db, err := gorm.Open(mysql.Open(ctx.StoragePath), &gorm.Config{
 		SkipDefaultTransaction: true,

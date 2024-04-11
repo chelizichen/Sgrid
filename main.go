@@ -4,19 +4,19 @@ import (
 	h "Sgrid/src/http"
 	service "Sgrid/src/service"
 	"fmt"
-
-	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	ctx := h.NewSgridHttpServerCtx(gin.Default())
-	ctx.DefineMain()
+	ctx := h.NewSgridServerCtx(
+		h.WithSgridServerType(h.GIN_HTTP_SERVER),
+		h.WithSgridGinStatic("/static"),
+		h.WithSgridController(),
+		h.WithCors(),
+	)
 	ctx.Use(service.InitService)
 	ctx.Use(service.UploadService)
 	ctx.Use(service.Registry)
-	ctx.Use(service.Static)
-	ctx.Use(service.TestRoute)
-	h.NewSgridHttpServer(ctx, func(port string) {
+	h.NewSgridServer(ctx, func(port string) {
 		ctx.Engine.Run(port)
 		fmt.Println("Server started on " + port)
 	})

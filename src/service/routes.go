@@ -6,6 +6,7 @@ import (
 	"Sgrid/src/public"
 	"Sgrid/src/storage"
 	"Sgrid/src/storage/dto"
+	"Sgrid/src/storage/vo"
 	utils "Sgrid/src/utils"
 	"fmt"
 	"net/http"
@@ -27,7 +28,7 @@ const (
 	SINGLE_REQUEST  = "SINGLE_REQUEST"
 )
 
-func Registry(ctx *handlers.SimpHttpServerCtx) {
+func Registry(ctx *handlers.SgridServerCtx) {
 	GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
 	GROUP.POST("/login", func(c *gin.Context) {
 		token := c.PostForm("token")
@@ -422,19 +423,16 @@ func Registry(ctx *handlers.SimpHttpServerCtx) {
 
 	GROUP.POST("/checkConfig", func(c *gin.Context) {
 		serverName := c.PostForm("serverName")
-		configPath := filepath.Join(utils.PublishPath, serverName, "simp.yaml")
 		configProdPath := filepath.Join(utils.PublishPath, serverName, "simpProd.yaml")
-		sc, err := public.NewConfig(public.WithTargetPath(configPath))
 		prod, err := public.NewConfig(public.WithTargetPath(configProdPath))
-		mergeConf := config.MergeYAML(prod, sc)
 		if err != nil {
 			fmt.Println("Error To Get NewConfig", err.Error())
 		}
-		c.JSON(200, handlers.Resp(0, "ok", mergeConf))
+		c.JSON(200, handlers.Resp(0, "ok", prod))
 	})
 
 	GROUP.POST("/coverConfig", func(c *gin.Context) {
-		var reqVo config.CoverConfigVo
+		var reqVo vo.CoverConfigVo
 		if err := c.BindJSON(&reqVo); err != nil {
 			c.JSON(http.StatusOK, handlers.Resp(0, "-1", err.Error()))
 			return
