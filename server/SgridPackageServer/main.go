@@ -4,6 +4,7 @@ import (
 	file_gen "Sgrid/src/proto/file.gen"
 	"Sgrid/src/public"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -80,12 +81,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to NewConfig: %v", err)
 	}
-	lis, err := net.Listen(sc.Server.Type, ":"+string(rune(sc.Server.Port)))
+	port := fmt.Sprintf(":%v", sc.Server.Port)
+
+	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
 	grpcServer := grpc.NewServer()
 	file_gen.RegisterFileTransferServiceServer(grpcServer, &fileTransferServer{})
+	fmt.Println("Sgrid svr started on", port)
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

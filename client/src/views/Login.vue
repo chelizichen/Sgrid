@@ -1,33 +1,33 @@
 <script lang="ts">
 export default {
-  name: 'login-vue'
-}
+  name: "login-component",
+};
 </script>
 <script lang="ts" setup>
-import API from '@/api/server'
-import { ElMessage } from 'element-plus'
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { md5 } from 'js-md5'
-const router = useRouter()
-const token = ref('')
+import API from "@/api/server";
+import { ElMessage } from "element-plus";
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { md5 } from "js-md5";
+const router = useRouter();
+const token = ref("");
 async function saveToken() {
-  const data = new FormData()
-  const tkn = md5(token.value)
-  data.append('token', tkn)
-  const ret = await API.Login(data)
+  const data = new FormData();
+  const tkn = md5(token.value);
+  data.append("token", tkn);
+  const ret = await API.Login(data);
   if (ret.Data) {
-    ElMessage.error('Please enter a valid token.')
+    ElMessage.error("Please enter a valid token.");
   } else {
-    router.push('/server')
-    localStorage.setItem('token', tkn)
+    router.push("/server");
+    localStorage.setItem("token", tkn);
   }
 }
 </script>
 <template>
   <div class="body">
     <div class="container">
-      <div class="hello">Hello Simp!</div>
+      <div class="hello">Hello SgridCloud!</div>
       <el-form :inline="true">
         <el-form-item label="Token">
           <el-input v-model="token" />

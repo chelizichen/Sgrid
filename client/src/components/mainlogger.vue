@@ -7,7 +7,6 @@ export default {
 import { backupNginx, getBackupFile, getBackupList, nginxReload } from "@/api/nginx";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { reactive, watch, ref } from "vue";
-import shellDialog from "./shell.vue";
 
 const props = defineProps<{
   serverList: any[];

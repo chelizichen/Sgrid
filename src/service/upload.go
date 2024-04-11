@@ -24,7 +24,8 @@ import (
 
 func UploadService(ctx *handlers.SgridServerCtx) {
 	GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
-	addresses := []string{"http://47.98.174.10:24283", "http://150.158.120.244/:24283"}
+	// addresses := []string{"http://47.98.174.10:24283", "http://150.158.120.244/:24283"}
+	addresses := []string{"http://localhost:14938"}
 	clients := []*file_gen.FileTransferServiceClient{}
 	for _, v := range addresses {
 		add := v

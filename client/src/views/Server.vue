@@ -1,3 +1,9 @@
+<script lang="ts">
+export default {
+  name: "server-component",
+};
+</script>
+
 <template>
   <div>
     <el-container>
@@ -27,6 +33,7 @@ import gridsComponent from "@/components/grids.vue";
 import { onMounted, reactive, ref } from "vue";
 import API from "../api/server";
 import type { Item } from "@/dto/dto";
+
 const state = reactive({
   serverName: <string>"",
   serverList: [],

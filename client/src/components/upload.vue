@@ -1,0 +1,98 @@
+<script lang="ts">
+export default {
+  name: "upload-form",
+};
+</script>
+
+<template>
+  <div>
+    <!-- 文件上传表单 -->
+    <el-dialog
+      append-to-body
+      :model-value="props.uploadVisible"
+      width="50%"
+      title="Release"
+      @close="emits('CLOSE_UPLOAD_DIALOG')"
+    >
+      <el-form :model="uploadForm" label-width="150px">
+        <el-form-item label="Server Name" required>
+          <el-input :value="props.serverName" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="Document" required>
+          <el-input v-model="uploadForm.content" type="textarea" row="5"></el-input>
+        </el-form-item>
+        <el-form-item label="File" required>
+          <el-upload
+            :file-list="state.fileList"
+            :show-file-list="true"
+            :on-change="handleFileChange"
+            :auto-upload="false"
+            action="/upload/uploadServer"
+          >
+            <el-button slot="trigger" size="small">Choose File</el-button>
+          </el-upload>
+        </el-form-item>
+      </el-form>
+      <span slot="footer">
+        <div style="display: flex; align-items: center; justify-content: center">
+          <el-button type="primary" @click="emits('CLOSE_UPLOAD_DIALOG')"
+            >Close</el-button
+          >
+          <el-button type="success" @click="uploadFile">Upload</el-button>
+        </div>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ElMessage, type UploadUserFile } from "element-plus";
+import { ref,reactive } from "vue";
+import api from '@/api/server'
+import SparkMD5 from "spark-md5";
+
+const props = defineProps<{
+  uploadVisible: boolean;
+  serverName:string;
+  servantId:number;
+}>();
+
+const emits = defineEmits(["CLOSE_UPLOAD_DIALOG"]);
+
+const uploadForm = ref({
+  file: null,
+  content: "",
+});
+
+const state = reactive({
+  fileList: <Array<UploadUserFile>>[],
+});
+function handleFileChange(file:any) {
+    if (!file.name.includes(props.serverName)) {
+    ElMessage.error(`请上传正确的服务包 [ ${props.serverName} ] `)
+    uploadForm.value.file = null
+    state.fileList = []
+  } else {
+    uploadForm.value.file = file.raw
+    state.fileList = [file]
+  }
+}
+
+async function uploadFile(){
+  const file = uploadForm.value.file;
+  const fileReader = new FileReader();
+  fileReader.onload = async function(event:ProgressEvent<FileReader>) {
+      const result = event.target!.result;
+      const fileHash = SparkMD5.hashBinary(result);
+      const formData = new FormData();
+      formData.append('serverName', props.serverName);
+      formData.append('file', file as unknown as Blob);
+      formData.append('content', uploadForm.value.content);
+      formData.append('servantId', String(props.servantId));
+      formData.append('fileHash', String(fileHash));
+      const data = await api.uploadSgridServer(formData);
+      console.log('data',data);
+  };
+
+}
+</script>

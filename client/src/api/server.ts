@@ -2,9 +2,9 @@ import type { BasicResp } from '@/dto/dto'
 import HttpReq from '@/utils/request'
 
 const API = {
-  UploadServer: function (data:any) {
+  uploadSgridServer: function (data:any) {
     return HttpReq({
-      url:'/uploadServer',
+      url:'/upload/uploadServer',
       data,
       timeout: 10 * 60 * 1000
     }) as unknown as BasicResp<any>
