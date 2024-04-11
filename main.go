@@ -10,7 +10,7 @@ func main() {
 	ctx := h.NewSgridServerCtx(
 		h.WithSgridServerType(h.GIN_HTTP_SERVER),
 		h.WithSgridGinStatic("/static"),
-		h.WithSgridController(),
+		// h.WithSgridController(),
 		h.WithCors(),
 	)
 	ctx.Use(service.InitService)

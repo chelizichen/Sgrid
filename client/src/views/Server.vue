@@ -20,6 +20,7 @@ export default {
           <gridsComponent
             :grids-list="state.gridsList"
             :server-name="state.serverName"
+            :servant-id="state.servantId"
           ></gridsComponent>
         </el-card>
       </el-main>
@@ -38,21 +39,16 @@ const state = reactive({
   serverName: <string>"",
   serverList: [],
   gridsList: [],
-});
-
-const uploadForm = ref({
-  serverName: "",
-  file: null,
-  doc: "",
+  servantId: 0,
 });
 
 async function handleOpen(item: Item) {
   console.log("item", item);
   const grids = await API.queryGrid({ id: item.id });
   state.gridsList = grids.Data;
+  state.servantId = item.id;
   console.log("state.grids", state.gridsList);
   state.serverName = item.serverName;
-  uploadForm.value.serverName = item.serverName;
 }
 
 async function fetchServerList() {

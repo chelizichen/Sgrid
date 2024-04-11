@@ -46,7 +46,7 @@ export default {
 </template>
 
 <script setup lang="ts">
-import { ElMessage, type UploadUserFile } from "element-plus";
+import { ElLoading, ElMessage, type UploadUserFile } from "element-plus";
 import { ref,reactive } from "vue";
 import api from '@/api/server'
 import SparkMD5 from "spark-md5";
@@ -66,33 +66,54 @@ const uploadForm = ref({
 
 const state = reactive({
   fileList: <Array<UploadUserFile>>[],
+  hash:'',
 });
-function handleFileChange(file:any) {
+function handleFileChange(file:UploadUserFile) {
+  console.log('file',file);
     if (!file.name.includes(props.serverName)) {
     ElMessage.error(`请上传正确的服务包 [ ${props.serverName} ] `)
     uploadForm.value.file = null
     state.fileList = []
   } else {
-    uploadForm.value.file = file.raw
+    const fileReader = new FileReader();
+    const spark = new SparkMD5.ArrayBuffer();
+    fileReader.onload = function(e){
+      spark.append(e.target.result);
+      var md5 = spark.end()
+      state.hash = md5
+    }
+    fileReader.readAsArrayBuffer(file.raw!)
+    uploadForm.value.file = file.raw as any
     state.fileList = [file]
   }
 }
 
 async function uploadFile(){
-  const file = uploadForm.value.file;
-  const fileReader = new FileReader();
-  fileReader.onload = async function(event:ProgressEvent<FileReader>) {
-      const result = event.target!.result;
-      const fileHash = SparkMD5.hashBinary(result);
-      const formData = new FormData();
-      formData.append('serverName', props.serverName);
-      formData.append('file', file as unknown as Blob);
-      formData.append('content', uploadForm.value.content);
-      formData.append('servantId', String(props.servantId));
-      formData.append('fileHash', String(fileHash));
-      const data = await api.uploadSgridServer(formData);
-      console.log('data',data);
-  };
-
+  const loading = ElLoading.service({
+    lock: true,
+    text: 'Loading',
+    spinner: 'el-icon-loading',
+    background: 'rgba(0, 0, 0, 0.7)'
+  })
+    const formData = new FormData()
+    formData.append('serverName', props.serverName)
+    formData.append('file', uploadForm.value.file as unknown as Blob)
+    formData.append('content', uploadForm.value.content)
+    formData.append('servantId', String(props.servantId))
+    formData.append('fileHash', String(state.hash))
+    const data = await api.uploadSgridServer(formData)
+    if (data.Code) {
+      ElMessage({
+        type: 'error',
+        message: '上传失败' + data.Message
+      })
+    } else {
+      ElMessage({
+        type: 'success',
+        message: '上传成功'
+      })
+      emits('CLOSE_UPLOAD_DIALOG')
+    }
+    loading.close()
 }
 </script>

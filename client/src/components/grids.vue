@@ -10,7 +10,7 @@ export default {
       <div class="card">
         <div class="flex-item">
           <div style="font-weight: 700">ServerName</div>
-          <div class="text" @click="state.uploadVisible=true">
+          <div class="text" @click="state.uploadVisible = true">
             {{ props.serverName }}
           </div>
         </div>
@@ -52,27 +52,29 @@ export default {
         </template>
       </el-table-column>
     </el-table>
-    <uploadComponent 
-    :upload-visible="state.uploadVisible"
-    :serverName="$props.serverName"
-    @CLOSE_UPLOAD_DIALOG="()=>state.uploadVisible = false"
-     ></uploadComponent>
+    <uploadComponent
+      :upload-visible="state.uploadVisible"
+      :serverName="$props.serverName"
+      :servantId="$props.servantId"
+      @CLOSE_UPLOAD_DIALOG="() => (state.uploadVisible = false)"
+    ></uploadComponent>
   </div>
 </template>
 <script lang="ts" setup>
 import type { Item } from "@/dto/dto";
 import { reactive } from "vue";
-import uploadComponent from './upload.vue';
+import uploadComponent from "./upload.vue";
 const props = defineProps<{
   gridsList: any[];
   serverName: string;
+  servantId: number;
 }>();
 
 const emits = defineEmits(["handleOpen"]);
 
 const state = reactive({
-  uploadVisible :false,
-})
+  uploadVisible: false,
+});
 function handleOpen(item: Item) {
   emits("handleOpen", item);
 }
