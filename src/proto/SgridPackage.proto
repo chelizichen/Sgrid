@@ -1,13 +1,23 @@
 syntax = "proto3";  
   
-package SgridPackageServer;  
-option go_package = "file.gen";
+package SgridProtocol;
 
-// 文件传输服务定义  
-service FileTransferService {  
-    // 双向流式 RPC 用于文件传输  
-    rpc StreamFile(stream FileChunk) returns (stream FileResp) {}  
-}  
+option go_package = ".;protocol";
+
+message queryIdReq {
+    int32 id = 1;
+}
+
+message deletePackageReq{
+    string serverName = 1;
+    string filePath = 2;
+}
+
+message basicResp {
+    int32 code = 1;
+    string message = 2;
+}
+
   
 // 文件块消息定义  
 message FileChunk {  
@@ -21,3 +31,10 @@ message FileResp {
     string msg = 1;
     int32 code = 2;
 }
+
+// 文件传输服务定义  
+service FileTransferService {  
+    // 双向流式 RPC 用于文件传输  
+    rpc StreamFile(stream FileChunk) returns (stream FileResp) {}  
+    rpc DeletePackage(deletePackageReq)returns(basicResp){}
+}  

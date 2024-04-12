@@ -50,6 +50,7 @@ type ServantPackage struct {
 	Content    string // 上传内容
 	Version    string // 版本号
 	CreateTime string `gorm:"autoCreateTime"` // 创建时间
+	Status     int    // 文件状态 -1 为已删除不可用
 }
 
 type Properties struct {

@@ -35,3 +35,13 @@ func UpdateGrid(group pojo.Grid) int {
 	c.GORM.Create(&group)
 	return (group.Id)
 }
+
+func DeletePackage(id int) {
+	c.GORM.Debug().
+		Model(&pojo.ServantPackage{}).
+		Select("status").
+		Where("id = ?", id).
+		Updates(&pojo.Grid{
+			Status: -1,
+		})
+}

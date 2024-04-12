@@ -1,8 +1,9 @@
 package main
 
 import (
-	file_gen "Sgrid/src/proto/file.gen"
+	protocol "Sgrid/src/proto"
 	"Sgrid/src/public"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -15,14 +16,14 @@ import (
 )
 
 type fileTransferServer struct {
-	file_gen.UnimplementedFileTransferServiceServer
+	protocol.UnimplementedFileTransferServiceServer
 }
 
 const (
 	App = "application"
 )
 
-func (s *fileTransferServer) StreamFile(stream file_gen.FileTransferService_StreamFileServer) error {
+func (s *fileTransferServer) StreamFile(stream protocol.FileTransferService_StreamFileServer) error {
 	// 创建文件来存储接收到的数据
 	md, ok := metadata.FromIncomingContext(stream.Context())
 	if !ok {
@@ -55,7 +56,7 @@ func (s *fileTransferServer) StreamFile(stream file_gen.FileTransferService_Stre
 		}
 
 		// Respond to the client (optional)
-		response := &file_gen.FileResp{
+		response := &protocol.FileResp{
 			Msg:  "Chunk received",
 			Code: 200,
 		}
@@ -65,7 +66,7 @@ func (s *fileTransferServer) StreamFile(stream file_gen.FileTransferService_Stre
 	}
 
 	// 发送文件接收完成的响应
-	finalResponse := &file_gen.FileResp{
+	finalResponse := &protocol.FileResp{
 		Msg:  "File received successfully",
 		Code: 200,
 	}
@@ -74,6 +75,23 @@ func (s *fileTransferServer) StreamFile(stream file_gen.FileTransferService_Stre
 	}
 
 	return nil
+}
+
+func (s *fileTransferServer) DeletePackage(ctx context.Context, req *protocol.DeletePackageReq) (res *protocol.BasicResp, err error) {
+	f := req.FilePath
+	svr := req.ServerName
+	t := public.Join(svr, f)
+	err = os.Remove(t)
+	if err != nil {
+		return &protocol.BasicResp{
+			Code:    -1,
+			Message: "error" + err.Error(),
+		}, err
+	}
+	return &protocol.BasicResp{
+		Code:    0,
+		Message: "ok",
+	}, nil
 }
 
 func main() {
@@ -89,7 +107,7 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	file_gen.RegisterFileTransferServiceServer(grpcServer, &fileTransferServer{})
+	protocol.RegisterFileTransferServiceServer(grpcServer, &fileTransferServer{})
 	fmt.Println("Sgrid svr started on", port)
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)

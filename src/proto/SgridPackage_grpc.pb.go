@@ -4,7 +4,7 @@
 // - protoc             v4.25.1
 // source: SgridPackage.proto
 
-package file_gen
+package protocol
 
 import (
 	context "context"
@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type FileTransferServiceClient interface {
 	// 双向流式 RPC 用于文件传输
 	StreamFile(ctx context.Context, opts ...grpc.CallOption) (FileTransferService_StreamFileClient, error)
+	DeletePackage(ctx context.Context, in *DeletePackageReq, opts ...grpc.CallOption) (*BasicResp, error)
 }
 
 type fileTransferServiceClient struct {
@@ -35,7 +36,7 @@ func NewFileTransferServiceClient(cc grpc.ClientConnInterface) FileTransferServi
 }
 
 func (c *fileTransferServiceClient) StreamFile(ctx context.Context, opts ...grpc.CallOption) (FileTransferService_StreamFileClient, error) {
-	stream, err := c.cc.NewStream(ctx, &FileTransferService_ServiceDesc.Streams[0], "/SgridPackageServer.FileTransferService/StreamFile", opts...)
+	stream, err := c.cc.NewStream(ctx, &FileTransferService_ServiceDesc.Streams[0], "/SgridProtocol.FileTransferService/StreamFile", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -65,12 +66,22 @@ func (x *fileTransferServiceStreamFileClient) Recv() (*FileResp, error) {
 	return m, nil
 }
 
+func (c *fileTransferServiceClient) DeletePackage(ctx context.Context, in *DeletePackageReq, opts ...grpc.CallOption) (*BasicResp, error) {
+	out := new(BasicResp)
+	err := c.cc.Invoke(ctx, "/SgridProtocol.FileTransferService/DeletePackage", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FileTransferServiceServer is the server API for FileTransferService service.
 // All implementations must embed UnimplementedFileTransferServiceServer
 // for forward compatibility
 type FileTransferServiceServer interface {
 	// 双向流式 RPC 用于文件传输
 	StreamFile(FileTransferService_StreamFileServer) error
+	DeletePackage(context.Context, *DeletePackageReq) (*BasicResp, error)
 	mustEmbedUnimplementedFileTransferServiceServer()
 }
 
@@ -80,6 +91,9 @@ type UnimplementedFileTransferServiceServer struct {
 
 func (UnimplementedFileTransferServiceServer) StreamFile(FileTransferService_StreamFileServer) error {
 	return status.Errorf(codes.Unimplemented, "method StreamFile not implemented")
+}
+func (UnimplementedFileTransferServiceServer) DeletePackage(context.Context, *DeletePackageReq) (*BasicResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeletePackage not implemented")
 }
 func (UnimplementedFileTransferServiceServer) mustEmbedUnimplementedFileTransferServiceServer() {}
 
@@ -120,13 +134,36 @@ func (x *fileTransferServiceStreamFileServer) Recv() (*FileChunk, error) {
 	return m, nil
 }
 
+func _FileTransferService_DeletePackage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeletePackageReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FileTransferServiceServer).DeletePackage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/SgridProtocol.FileTransferService/DeletePackage",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FileTransferServiceServer).DeletePackage(ctx, req.(*DeletePackageReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FileTransferService_ServiceDesc is the grpc.ServiceDesc for FileTransferService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var FileTransferService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "SgridPackageServer.FileTransferService",
+	ServiceName: "SgridProtocol.FileTransferService",
 	HandlerType: (*FileTransferServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "DeletePackage",
+			Handler:    _FileTransferService_DeletePackage_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "StreamFile",

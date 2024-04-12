@@ -143,3 +143,12 @@ func QueryPackage(queryPackageDto *dto.QueryPackageDto) []vo.VoServantPackage {
 		Find(&queryPackageResp)
 	return queryPackageResp
 }
+
+func QueryPackageById(id int) (rsp pojo.ServantPackage) {
+	c.GORM.Model(&pojo.ServantPackage{}).
+		Where(&pojo.ServantPackage{
+			Id: id,
+		}).
+		Find(&rsp)
+	return rsp
+}

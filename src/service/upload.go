@@ -2,7 +2,7 @@ package service
 
 import (
 	handlers "Sgrid/src/http"
-	file_gen "Sgrid/src/proto/file.gen"
+	protocol "Sgrid/src/proto"
 	"Sgrid/src/storage"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
@@ -27,7 +27,7 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 	GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
 	// addresses := []string{"http://47.98.174.10:24283", "http://150.158.120.244/:24283"}
 	addresses := []string{"localhost:14938"}
-	clients := []*file_gen.FileTransferServiceClient{}
+	clients := []*protocol.FileTransferServiceClient{}
 	for _, v := range addresses {
 		fmt.Println("111", v)
 		add := v
@@ -36,7 +36,7 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 			log.Fatalf("无法连接: %v", err)
 		}
 		// defer conn.Close() // 移动到循环内部
-		client := file_gen.NewFileTransferServiceClient(conn)
+		client := protocol.NewFileTransferServiceClient(conn)
 		clients = append(clients, &client)
 	}
 	GROUP.POST("/upload/uploadServer", func(c *gin.Context) {
@@ -66,7 +66,7 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 		var wg sync.WaitGroup
 		for _, client := range clients {
 			wg.Add(1)
-			go func(client file_gen.FileTransferServiceClient) {
+			go func(client protocol.FileTransferServiceClient) {
 				// 设置 gRPC 客户端
 				stream, err := client.StreamFile(ctx)
 				if err != nil {
@@ -99,7 +99,7 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 					}
 
 					// 构造文件块
-					chunk := &file_gen.FileChunk{
+					chunk := &protocol.FileChunk{
 						Data:       buffer[:n],
 						Offset:     int64(n), // 当前文件块在文件中的偏移量
 						ServerName: serverName,
@@ -153,6 +153,29 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 
 		vsp := storage.QueryPackage(params)
 		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", vsp))
+	})
+
+	GROUP.GET("/upload/removePackage", func(c *gin.Context) {
+		id, err := strconv.Atoi(c.DefaultQuery("id", "0"))
+		serverName := c.DefaultQuery("serverName", "")
+		if err != nil || id == 0 || len(serverName) == 0 {
+			c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "params error ! [id] or [serverName]", nil))
+			return
+		}
+		sp := storage.QueryPackageById(id)
+		var wg sync.WaitGroup
+		for _, client := range clients {
+			wg.Add(1)
+			go func(client protocol.FileTransferServiceClient) {
+				client.DeletePackage(&gin.Context{}, &protocol.DeletePackageReq{
+					FilePath: sp.FilePath,
+				})
+				wg.Done()
+			}(*client)
+		}
+		wg.Wait()
+		storage.DeletePackage(id)
+		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "params error ! [id] or [serverName]", nil))
 	})
 	ctx.Engine.Use(GROUP.Handlers...)
 }
