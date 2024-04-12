@@ -6,3 +6,10 @@ type PageBasicReq struct {
 	Keyword string `json:"keyword,omitempty"`
 	Id      int    `json:"id,omitempty"`
 }
+
+type QueryPackageDto struct {
+	Size    int    `json:"size,omitempty"`
+	Offset  int    `json:"offset,omitempty"`
+	Version string `json:"version,omitempty"`
+	Id      int    `json:"id,omitempty"`
+}

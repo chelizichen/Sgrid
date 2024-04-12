@@ -6,6 +6,7 @@ import (
 	"Sgrid/src/storage/pojo"
 	"Sgrid/src/storage/vo"
 	"Sgrid/src/utils"
+	"fmt"
 )
 
 // 查询标签组，创建时用
@@ -113,4 +114,32 @@ func ConvertToVoGroupByServant(voServantGroups []vo.VoServantGroup) []vo.VoGroup
 	}
 
 	return result
+}
+
+func QueryPackage(queryPackageDto *dto.QueryPackageDto) []vo.VoServantPackage {
+	var queryPackageResp []vo.VoServantPackage
+	fmt.Println("queryPackageDto", queryPackageDto)
+	where := `1 = 1`
+	params := make([]any, 0)
+	if queryPackageDto.Id != 0 {
+		where += ` and gsp.servant_id = ?`
+		params = append(params, queryPackageDto.Id)
+	}
+	if len(queryPackageDto.Version) != 0 {
+		where += ` and gsp.version = ?`
+		params = append(params, queryPackageDto.Version)
+	}
+	c.GORM.Table("grid_servant_package gsp").
+		Select(`
+	gsp.*,
+	gs.server_name as gs_server_name,
+	gs.create_time as gs_create_time,
+	gs.language  as gs_language
+	`).Joins(`
+	left join grid_servant gs on
+	gsp.servant_id = gs.id
+	`).Where(where, utils.Removenullvalue(params)...).
+		Order(" gsp.create_time  DESC").
+		Find(&queryPackageResp)
+	return queryPackageResp
 }

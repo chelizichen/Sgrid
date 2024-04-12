@@ -4,6 +4,7 @@ import (
 	handlers "Sgrid/src/http"
 	file_gen "Sgrid/src/proto/file.gen"
 	"Sgrid/src/storage"
+	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
 	"context"
 	"fmt"
@@ -135,6 +136,23 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 			CreateTime: dateTime,
 		})
 		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", nil))
+	})
+
+	GROUP.GET("/upload/getList", func(c *gin.Context) {
+		id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
+		offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
+		size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
+		version := c.DefaultQuery("version", "")
+
+		params := &dto.QueryPackageDto{
+			Id:      id,
+			Offset:  offset,
+			Size:    size,
+			Version: version,
+		}
+
+		vsp := storage.QueryPackage(params)
+		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", vsp))
 	})
 	ctx.Engine.Use(GROUP.Handlers...)
 }

@@ -48,6 +48,7 @@ type ServantPackage struct {
 	Hash       string // Hash值
 	FilePath   string // 文件路径
 	Content    string // 上传内容
+	Version    string // 版本号
 	CreateTime string `gorm:"autoCreateTime"` // 创建时间
 }
 
