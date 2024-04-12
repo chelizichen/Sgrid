@@ -3,9 +3,11 @@ package public
 import (
 	"Sgrid/src/config"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
+	"github.com/c4milo/unpackit"
 	"gopkg.in/yaml.v2"
 )
 
@@ -14,6 +16,17 @@ const (
 	ENV_TARGET_PORT = "SGRID_TARGET_PORT"
 	DEV_CONF_NAME   = "sgrid.yml"
 	PROD_CONF_NAME  = "sgridProd.yml"
+)
+
+const (
+	RELEASE_GO = iota
+	RELEASE_NODE
+	RELEASE_JAVA
+)
+
+const (
+	PROTOCOL_HTTP = iota
+	PROTOCOL_GRPC
 )
 
 func SgridProduction() bool {
@@ -86,4 +99,64 @@ func NewConfig(opts ...ConfOpt) (conf *config.SgridConf, err error) {
 	// 打印解析后的配置
 	fmt.Printf("%+v\n", conf)
 	return conf, nil
+}
+
+func CheckDirectoryOrCreate(directoryPath string) error {
+	_, err := os.Stat(directoryPath)
+	if os.IsNotExist(err) {
+		err := os.Mkdir(directoryPath, os.ModePerm)
+		if err != nil {
+			fmt.Println("err", err)
+		}
+		fmt.Printf("Path %s does not exist.\n", directoryPath)
+		return err
+	}
+	return err
+}
+
+func Tar2Dest(src, dest string) error {
+	file, err := os.Open(src)
+	if err != nil {
+		fmt.Println("Open Error", err.Error())
+		return err
+	}
+	defer file.Close()
+	err = unpackit.Unpack(file, dest)
+	if err != nil {
+		fmt.Println("Unpackit Error", err.Error())
+		return err
+	}
+	return nil
+}
+
+func CopyProdYml(storageYmlEPath, storageYmlProdPath string) (err error) {
+	_, err = os.Stat(storageYmlProdPath)
+	if err != nil {
+		fmt.Println("os.Stat ", err.Error())
+	}
+	if os.IsNotExist(err) {
+		err = CopyFile(storageYmlEPath, storageYmlProdPath)
+		if err != nil {
+			fmt.Println("utils.CopyFile ", storageYmlEPath, err.Error())
+		}
+	}
+	return err
+}
+
+func CopyFile(src string, dst string) error {
+	srcFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+	dstFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer dstFile.Close()
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return err
+	}
+	return nil
 }

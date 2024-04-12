@@ -3,7 +3,6 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"sync/atomic"
@@ -102,21 +101,6 @@ func (s *Servants) StopServant() error {
 	err := s.Process.Process.Kill() // 终止进程
 	if err != nil {
 		fmt.Println("Killed Error", err.Error())
-	}
-	return err
-}
-
-func CopyProdYml(storageYmlEPath, storageYmlProdPath string) (err error) {
-	_, err = os.Stat(storageYmlProdPath)
-	if err != nil {
-		fmt.Println("os.Stat ", err.Error())
-	}
-	// 如果没有该文件，则将simp.yaml拷贝一份成simpProd.yaml
-	if os.IsNotExist(err) {
-		err = CopyFile(storageYmlEPath, storageYmlProdPath)
-		if err != nil {
-			fmt.Println("utils.CopyFile ", storageYmlEPath, err.Error())
-		}
 	}
 	return err
 }

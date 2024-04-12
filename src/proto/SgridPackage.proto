@@ -13,12 +13,20 @@ message deletePackageReq{
     string filePath = 2;
 }
 
+message releaseServerReq{
+    string serverName = 1;
+    string filePath = 2;
+    int32 serverLanguage = 3;
+    int32 serverProtocol = 4;
+    string execPath = 5;
+}
+
+
 message basicResp {
     int32 code = 1;
     string message = 2;
 }
 
-  
 // 文件块消息定义  
 message FileChunk {  
     bytes data = 1; // 文件内容块  
@@ -37,4 +45,5 @@ service FileTransferService {
     // 双向流式 RPC 用于文件传输  
     rpc StreamFile(stream FileChunk) returns (stream FileResp) {}  
     rpc DeletePackage(deletePackageReq)returns(basicResp){}
+    rpc ReleaseServerByPackage(releaseServerReq)returns(basicResp){}
 }  

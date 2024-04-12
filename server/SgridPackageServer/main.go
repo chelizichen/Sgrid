@@ -1,27 +1,77 @@
 package main
 
 import (
+	"Sgrid/src/config"
 	protocol "Sgrid/src/proto"
 	"Sgrid/src/public"
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net"
 	"os"
+	"os/exec"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 )
+
+type WithSgridMonitorConfFunc func() func(*SgridMonitor)
+
+type SgridMonitor struct {
+	interval int // 上报时间
+}
+
+func WithMonitorInterval(interval int) func(*SgridMonitor) {
+	return func(monitor *SgridMonitor) {
+		monitor.interval = interval
+	}
+}
+
+func NewSgridMonitor() *SgridMonitor {
+	return &SgridMonitor{}
+}
 
 type fileTransferServer struct {
 	protocol.UnimplementedFileTransferServiceServer
 }
 
 const (
-	App = "application"
+	App      = "application"
+	Servants = "servants"
 )
+
+var db *sql.DB
+var sc *config.SgridConf
+
+func init() {
+	sc, err := public.NewConfig()
+	if err != nil {
+		fmt.Println("Error To NewConfig", err)
+	}
+	S, err := gorm.Open(mysql.Open(sc.Server.Storage), &gorm.Config{
+		SkipDefaultTransaction: true,
+		NamingStrategy: schema.NamingStrategy{
+			TablePrefix:   "grid_",
+			SingularTable: true,
+		},
+	})
+	if err != nil {
+		fmt.Println("Error To init gorm", err)
+	}
+	db, err = S.DB()
+	fmt.Println("db.Ping().Error()", db.Ping().Error())
+	if err != nil {
+		fmt.Println("Error To DB", err)
+	}
+}
 
 func (s *fileTransferServer) StreamFile(stream protocol.FileTransferService_StreamFileServer) error {
 	// 创建文件来存储接收到的数据
@@ -31,7 +81,13 @@ func (s *fileTransferServer) StreamFile(stream protocol.FileTransferService_Stre
 	}
 	// 获取文件名和哈希值
 	filename := md.Get("filename")[0]
-	targetFilePath := public.Join(App, filename)
+	servername := md.Get("serverName")[0]
+	directoryPath := public.Join(App, servername)
+	err := public.CheckDirectoryOrCreate(directoryPath)
+	if err != nil {
+		fmt.Println("check directory error")
+	}
+	targetFilePath := public.Join(App, servername, filename)
 	file, err := os.Create(targetFilePath)
 	if err != nil {
 		return err
@@ -94,11 +150,46 @@ func (s *fileTransferServer) DeletePackage(ctx context.Context, req *protocol.De
 	}, nil
 }
 
-func main() {
-	sc, err := public.NewConfig()
+// 发布 -> 上报给主控
+func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *protocol.ReleaseServerReq) (res *protocol.BasicResp, err error) {
+	filePath := req.FilePath             // 服务路径
+	serverLanguage := req.ServerLanguage // 服务语言
+	serverName := req.ServerName         // 服务名称
+	protocol := req.ServerProtocol       // 协议
+	execFilePath := req.ExecPath         // 执行路径
+
+	startDir := public.Join(Servants, serverName)
+	err = public.CheckDirectoryOrCreate(startDir)
 	if err != nil {
-		log.Fatalf("failed to NewConfig: %v", err)
+		fmt.Println("error", err.Error())
 	}
+	var cmd *exec.Cmd
+	if protocol == public.PROTOCOL_GRPC {
+		if serverLanguage == public.RELEASE_GO {
+			startFile := public.Join(Servants, serverName, execFilePath) // 启动文件
+			packageFile := public.Join(App, filePath)
+			public.Tar2Dest(packageFile, startDir)
+			cmd = exec.Command(startFile)
+		}
+	}
+
+	if protocol == public.PROTOCOL_HTTP {
+		if serverLanguage == public.RELEASE_GO {
+			startFile := public.Join(Servants, serverName, execFilePath) // 启动文件
+			packageFile := public.Join(App, filePath)
+			public.Tar2Dest(packageFile, startDir)
+			cmd = exec.Command(startFile)
+		}
+	}
+
+	err = cmd.Start()
+	if err != nil {
+		fmt.Println("error", err.Error())
+	}
+	return nil, status.Errorf(codes.Unimplemented, "method ReleaseServerByPackage not implemented")
+}
+
+func main() {
 	port := fmt.Sprintf(":%v", sc.Server.Port)
 
 	lis, err := net.Listen("tcp", port)

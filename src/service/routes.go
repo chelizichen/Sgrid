@@ -86,7 +86,7 @@ func Registry(ctx *handlers.SgridServerCtx) {
 			if err != nil {
 				fmt.Println("Error To Unzip", err.Error())
 			}
-			err = utils.CopyProdYml(storageYmlEPath, storageYmlProdPath) // 拷贝配置文件
+			err = public.CopyProdYml(storageYmlEPath, storageYmlProdPath) // 拷贝配置文件
 			if err != nil {
 				fmt.Println("Error To CopyProdYml", err.Error())
 			}

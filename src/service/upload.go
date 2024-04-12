@@ -24,7 +24,7 @@ import (
 )
 
 func UploadService(ctx *handlers.SgridServerCtx) {
-	GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
+	router := ctx.Engine.Group(strings.ToLower(ctx.Name))
 	// addresses := []string{"http://47.98.174.10:24283", "http://150.158.120.244/:24283"}
 	addresses := []string{"localhost:14938"}
 	clients := []*protocol.FileTransferServiceClient{}
@@ -39,7 +39,7 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 		client := protocol.NewFileTransferServiceClient(conn)
 		clients = append(clients, &client)
 	}
-	GROUP.POST("/upload/uploadServer", func(c *gin.Context) {
+	router.POST("/upload/uploadServer", func(c *gin.Context) {
 		// 从请求中获取服务器名、文件哈希和文件
 		serverName := c.PostForm("serverName")
 		fileHash := c.PostForm("fileHash")
@@ -61,7 +61,7 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 		dateTime := strings.ReplaceAll(time.Now().Format(time.DateTime), " ", "")
 		fileName := fmt.Sprintf("%v_%v_%v.tgz", serverName, dateTime, fileHash)
 		fmt.Println("fileName ", fileName)
-		META := metadata.Pairs("filename", fileName)
+		META := metadata.Pairs("filename", fileName, "serverName", serverName)
 		ctx := metadata.NewOutgoingContext(context.Background(), META)
 		var wg sync.WaitGroup
 		for _, client := range clients {
@@ -137,8 +137,10 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 		})
 		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", nil))
 	})
+	router.POST("/release/server", func(c *gin.Context) {
 
-	GROUP.GET("/upload/getList", func(c *gin.Context) {
+	})
+	router.GET("/upload/getList", func(c *gin.Context) {
 		id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 		offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
 		size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
@@ -155,7 +157,7 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", vsp))
 	})
 
-	GROUP.GET("/upload/removePackage", func(c *gin.Context) {
+	router.GET("/upload/removePackage", func(c *gin.Context) {
 		id, err := strconv.Atoi(c.DefaultQuery("id", "0"))
 		serverName := c.DefaultQuery("serverName", "")
 		if err != nil || id == 0 || len(serverName) == 0 {
@@ -177,5 +179,5 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 		storage.DeletePackage(id)
 		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "params error ! [id] or [serverName]", nil))
 	})
-	ctx.Engine.Use(GROUP.Handlers...)
+	ctx.Engine.Use(router.Handlers...)
 }

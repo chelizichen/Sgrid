@@ -310,30 +310,6 @@ func AppendDocToTgz(storagePath, docContent string) {
 	}
 }
 
-func CopyFile(src string, dst string) error {
-	// 打开源文件
-	srcFile, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer srcFile.Close()
-
-	// 创建目标文件
-	dstFile, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer dstFile.Close()
-
-	// 复制文件内容
-	_, err = io.Copy(dstFile, srcFile)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func Join(pre string) func(t string) string {
 	return func(target string) string {
 		return path.Join(pre, target)
