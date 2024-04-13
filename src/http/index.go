@@ -195,10 +195,6 @@ func NewSgridServer(ctx *SgridServerCtx, callback func(port string)) {
 		}
 	}
 
-	if public.SgridProduction() {
-		utils.CreateAPIFile(ctx.Engine, ctx.Name)
-	}
-
 	SIMP_TARGET_PORT := os.Getenv(public.ENV_TARGET_PORT)
 	SIMP_CONF_PORT := ctx.Port
 	var CallBackPort string = ""

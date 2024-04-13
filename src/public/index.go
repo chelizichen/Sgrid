@@ -29,8 +29,13 @@ const (
 	PROTOCOL_GRPC = "grpc"
 )
 
+const (
+	CRON_EVERY_DAY = "0 0 0 * * *"
+)
+
 func SgridProduction() bool {
 	s := os.Getenv(ENV_PRODUCTION)
+	fmt.Println("s", s)
 	if len(s) == 0 {
 		return false
 	} else {

@@ -2,7 +2,6 @@ package utils
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -11,8 +10,6 @@ import (
 	"path"
 	"strconv"
 	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
 // 日志上报功能
@@ -141,45 +138,6 @@ func AutoCreateLoggerFile(serverName string) {
 type APIFileVo struct {
 	Method string `json:"method"`
 	Path   string `json:"path"`
-}
-
-func CreateAPIFile(c *gin.Engine, serverName string) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		fmt.Println("Error To GetWd", err.Error())
-	}
-
-	// 获取所有监听的路由
-	routes := c.Routes()
-	var APIs []APIFileVo
-
-	// 打印路由信息
-	for _, route := range routes {
-		vo := APIFileVo{
-			Method: route.Method,
-			Path:   route.Path,
-		}
-		APIs = append(APIs, vo)
-		fmt.Printf("Method: %s, Path: %s  \n", route.Method, route.Path)
-	}
-
-	B, err := json.Marshal(APIs)
-	if err != nil {
-		fmt.Println("Errored On Json Marshal", err.Error())
-	}
-	path := path.Join(cwd, PublishPath, serverName, "API.json")
-	fmt.Println("Create JSON at ", path)
-	err = IFExistThenRemove(path, false)
-	if err != nil {
-		fmt.Println("IFExistThenRemove Error ", path)
-	}
-	F, err := os.Create(path)
-	defer F.Close()
-	if err != nil {
-		fmt.Println("Create JSON API File Error", err.Error())
-		return
-	}
-	F.WriteString(string(B))
 }
 
 // 主控服务用

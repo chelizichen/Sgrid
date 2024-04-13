@@ -24,6 +24,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/robfig/cron"
 	p "github.com/shirou/gopsutil/process"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -35,9 +36,14 @@ import (
 type WithSgridMonitorConfFunc func(*SgridMonitor)
 
 type SgridMonitor struct {
-	interval time.Duration // 上报时间
-	cmd      *exec.Cmd
-	next     atomic.Bool
+	interval   time.Duration // 上报时间
+	cmd        *exec.Cmd
+	next       atomic.Bool
+	serverName string
+	cron       *cron.Cron
+	dataLog    *os.File
+	errLog     *os.File
+	statLog    *os.File
 }
 
 func getStat(pid int) *p.Process {
@@ -65,12 +71,59 @@ func (s *SgridMonitor) Report() {
 			}
 			cpu, _ := statInfo.CPUPercent()
 			threads, _ := statInfo.NumThreads()
-			fmt.Println("cpu", cpu)
-			fmt.Println("threads", threads)
-			fmt.Println("status", status)
-			fmt.Println("pid", s.getPid())
+			content := fmt.Sprintf("time:%v |serverName:%v | pid:%v | cpu:%v | thread:%v | status:%v \n", time.Now().Format(time.DateTime), s.serverName, s.getPid(), cpu, threads, status)
+			s.statLog.Write([]byte(content))
 		})
 	}
+}
+
+func (s *SgridMonitor) PrintLogger() {
+	op, err := s.cmd.StdoutPipe()
+	if err != nil {
+		fmt.Println("StdoutPipe | Error", err.Error())
+	}
+	ep, err := s.cmd.StderrPipe()
+	if err != nil {
+		fmt.Println("StderrPipe | Error", err.Error())
+	}
+	s.getFile()
+	go func() {
+		for {
+			// 读取输出
+			buf := make([]byte, 1024)
+			time := time.Now().Format(time.DateTime)
+			n, err := op.Read(buf)
+			if err != nil {
+				break
+			}
+			// 打印输出
+			content := time + "|ServerName|" + s.serverName + "|" + string(buf[:n]) + "\n"
+			s.dataLog.Write([]byte(content))
+		}
+	}()
+	go func() {
+		for {
+			// 读取输出
+			buf := make([]byte, 1024)
+			time := time.Now().Format(time.DateTime)
+			n, err := ep.Read(buf)
+			if err != nil {
+				break
+			}
+			// 打印输出
+			content := time + "|ServerName|" + s.serverName + "|" + string(buf[:n]) + "\n"
+			s.errLog.Write([]byte(content))
+		}
+	}()
+
+	go func() {
+		spec := public.CRON_EVERY_DAY
+		s.cron = cron.New()
+		err = s.cron.AddFunc(spec, func() {
+			s.getFile()
+		})
+		go s.cron.Start()
+	}()
 }
 
 func (s *SgridMonitor) kill() {
@@ -81,6 +134,34 @@ func (s *SgridMonitor) kill() {
 func (s *SgridMonitor) getPid() int {
 	return s.cmd.Process.Pid
 }
+
+func (s *SgridMonitor) getFile() {
+	today := time.Now().Format(time.DateOnly)
+	directoryPath := public.Join(Logger, s.serverName)
+	err := public.CheckDirectoryOrCreate(directoryPath)
+	if err != nil {
+		fmt.Println("CheckDirectoryOrCreate Error", err.Error())
+	}
+	logDataPath := public.Join(Logger, s.serverName, fmt.Sprintf("log-data-%v.log", today))
+	logErrorPath := public.Join(Logger, s.serverName, fmt.Sprintf("log-error-%v.log", today))
+	logStatPath := public.Join(Logger, s.serverName, fmt.Sprintf("log-stat-%v.log", today))
+	opf, err := os.OpenFile(logDataPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		fmt.Println("OpenFile Error", logDataPath)
+	}
+	epf, err := os.OpenFile(logErrorPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		fmt.Println("OpenFile Error", logErrorPath)
+	}
+	spf, err := os.OpenFile(logStatPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		fmt.Println("OpenFile Error", logStatPath)
+	}
+	s.dataLog = opf
+	s.errLog = epf
+	s.statLog = spf
+}
+
 func WithMonitorInterval(interval time.Duration) func(*SgridMonitor) {
 	return func(monitor *SgridMonitor) {
 		if interval.Seconds() < 5 { // min 5s
@@ -107,6 +188,12 @@ func NewSgridMonitor(opt ...WithSgridMonitorConfFunc) *SgridMonitor {
 	return monitor
 }
 
+func WithMonitorServerName(serverName string) func(*SgridMonitor) {
+	return func(monitor *SgridMonitor) {
+		monitor.serverName = serverName
+	}
+}
+
 type fileTransferServer struct {
 	protocol.UnimplementedFileTransferServiceServer
 }
@@ -114,13 +201,21 @@ type fileTransferServer struct {
 const (
 	App      = "application"
 	Servants = "servants"
+	Logger   = "logger"
 )
 
 var db *sql.DB
 var globalConf *config.SgridConf
 var globalPool *pool.RoutinePool
 
+func initDir() {
+	public.CheckDirectoryOrCreate(public.Join(Logger))
+	public.CheckDirectoryOrCreate(public.Join(App))
+	public.CheckDirectoryOrCreate(public.Join(Servants))
+}
+
 func initSgridConf() *config.SgridConf {
+	initDir()
 	sc, err := public.NewConfig()
 	if err != nil {
 		fmt.Println("Error To NewConfig", err)
@@ -225,8 +320,12 @@ func (s *fileTransferServer) DeletePackage(ctx context.Context, req *protocol.De
 }
 
 func CheckProdConf(devConf, prodConf string) {
+	fmt.Println("CheckProdConf", devConf, prodConf)
 	if !public.IsExist(prodConf) {
-		public.CopyFile(devConf, prodConf)
+		err := public.CopyFile(devConf, prodConf)
+		if err != nil {
+			fmt.Println("CheckProdConf", err.Error())
+		}
 	}
 }
 
@@ -279,18 +378,21 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 					cmd = exec.Command("node", startFile)
 				}
 			}
-			cmd.Env = append(cmd.Env, fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, grid.Port), fmt.Sprintf("%v=%v", public.ENV_PRODUCTION, "SgridProduction"))
+			cmd.Env = append(cmd.Env, fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, grid.Port), fmt.Sprintf("%v=%v", public.ENV_PRODUCTION, startDir))
 			fmt.Println("cmd.Env", cmd.Env)
+			monitor := NewSgridMonitor(
+				WithMonitorInterval(time.Second*5),
+				WithMonitorSetCmd(cmd),
+				WithMonitorServerName(serverName),
+			)
+			monitor.PrintLogger()
+			go monitor.Report()
+
 			go func() {
 				err = cmd.Start()
 				if err != nil {
 					fmt.Println("error", err.Error())
 				}
-				monitor := NewSgridMonitor(
-					WithMonitorInterval(time.Second*5),
-					WithMonitorSetCmd(cmd),
-				)
-				go monitor.Report()
 			}()
 		}
 	}
