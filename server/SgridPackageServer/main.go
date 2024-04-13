@@ -1,9 +1,16 @@
+// ************************ SgridCloud **********************
+// SgridPackageServer created at 2024.4.8
+// Author @chelizichen
+// Operations and Deployment Services
+// ************************ SgridCloud **********************
+
 package main
 
 import (
 	"Sgrid/src/config"
 	protocol "Sgrid/src/proto"
 	"Sgrid/src/public"
+	"Sgrid/src/public/pool"
 	"context"
 	"database/sql"
 	"errors"
@@ -13,7 +20,11 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path"
+	"sync/atomic"
+	"time"
 
+	p "github.com/shirou/gopsutil/process"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"gorm.io/driver/mysql"
@@ -21,20 +32,79 @@ import (
 	"gorm.io/gorm/schema"
 )
 
-type WithSgridMonitorConfFunc func() func(*SgridMonitor)
+type WithSgridMonitorConfFunc func(*SgridMonitor)
 
 type SgridMonitor struct {
-	interval int // 上报时间
+	interval time.Duration // 上报时间
+	cmd      *exec.Cmd
+	next     atomic.Bool
 }
 
-func WithMonitorInterval(interval int) func(*SgridMonitor) {
+func getStat(pid int) *p.Process {
+	process, err := p.NewProcess(int32(pid))
+	if err != nil {
+		fmt.Println("Error creating new process:", err)
+		return nil
+	}
+	return process
+}
+
+func (s *SgridMonitor) Report() {
+	for {
+		fmt.Println("Next Load Report", s.next.Load())
+		if s.next.Load() {
+			break
+		}
+		time.Sleep(s.interval)
+		globalPool.Add(func() {
+			id := s.getPid()
+			statInfo := getStat(id)
+			status, _ := statInfo.Status()
+			if status == "Z" { // down 了 进行物理kill
+				s.kill()
+			}
+			cpu, _ := statInfo.CPUPercent()
+			threads, _ := statInfo.NumThreads()
+			fmt.Println("cpu", cpu)
+			fmt.Println("threads", threads)
+			fmt.Println("status", status)
+			fmt.Println("pid", s.getPid())
+		})
+	}
+}
+
+func (s *SgridMonitor) kill() {
+	s.cmd.Process.Kill()
+	s.next.Store(true)
+}
+
+func (s *SgridMonitor) getPid() int {
+	return s.cmd.Process.Pid
+}
+func WithMonitorInterval(interval time.Duration) func(*SgridMonitor) {
 	return func(monitor *SgridMonitor) {
+		if interval.Seconds() < 5 { // min 5s
+			interval = time.Second * 5
+		}
 		monitor.interval = interval
 	}
 }
 
-func NewSgridMonitor() *SgridMonitor {
-	return &SgridMonitor{}
+func WithMonitorSetCmd(cmd *exec.Cmd) func(*SgridMonitor) {
+	return func(monitor *SgridMonitor) {
+		monitor.cmd = cmd
+	}
+}
+
+func NewSgridMonitor(opt ...WithSgridMonitorConfFunc) *SgridMonitor {
+	monitor := &SgridMonitor{
+		next: atomic.Bool{},
+	}
+	for _, v := range opt {
+		fn := v
+		fn(monitor)
+	}
+	return monitor
 }
 
 type fileTransferServer struct {
@@ -48,6 +118,7 @@ const (
 
 var db *sql.DB
 var globalConf *config.SgridConf
+var globalPool *pool.RoutinePool
 
 func initSgridConf() *config.SgridConf {
 	sc, err := public.NewConfig()
@@ -153,28 +224,35 @@ func (s *fileTransferServer) DeletePackage(ctx context.Context, req *protocol.De
 	}, nil
 }
 
+func CheckProdConf(devConf, prodConf string) {
+	if !public.IsExist(prodConf) {
+		public.CopyFile(devConf, prodConf)
+	}
+}
+
 // 发布 -> 上报给主控
 func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *protocol.ReleaseServerReq) (res *protocol.BasicResp, err error) {
-	filePath := req.FilePath             // 服务路径
-	serverLanguage := req.ServerLanguage // 服务语言
-	serverName := req.ServerName         // 服务名称
-	serverProtocol := req.ServerProtocol // 协议
-	execFilePath := req.ExecPath         // 执行路径
 	if len(req.ServantGrids) == 0 {
 		return
 	}
-	servantGrid := req.ServantGrids // 服务
-	// 通过Host过滤拿到IP，然后进行服务启动
-	for _, grid := range servantGrid {
+	filePath := req.FilePath                              // 服务路径
+	serverLanguage := req.ServerLanguage                  // 服务语言
+	serverName := req.ServerName                          // 服务名称
+	serverProtocol := req.ServerProtocol                  // 协议
+	execFilePath := req.ExecPath                          // 执行路径
+	startDir := public.Join(Servants, serverName)         // 解压目录
+	packageFile := public.Join(App, serverName, filePath) // 路径
+	public.Tar2Dest(packageFile, startDir)                // 解压
+	servantGrid := req.ServantGrids                       // 服务列表  通过Host过滤拿到IP，然后进行服务启动
+	var startFile string                                  // 启动文件
+	CheckProdConf(path.Join(startDir, public.DEV_CONF_NAME), path.Join(startDir, public.PROD_CONF_NAME))
+	for _, grid := range servantGrid { // 通过Host过滤拿到IP，然后进行服务启动
 		GRID := grid
 		fmt.Println("GRID", GRID)
 		if GRID.Ip != globalConf.Server.Host {
 			fmt.Println("server is not equal")
 			return
 		} else {
-			var startFile string
-			var packageFile string
-			startDir := public.Join(Servants, serverName)
 			err = public.CheckDirectoryOrCreate(startDir)
 			if err != nil {
 				fmt.Println("error", err.Error())
@@ -183,14 +261,10 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 			if serverProtocol == public.PROTOCOL_GRPC {
 				if serverLanguage == public.RELEASE_GO {
 					startFile = public.Join(Servants, serverName, execFilePath) // 启动文件
-					packageFile = public.Join(App, serverName, filePath)
-					public.Tar2Dest(packageFile, startDir)
 					cmd = exec.Command(startFile)
 				}
 				if serverLanguage == public.RELEASE_NODE {
 					startFile = public.Join(Servants, serverName, execFilePath) // 启动文件
-					packageFile = public.Join(App, serverName, filePath)
-					public.Tar2Dest(packageFile, startDir)
 					cmd = exec.Command("node", startFile)
 				}
 			}
@@ -198,26 +272,34 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 			if serverProtocol == public.PROTOCOL_HTTP {
 				if serverLanguage == public.RELEASE_GO {
 					startFile = public.Join(Servants, serverName, execFilePath) // 启动文件
-					packageFile = public.Join(App, serverName, filePath)
-					public.Tar2Dest(packageFile, startDir)
 					cmd = exec.Command(startFile)
 				}
 				if serverLanguage == public.RELEASE_NODE {
 					startFile = public.Join(Servants, serverName, execFilePath) // 启动文件
-					packageFile = public.Join(App, serverName, filePath)
-					public.Tar2Dest(packageFile, startDir)
 					cmd = exec.Command("node", startFile)
 				}
 			}
-			fmt.Println("startFile", startFile)
-			fmt.Println("packageFile", packageFile)
-			cmd.Env = append(cmd.Env, fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, grid.Port), fmt.Sprintf("%v=%v", public.ENV_PRODUCTION, "SgridPackageServer"))
-			err = cmd.Start()
-			if err != nil {
-				fmt.Println("error", err.Error())
-			}
+			cmd.Env = append(cmd.Env, fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, grid.Port), fmt.Sprintf("%v=%v", public.ENV_PRODUCTION, "SgridProduction"))
+			fmt.Println("cmd.Env", cmd.Env)
+			go func() {
+				err = cmd.Start()
+				if err != nil {
+					fmt.Println("error", err.Error())
+				}
+				monitor := NewSgridMonitor(
+					WithMonitorInterval(time.Second*5),
+					WithMonitorSetCmd(cmd),
+				)
+				go monitor.Report()
+			}()
 		}
 	}
+
+	//  ********************** debug *********************
+	fmt.Println("startFile", startFile)
+	fmt.Println("packageFile", packageFile)
+	//  ********************** debug *********************
+
 	return &protocol.BasicResp{
 		Code:    0,
 		Message: "ok",
@@ -226,6 +308,8 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 }
 
 func main() {
+	globalPool = pool.NewRoutinePool(1000)
+	go globalPool.Run()
 	sc := initSgridConf()
 	fmt.Println("sc", sc)
 	port := fmt.Sprintf(":%v", sc.Server.Port)

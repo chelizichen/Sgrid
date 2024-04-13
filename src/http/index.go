@@ -14,11 +14,6 @@ import (
 	"github.com/robfig/cron"
 )
 
-const (
-	GRPC_SERVER = iota
-	GIN_HTTP_SERVER
-)
-
 type SgridServerCtx struct {
 	Port        string
 	Name        string
@@ -100,7 +95,7 @@ func (c *SgridServerCtx) Static(realPath string, args ...string) {
 
 type InitConf struct {
 	SgridController    bool
-	ServerType         int
+	ServerType         string
 	SgridConfPath      string
 	SgridGinStaticPath string
 	SgridGinWithCors   bool
@@ -113,7 +108,7 @@ func WithSgridController() NewSgrid {
 	}
 }
 
-func WithSgridServerType(T int) NewSgrid {
+func WithSgridServerType(T string) NewSgrid {
 	return func(conf *InitConf) {
 		conf.ServerType = T
 	}
@@ -148,7 +143,7 @@ func NewSgridServerCtx(opt ...NewSgrid) *SgridServerCtx {
 		fmt.Println("NewConfig Error:", err.Error())
 		panic(err.Error())
 	}
-	if initConf.ServerType == GIN_HTTP_SERVER {
+	if initConf.ServerType == public.PROTOCOL_HTTP {
 		ctx.Engine = gin.Default()
 		ctx.Port = ":" + strconv.Itoa(conf.Server.Port)
 		ctx.StoragePath = conf.Server.Storage

@@ -1,8 +1,13 @@
 client/node_modules
 server/SgridPackageServer/servants
-
+server/SubServer/*
 test
 
 *.log
 
 *.tgz
+
+*.gz
+
+sgrid_app
+

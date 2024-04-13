@@ -34,7 +34,7 @@ func NewRoutinePool(maxSize int) *RoutinePool {
 	}
 }
 
-func (p *RoutinePool) AddNeedRunTask(job Job) {
+func (p *RoutinePool) addNeedRunTask(job Job) {
 	p.taskList = append(p.taskList, job)
 }
 
@@ -43,7 +43,7 @@ func (p *RoutinePool) Add(job Job) {
 	case p.Jobs <- job:
 		atomic.AddInt32(&p.runningCount, 1)
 	default:
-		p.AddNeedRunTask(job)
+		p.addNeedRunTask(job)
 	}
 }
 

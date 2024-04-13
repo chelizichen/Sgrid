@@ -2,13 +2,14 @@ package main
 
 import (
 	h "Sgrid/src/http"
+	"Sgrid/src/public"
 	service "Sgrid/src/service"
 	"fmt"
 )
 
 func main() {
 	ctx := h.NewSgridServerCtx(
-		h.WithSgridServerType(h.GIN_HTTP_SERVER),
+		h.WithSgridServerType(public.PROTOCOL_HTTP),
 		h.WithSgridGinStatic("/static"),
 		// h.WithSgridController(),
 		h.WithCors(),
