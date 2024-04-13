@@ -60,6 +60,8 @@ type GridServant struct {
 	ServantGroupID    int    `gorm:"column:gs_servant_group_id" json:"servantGroupId,omitempty"`
 	ServerName        string `gorm:"column:gs_server_name" json:"serverName,omitempty"`
 	ServantCreateTime string `gorm:"column:gs_create_time" json:"servantCreateTime,omitempty"`
+	ExecPath          string `gorm:"column:gs_exec_path" json:"execPath,omitempty"`
+	Protocol          string `gorm:"column:gs_protocol" json:"protocol,omitempty"`
 }
 
 type GridNode struct {
@@ -87,4 +89,6 @@ type VoServantPackage struct {
 	GSServerName string    `gorm:"gs_server_name" json:"serverName,omitempty"`
 	GSCreateTime time.Time `gorm:"gs_create_time" json:"serverCreateTime,omitempty"`
 	GSLanguage   string    `gorm:"gs_language" json:"language,omitempty"`
+	GSExecPath   string    `gorm:"gs_exec_path" json:"execPath,omitempty"`
+	GSProtocol   string    `gorm:"gs_protocol" json:"protocol,omitempty"`
 }

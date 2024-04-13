@@ -19,7 +19,7 @@ export default {
           <div class="text">Shutdown</div>
         </div>
         <div class="flex-item">
-          <div class="text">Release</div>
+          <div class="text" @click="releaseServer">Release</div>
         </div>
         <div class="flex-item">
           <div class="text">Restart</div>
@@ -51,6 +51,11 @@ export default {
           <div>{{ scoped.row.gridServant.language }}</div>
         </template>
       </el-table-column>
+      <el-table-column label="Protocol">
+        <template #default="scoped">
+          <div>{{ scoped.row.gridServant.protocol }}</div>
+        </template>
+      </el-table-column>
     </el-table>
     <uploadComponent
       :upload-visible="state.uploadVisible"
@@ -58,29 +63,65 @@ export default {
       :servantId="$props.servantId"
       @CLOSE_UPLOAD_DIALOG="() => (state.uploadVisible = false)"
     ></uploadComponent>
+    <releaseComponent
+      :releaseVisible="state.releaseVisible"
+      :serverName="$props.serverName"
+      :releaseList="releaseList"
+      :selectionGrid="selectionGrid"
+      @CLOSE_RELEASE_DIALOG="() => (state.releaseVisible = false)"
+      @RELEASE_SERVER_BY_ID="(val) => handleRelease(val)"
+    >
+    </releaseComponent>
   </div>
 </template>
 <script lang="ts" setup>
-import type { Item } from "@/dto/dto";
-import { reactive } from "vue";
+import { reactive, ref } from "vue";
 import uploadComponent from "./upload.vue";
+import releaseComponent from "./release.vue";
+import api from "@/api/server";
+
 const props = defineProps<{
   gridsList: any[];
   serverName: string;
   servantId: number;
 }>();
 
-const emits = defineEmits(["handleOpen"]);
-
 const state = reactive({
   uploadVisible: false,
+  releaseVisible: false,
 });
-function handleOpen(item: Item) {
-  emits("handleOpen", item);
+const releaseList = ref([]);
+async function releaseServer() {
+  const data = await api.getUploadList({
+    id: props.servantId,
+  });
+  state.releaseVisible = true;
+  releaseList.value = data.Data;
 }
+async function handleRelease(id) {
+  const releaseItem = releaseList.value.find((v) => v.id == id);
+  const servantBaseInfo = props.gridsList[0];
+  console.log("selectionGrid", selectionGrid);
 
+  const body = {
+    serverName: props.serverName,
+    filePath: releaseItem.filePath,
+    serverLanguage: servantBaseInfo.gridServant.language,
+    serverProtocol: servantBaseInfo.gridServant.protocol,
+    execPath: servantBaseInfo.gridServant.execPath,
+    servantGrids: selectionGrid.value.map((v) => ({
+      ip: v.gridNode.ip,
+      port: v.port,
+    })),
+  };
+
+  console.log("body", body);
+
+  const data = await api.releaseServer(body);
+}
+const selectionGrid = ref([]);
 function handleSelectionChange(value) {
-  console.log("value", value);
+  selectionGrid.value = value;
 }
 const gridStatus = {
   "1": "online",

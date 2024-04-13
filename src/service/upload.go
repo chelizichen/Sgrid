@@ -138,7 +138,21 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", nil))
 	})
 	router.POST("/release/server", func(c *gin.Context) {
-
+		var req *protocol.ReleaseServerReq
+		err := c.BindJSON(&req)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "err", err.Error()))
+		}
+		var wg sync.WaitGroup
+		for _, client := range clients {
+			wg.Add(1)
+			go func(client protocol.FileTransferServiceClient) {
+				client.ReleaseServerByPackage(&gin.Context{}, req)
+				wg.Done()
+			}(*client)
+		}
+		wg.Wait()
+		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", nil))
 	})
 	router.GET("/upload/getList", func(c *gin.Context) {
 		id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))

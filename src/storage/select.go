@@ -56,6 +56,8 @@ func QueryGrid(req *dto.PageBasicReq) (resp []vo.Grid) {
 	gs.servant_group_id AS gs_servant_group_id,
 	gs.server_name as gs_server_name,
 	gs.create_time as gs_create_time,
+	gs.exec_path as gs_exec_path,
+	gs.protocol as gs_protocol,
 	gn.id as gn_id,
 	gn.ip as gn_ip,
 	gn.main as gn_main,
@@ -134,7 +136,9 @@ func QueryPackage(queryPackageDto *dto.QueryPackageDto) []vo.VoServantPackage {
 	gsp.*,
 	gs.server_name as gs_server_name,
 	gs.create_time as gs_create_time,
-	gs.language  as gs_language
+	gs.language  as gs_language,
+	gs.exec_path as gs_exec_path,
+	gs.protocol as gs_protocol
 	`).Joins(`
 	left join grid_servant gs on
 	gsp.servant_id = gs.id

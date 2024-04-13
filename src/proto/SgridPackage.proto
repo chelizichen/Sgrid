@@ -13,12 +13,20 @@ message deletePackageReq{
     string filePath = 2;
 }
 
+
+
+message releaseTarget{
+    int32 port = 1;
+    string ip = 2;
+}
+
 message releaseServerReq{
     string serverName = 1;
     string filePath = 2;
-    int32 serverLanguage = 3;
-    int32 serverProtocol = 4;
+    string serverLanguage = 3;
+    string serverProtocol = 4;
     string execPath = 5;
+    repeated releaseTarget servantGrids = 6;
 }
 
 

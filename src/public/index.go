@@ -19,14 +19,14 @@ const (
 )
 
 const (
-	RELEASE_GO = iota
-	RELEASE_NODE
-	RELEASE_JAVA
+	RELEASE_GO   = "go"
+	RELEASE_NODE = "node"
+	RELEASE_JAVA = "java"
 )
 
 const (
-	PROTOCOL_HTTP = iota
-	PROTOCOL_GRPC
+	PROTOCOL_HTTP = "http"
+	PROTOCOL_GRPC = "grpc"
 )
 
 func SgridProduction() bool {

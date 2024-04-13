@@ -9,9 +9,9 @@ const API = {
       timeout: 10 * 60 * 1000
     }) as unknown as BasicResp<any>
   },
-  RestartServer: function (data:any) {
+  releaseServer: function (data:any) {
     return HttpReq({
-      url:'/restartServer',
+      url:'/release/server',
       data,
     }) as unknown as BasicResp<any>
   },
@@ -21,10 +21,11 @@ const API = {
       method:'get'
     }) as unknown as BasicResp<any>
   },
-  GetServerPackageList: function (data:any) {
+  getUploadList: function (params:any) {
     return HttpReq({
-      url:'/getServerPackageList',
-      data
+      url:'/upload/getList',
+      params,
+      method:'get',
     }) as unknown as BasicResp<any>
   },
   CheckServer: function (data:any) {

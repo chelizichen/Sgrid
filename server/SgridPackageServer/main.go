@@ -15,9 +15,7 @@ import (
 	"os/exec"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -49,13 +47,14 @@ const (
 )
 
 var db *sql.DB
-var sc *config.SgridConf
+var globalConf *config.SgridConf
 
-func init() {
+func initSgridConf() *config.SgridConf {
 	sc, err := public.NewConfig()
 	if err != nil {
 		fmt.Println("Error To NewConfig", err)
 	}
+	fmt.Println("sc", sc.Server.Storage)
 	S, err := gorm.Open(mysql.Open(sc.Server.Storage), &gorm.Config{
 		SkipDefaultTransaction: true,
 		NamingStrategy: schema.NamingStrategy{
@@ -67,10 +66,14 @@ func init() {
 		fmt.Println("Error To init gorm", err)
 	}
 	db, err = S.DB()
-	fmt.Println("db.Ping().Error()", db.Ping().Error())
 	if err != nil {
 		fmt.Println("Error To DB", err)
 	}
+	err = db.Ping()
+	if err != nil {
+		fmt.Println("Error To Ping", err)
+	}
+	return sc
 }
 
 func (s *fileTransferServer) StreamFile(stream protocol.FileTransferService_StreamFileServer) error {
@@ -155,43 +158,78 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 	filePath := req.FilePath             // 服务路径
 	serverLanguage := req.ServerLanguage // 服务语言
 	serverName := req.ServerName         // 服务名称
-	protocol := req.ServerProtocol       // 协议
+	serverProtocol := req.ServerProtocol // 协议
 	execFilePath := req.ExecPath         // 执行路径
-
-	startDir := public.Join(Servants, serverName)
-	err = public.CheckDirectoryOrCreate(startDir)
-	if err != nil {
-		fmt.Println("error", err.Error())
+	if len(req.ServantGrids) == 0 {
+		return
 	}
-	var cmd *exec.Cmd
-	if protocol == public.PROTOCOL_GRPC {
-		if serverLanguage == public.RELEASE_GO {
-			startFile := public.Join(Servants, serverName, execFilePath) // 启动文件
-			packageFile := public.Join(App, filePath)
-			public.Tar2Dest(packageFile, startDir)
-			cmd = exec.Command(startFile)
+	servantGrid := req.ServantGrids // 服务
+	// 通过Host过滤拿到IP，然后进行服务启动
+	for _, grid := range servantGrid {
+		GRID := grid
+		fmt.Println("GRID", GRID)
+		if GRID.Ip != globalConf.Server.Host {
+			fmt.Println("server is not equal")
+			return
+		} else {
+			var startFile string
+			var packageFile string
+			startDir := public.Join(Servants, serverName)
+			err = public.CheckDirectoryOrCreate(startDir)
+			if err != nil {
+				fmt.Println("error", err.Error())
+			}
+			var cmd *exec.Cmd
+			if serverProtocol == public.PROTOCOL_GRPC {
+				if serverLanguage == public.RELEASE_GO {
+					startFile = public.Join(Servants, serverName, execFilePath) // 启动文件
+					packageFile = public.Join(App, serverName, filePath)
+					public.Tar2Dest(packageFile, startDir)
+					cmd = exec.Command(startFile)
+				}
+				if serverLanguage == public.RELEASE_NODE {
+					startFile = public.Join(Servants, serverName, execFilePath) // 启动文件
+					packageFile = public.Join(App, serverName, filePath)
+					public.Tar2Dest(packageFile, startDir)
+					cmd = exec.Command("node", startFile)
+				}
+			}
+
+			if serverProtocol == public.PROTOCOL_HTTP {
+				if serverLanguage == public.RELEASE_GO {
+					startFile = public.Join(Servants, serverName, execFilePath) // 启动文件
+					packageFile = public.Join(App, serverName, filePath)
+					public.Tar2Dest(packageFile, startDir)
+					cmd = exec.Command(startFile)
+				}
+				if serverLanguage == public.RELEASE_NODE {
+					startFile = public.Join(Servants, serverName, execFilePath) // 启动文件
+					packageFile = public.Join(App, serverName, filePath)
+					public.Tar2Dest(packageFile, startDir)
+					cmd = exec.Command("node", startFile)
+				}
+			}
+			fmt.Println("startFile", startFile)
+			fmt.Println("packageFile", packageFile)
+			cmd.Env = append(cmd.Env, fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, grid.Port), fmt.Sprintf("%v=%v", public.ENV_PRODUCTION, "SgridPackageServer"))
+			err = cmd.Start()
+			if err != nil {
+				fmt.Println("error", err.Error())
+			}
 		}
 	}
+	return &protocol.BasicResp{
+		Code:    0,
+		Message: "ok",
+	}, nil
 
-	if protocol == public.PROTOCOL_HTTP {
-		if serverLanguage == public.RELEASE_GO {
-			startFile := public.Join(Servants, serverName, execFilePath) // 启动文件
-			packageFile := public.Join(App, filePath)
-			public.Tar2Dest(packageFile, startDir)
-			cmd = exec.Command(startFile)
-		}
-	}
-
-	err = cmd.Start()
-	if err != nil {
-		fmt.Println("error", err.Error())
-	}
-	return nil, status.Errorf(codes.Unimplemented, "method ReleaseServerByPackage not implemented")
 }
 
 func main() {
+	sc := initSgridConf()
+	fmt.Println("sc", sc)
 	port := fmt.Sprintf(":%v", sc.Server.Port)
-
+	globalConf = sc
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
