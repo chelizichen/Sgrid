@@ -137,23 +137,6 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 		})
 		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", nil))
 	})
-	router.POST("/release/server", func(c *gin.Context) {
-		var req *protocol.ReleaseServerReq
-		err := c.BindJSON(&req)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "err", err.Error()))
-		}
-		var wg sync.WaitGroup
-		for _, client := range clients {
-			wg.Add(1)
-			go func(client protocol.FileTransferServiceClient) {
-				client.ReleaseServerByPackage(&gin.Context{}, req)
-				wg.Done()
-			}(*client)
-		}
-		wg.Wait()
-		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", nil))
-	})
 	router.GET("/upload/getList", func(c *gin.Context) {
 		id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 		offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
@@ -192,6 +175,42 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 		wg.Wait()
 		storage.DeletePackage(id)
 		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "params error ! [id] or [serverName]", nil))
+	})
+
+	router.POST("/release/server", func(c *gin.Context) {
+		var req *protocol.ReleaseServerReq
+		err := c.BindJSON(&req)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "err", err.Error()))
+		}
+		var wg sync.WaitGroup
+		for _, client := range clients {
+			wg.Add(1)
+			go func(client protocol.FileTransferServiceClient) {
+				client.ReleaseServerByPackage(&gin.Context{}, req)
+				wg.Done()
+			}(*client)
+		}
+		wg.Wait()
+		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", nil))
+	})
+
+	router.POST("/release/shutdown", func(c *gin.Context) {
+		var req *protocol.ShutdownGridReq
+		err := c.BindJSON(&req)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "err", err.Error()))
+		}
+		var wg sync.WaitGroup
+		for _, client := range clients {
+			wg.Add(1)
+			go func(client protocol.FileTransferServiceClient) {
+				client.ShutdownGrid(&gin.Context{}, req)
+				wg.Done()
+			}(*client)
+		}
+		wg.Wait()
+		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", nil))
 	})
 	ctx.Engine.Use(router.Handlers...)
 }

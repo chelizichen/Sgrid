@@ -42,7 +42,7 @@ export default {
       </el-table-column>
       <el-table-column label="Status">
         <template #default="scoped">
-          <div>{{ gridStatus[scoped.row.status] }}</div>
+          <div>{{ gridStatus[scoped.row.status] || "offline" }}</div>
         </template>
       </el-table-column>
       <el-table-column prop="pid" label="PID"></el-table-column>
@@ -112,6 +112,7 @@ async function handleRelease(id) {
     servantGrids: selectionGrid.value.map((v) => ({
       ip: v.gridNode.ip,
       port: v.port,
+      gridId: v.id,
     })),
   };
 

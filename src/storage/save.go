@@ -20,20 +20,21 @@ func SaveServantGroup(group pojo.ServantGroup) int {
 	return group.Id
 }
 
-func UpdateGrid(group pojo.Grid) int {
-	if group.Id != 0 {
+func UpdateGrid(group *pojo.Grid) int {
+	if group.Id == 0 {
+		c.GORM.Debug().Create(&group)
+		return (group.Id)
+	} else {
 		c.GORM.Debug().
 			Model(&group).
-			Select("content", "title").
+			Select("status", "pid").
 			Where("id = ?", group.Id).
 			Updates(&pojo.Grid{
 				Status: group.Status,
-				Pid:    group.Status,
+				Pid:    group.Pid,
 			})
 		return (group.Id)
 	}
-	c.GORM.Create(&group)
-	return (group.Id)
 }
 
 func DeletePackage(id int) {

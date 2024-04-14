@@ -1,5 +1,7 @@
 package pojo
 
+import "time"
+
 // 节点
 type Node struct {
 	Id         int
@@ -35,12 +37,12 @@ type Servant struct {
 // 服务网格 用于查看所有节点信息
 type Grid struct {
 	Id         int
-	Port       int // 网格端口
-	Status     int // 网格状态
-	Pid        int // 网格Pid
-	UpdateTime int `gorm:"autoCreateTime"`            // 更新时间
-	NodeId     int `gorm:"foreignKey:NodeId"`         // 网格所属节点ID
-	ServantId  int `gorm:"foreignKey:ServantGroupId"` // 网格容纳服务ID
+	Port       int        // 网格端口
+	Status     int        // 网格状态
+	Pid        int        // 网格Pid
+	UpdateTime *time.Time `gorm:"autoCreateTime"`            // 更新时间
+	NodeId     int        `gorm:"foreignKey:NodeId"`         // 网格所属节点ID
+	ServantId  int        `gorm:"foreignKey:ServantGroupId"` // 网格容纳服务ID
 }
 
 // 服务包

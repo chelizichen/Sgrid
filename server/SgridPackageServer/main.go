@@ -8,11 +8,13 @@ package main
 
 import (
 	"Sgrid/src/config"
+	"Sgrid/src/configuration"
 	protocol "Sgrid/src/proto"
 	"Sgrid/src/public"
 	"Sgrid/src/public/pool"
+	"Sgrid/src/storage"
+	"Sgrid/src/storage/pojo"
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"io"
@@ -28,9 +30,6 @@ import (
 	p "github.com/shirou/gopsutil/process"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
-	"gorm.io/gorm/schema"
 )
 
 type WithSgridMonitorConfFunc func(*SgridMonitor)
@@ -44,6 +43,7 @@ type SgridMonitor struct {
 	dataLog    *os.File
 	errLog     *os.File
 	statLog    *os.File
+	gridId     int
 }
 
 func getStat(pid int) *p.Process {
@@ -66,12 +66,23 @@ func (s *SgridMonitor) Report() {
 			id := s.getPid()
 			statInfo := getStat(id)
 			status, _ := statInfo.Status()
+			var gridStat int = 0
 			if status == "Z" { // down 了 进行物理kill
 				s.kill()
+				gridStat = 0
+			} else {
+				gridStat = 1
 			}
 			cpu, _ := statInfo.CPUPercent()
 			threads, _ := statInfo.NumThreads()
-			content := fmt.Sprintf("time:%v |serverName:%v | pid:%v | cpu:%v | thread:%v | status:%v \n", time.Now().Format(time.DateTime), s.serverName, s.getPid(), cpu, threads, status)
+			now := time.Now()
+			content := fmt.Sprintf("time:%v |serverName:%v | pid:%v | cpu:%v | thread:%v | status:%v \n", now.Format(time.DateTime), s.serverName, s.getPid(), cpu, threads, status)
+			storage.UpdateGrid(&pojo.Grid{
+				Id:         s.gridId,
+				Status:     gridStat,
+				Pid:        s.getPid(),
+				UpdateTime: &now,
+			})
 			s.statLog.Write([]byte(content))
 		})
 	}
@@ -177,6 +188,12 @@ func WithMonitorSetCmd(cmd *exec.Cmd) func(*SgridMonitor) {
 	}
 }
 
+func WithMonitorGridID(id int) func(*SgridMonitor) {
+	return func(monitor *SgridMonitor) {
+		monitor.gridId = id
+	}
+}
+
 func NewSgridMonitor(opt ...WithSgridMonitorConfFunc) *SgridMonitor {
 	monitor := &SgridMonitor{
 		next: atomic.Bool{},
@@ -204,9 +221,9 @@ const (
 	Logger   = "logger"
 )
 
-var db *sql.DB
 var globalConf *config.SgridConf
 var globalPool *pool.RoutinePool
+var globalGrids map[int]*SgridMonitor = make(map[int]*SgridMonitor)
 
 func initDir() {
 	public.CheckDirectoryOrCreate(public.Join(Logger))
@@ -220,25 +237,7 @@ func initSgridConf() *config.SgridConf {
 	if err != nil {
 		fmt.Println("Error To NewConfig", err)
 	}
-	fmt.Println("sc", sc.Server.Storage)
-	S, err := gorm.Open(mysql.Open(sc.Server.Storage), &gorm.Config{
-		SkipDefaultTransaction: true,
-		NamingStrategy: schema.NamingStrategy{
-			TablePrefix:   "grid_",
-			SingularTable: true,
-		},
-	})
-	if err != nil {
-		fmt.Println("Error To init gorm", err)
-	}
-	db, err = S.DB()
-	if err != nil {
-		fmt.Println("Error To DB", err)
-	}
-	err = db.Ping()
-	if err != nil {
-		fmt.Println("Error To Ping", err)
-	}
+	configuration.InitStorage(sc)
 	return sc
 }
 
@@ -319,6 +318,25 @@ func (s *fileTransferServer) DeletePackage(ctx context.Context, req *protocol.De
 	}, nil
 }
 
+func (s *fileTransferServer) ShutdownGrid(ctx context.Context, req *protocol.ShutdownGridReq) (res *protocol.BasicResp, err error) {
+	i := req.GetGridId()
+	p := req.GetPid()
+
+	sm := globalGrids[int(i)]
+	if sm.getPid() == int(p) {
+		sm.kill()
+		delete(globalGrids, int(i))
+		return &protocol.BasicResp{
+			Code:    0,
+			Message: "ok",
+		}, nil
+	}
+	return &protocol.BasicResp{
+		Code:    -1,
+		Message: "error",
+	}, nil
+}
+
 func CheckProdConf(devConf, prodConf string) {
 	fmt.Println("CheckProdConf", devConf, prodConf)
 	if !public.IsExist(prodConf) {
@@ -347,6 +365,7 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 	CheckProdConf(path.Join(startDir, public.DEV_CONF_NAME), path.Join(startDir, public.PROD_CONF_NAME))
 	for _, grid := range servantGrid { // 通过Host过滤拿到IP，然后进行服务启动
 		GRID := grid
+		id := GRID.GridId
 		fmt.Println("GRID", GRID)
 		if GRID.Ip != globalConf.Server.Host {
 			fmt.Println("server is not equal")
@@ -384,7 +403,12 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 				WithMonitorInterval(time.Second*5),
 				WithMonitorSetCmd(cmd),
 				WithMonitorServerName(serverName),
+				WithMonitorGridID(int(id)),
 			)
+
+			delete(globalGrids, int(id))
+			globalGrids[int(id)] = monitor
+
 			monitor.PrintLogger()
 			go monitor.Report()
 

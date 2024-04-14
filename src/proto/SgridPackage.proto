@@ -18,6 +18,7 @@ message deletePackageReq{
 message releaseTarget{
     int32 port = 1;
     string ip = 2;
+    int32 gridId = 3;
 }
 
 message releaseServerReq{
@@ -48,10 +49,22 @@ message FileResp {
     int32 code = 2;
 }
 
+message ShutdownGridReq{
+    int32 pid = 1;
+    int32 gridId = 2;
+}
+
 // 文件传输服务定义  
 service FileTransferService {  
     // 双向流式 RPC 用于文件传输  
     rpc StreamFile(stream FileChunk) returns (stream FileResp) {}  
+    
+    // 删除包
     rpc DeletePackage(deletePackageReq)returns(basicResp){}
+    
+    // 发布服务
     rpc ReleaseServerByPackage(releaseServerReq)returns(basicResp){}
+
+    // 关闭指定节点服务
+    rpc ShutdownGrid(ShutdownGridReq)returns(basicResp){}
 }  

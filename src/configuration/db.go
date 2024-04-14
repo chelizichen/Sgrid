@@ -1,7 +1,7 @@
 package configuration
 
 import (
-	"Sgrid/src/http"
+	"Sgrid/src/config"
 	"Sgrid/src/storage/pojo"
 	"context"
 	"fmt"
@@ -15,9 +15,9 @@ import (
 var GORM *gorm.DB
 var RDBContext = context.Background()
 
-func InitStorage(ctx *http.SgridServerCtx) {
+func InitStorage(ctx *config.SgridConf) {
 
-	db, err := gorm.Open(mysql.Open(ctx.StoragePath), &gorm.Config{
+	db, err := gorm.Open(mysql.Open(ctx.Server.Storage), &gorm.Config{
 		SkipDefaultTransaction: true,
 		NamingStrategy: schema.NamingStrategy{
 			TablePrefix:   "grid_",
