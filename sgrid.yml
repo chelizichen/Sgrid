@@ -1,8 +1,6 @@
 server:
-  main: true
   name: SgirdCloud
   host: 47.98.174.10
   port: 12111
-  type: main
   staticPath: static # 静态资源
   storage:  root:123456@tcp(127.0.0.1:3306)/sgrid?charset=utf8&parseTime=true # 存储

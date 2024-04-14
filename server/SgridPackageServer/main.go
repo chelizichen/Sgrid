@@ -38,6 +38,13 @@ const (
 	Logger   = "logger"
 )
 
+const (
+	BEHAVIOR_PULL  = "pull"
+	BEHAVIOR_KILL  = "kill"
+	BEHAVIOR_DOWN  = "down"
+	BEHAVIOR_ALIVE = "alive"
+)
+
 var globalConf *config.SgridConf
 var globalPool *pool.RoutinePool
 var globalGrids map[int]*SgridMonitor = make(map[int]*SgridMonitor)
@@ -141,6 +148,10 @@ func (s *SgridMonitor) Report() {
 				Pid:        s.getPid(),
 				UpdateTime: &now,
 			})
+			storage.SaveStatLog(&pojo.StatLog{
+				GridId: s.gridId,
+				Stat:   BEHAVIOR_ALIVE,
+			})
 			s.statLog.Write([]byte(content))
 		})
 	}
@@ -197,6 +208,11 @@ func (s *SgridMonitor) PrintLogger() {
 
 func (s *SgridMonitor) kill() {
 	s.cmd.Process.Kill()
+	s.cron.Stop()
+	storage.SaveStatLog(&pojo.StatLog{
+		GridId: s.gridId,
+		Stat:   BEHAVIOR_KILL,
+	})
 	s.next.Store(true)
 }
 
@@ -321,6 +337,10 @@ func (s *fileTransferServer) ShutdownGrid(ctx context.Context, req *protocol.Shu
 			p := grid.GetPid()
 			sm := globalGrids[int(i)]
 			if sm.getPid() == int(p) {
+				storage.SaveStatLog(&pojo.StatLog{
+					GridId: int(i),
+					Stat:   BEHAVIOR_DOWN,
+				})
 				sm.kill()
 				delete(globalGrids, int(i))
 			}
@@ -384,6 +404,10 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 			}
 			cmd.Env = append(cmd.Env, fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, grid.Port), fmt.Sprintf("%v=%v", public.ENV_PRODUCTION, startDir))
 			fmt.Println("cmd.Env", cmd.Env)
+			storage.SaveStatLog(&pojo.StatLog{
+				GridId: int(id),
+				Stat:   BEHAVIOR_PULL,
+			})
 			monitor := NewSgridMonitor(
 				WithMonitorInterval(time.Second*5),
 				WithMonitorSetCmd(cmd),

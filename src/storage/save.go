@@ -20,6 +20,10 @@ func SaveServantGroup(group pojo.ServantGroup) int {
 	return group.Id
 }
 
+func SaveStatLog(stat *pojo.StatLog) {
+	c.GORM.Debug().Create(&stat)
+}
+
 func UpdateGrid(group *pojo.Grid) int {
 	if group.Id == 0 {
 		c.GORM.Debug().Create(&group)

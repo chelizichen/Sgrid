@@ -58,7 +58,8 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 			return
 		}
 		defer file.Close()
-		dateTime := strings.ReplaceAll(time.Now().Format(time.DateTime), " ", "")
+		now := time.Now()
+		dateTime := strings.ReplaceAll(now.Format(time.DateTime), " ", "")
 		fileName := fmt.Sprintf("%v_%v_%v.tgz", serverName, dateTime, fileHash)
 		fmt.Println("fileName ", fileName)
 		META := metadata.Pairs("filename", fileName, "serverName", serverName)
@@ -133,7 +134,7 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 			Hash:       fileHash,
 			FilePath:   fileName,
 			Content:    contetnt,
-			CreateTime: dateTime,
+			CreateTime: &now,
 		})
 		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", nil))
 	})
@@ -200,6 +201,7 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 		err := c.BindJSON(&req)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "err", err.Error()))
+			return
 		}
 		var wg sync.WaitGroup
 		for _, client := range clients {
@@ -211,6 +213,14 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 		}
 		wg.Wait()
 		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", nil))
+	})
+
+	router.GET("/statlog/getlist", func(c *gin.Context) {
+		id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
+		offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
+		size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
+		sl := storage.QueryStatLogById(id, offset, size)
+		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", sl))
 	})
 	ctx.Engine.Use(router.Handlers...)
 }

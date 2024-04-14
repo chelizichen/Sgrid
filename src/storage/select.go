@@ -156,3 +156,22 @@ func QueryPackageById(id int) (rsp pojo.ServantPackage) {
 		Find(&rsp)
 	return rsp
 }
+
+func QueryStatLogById(id int, offset int, size int) any {
+	var total int64
+	var rsp []pojo.StatLog
+	c.GORM.
+		Model(rsp).
+		Where(&pojo.StatLog{
+			GridId: id,
+		}).
+		Count(&total).
+		Limit(size).
+		Offset(offset).
+		Order("create_time desc").
+		Find(&rsp)
+	resp := make(map[string]interface{})
+	resp["list"] = rsp
+	resp["total"] = total
+	return resp
+}

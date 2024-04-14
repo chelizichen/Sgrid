@@ -52,12 +52,6 @@ const API = {
       data
     }) as unknown as BasicResp<any>
   },
-  ShutDownServer: function (data, url = '/shutdownServer') {
-    return HttpReq({
-      url,
-      data
-    }) as unknown as BasicResp<any>
-  },
   GetLogger: function (data, url = '/getServerLog') {
     return HttpReq({
       url,
@@ -123,6 +117,19 @@ const API = {
       url:'/main/queryGrid',
       params,
       method:'get',
+    })
+  },
+  shutdownServer:function(data:any){
+    return HttpReq({
+      url:'/release/shutdown',
+      data
+    })
+  },
+  getStatLogList:function(params:any){
+    return HttpReq({
+      url:'/statlog/getlist',
+      method:'get',
+      params
     })
   }
 }

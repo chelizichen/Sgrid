@@ -14,18 +14,30 @@ export default {
             {{ props.serverName }}
           </div>
         </div>
-
         <div class="flex-item">
-          <div class="text">Shutdown</div>
-        </div>
-        <div class="flex-item">
-          <div class="text" @click="releaseServer">Release</div>
+          <el-button
+            class="text"
+            type="text"
+            @click="releaseServer"
+            :disabled="selectionGrid.length == 0"
+            >Release</el-button
+          >
         </div>
         <div class="flex-item">
           <div class="text">Restart</div>
         </div>
+        <div class="flex-item">
+          <el-button
+            class="text"
+            type="text"
+            @click="batchShutdown"
+            :disabled="selectionGrid.length == 0"
+            >BatchShutDown</el-button
+          >
+        </div>
       </div>
     </el-card>
+    <el-divider content-position="left">GridNodes</el-divider>
     <el-table
       :data="props.gridsList"
       style="width: 100%"
@@ -56,6 +68,30 @@ export default {
           <div>{{ scoped.row.gridServant.protocol }}</div>
         </template>
       </el-table-column>
+      <el-table-column label="Shutdown">
+        <template #default="scoped">
+          <div>
+            <div class="text" @click="shutDown(scoped.row)">Shutdown</div>
+          </div>
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-divider content-position="left">
+      <el-button type="text" @click="getLogList($props.gridsList)">StatLog</el-button>
+    </el-divider>
+    <el-table :data="statLogList" style="width: 100%; margin-top: 20px" border>
+      <el-table-column prop="id" label="id" width="180" />
+      <el-table-column prop="createTime" label="createTime" />
+      <el-table-column label="Grid">
+        <template #default="scoped">
+          <el-button type="text"
+            >{{ scoped.row.gridInfo.gridNode.ip }}:{{
+              scoped.row.gridInfo.port
+            }}</el-button
+          >
+        </template>
+      </el-table-column>
+      <el-table-column prop="stat" label="stat" />
     </el-table>
     <uploadComponent
       :upload-visible="state.uploadVisible"
@@ -75,16 +111,50 @@ export default {
   </div>
 </template>
 <script lang="ts" setup>
-import { reactive, ref } from "vue";
+import { reactive, ref, watch } from "vue";
 import uploadComponent from "./upload.vue";
 import releaseComponent from "./release.vue";
+import moment from "moment";
 import api from "@/api/server";
+import { ElMessage } from "element-plus";
 
 const props = defineProps<{
   gridsList: any[];
   serverName: string;
   servantId: number;
 }>();
+
+async function getLogList(gridList) {
+  const resp = await Promise.all(
+    gridList.map(async (v) => {
+      const list = await api.getStatLogList({
+        id: v.id,
+      });
+      const ret = list.Data.list.map((item) => {
+        item.gridInfo = v;
+        return item;
+      });
+      return ret;
+    })
+  );
+  const newArr: any[] = [];
+  resp.forEach((v) => {
+    newArr.push(...v);
+  });
+
+  statLogList.value = newArr.map((v) => {
+    v.createTime = moment(v.createTime).format("YYYY-MM-DD HH:mm:ss");
+    return v;
+  });
+}
+
+const statLogList = ref([]);
+watch(
+  () => props.gridsList,
+  async function (newVal) {
+    getLogList(newVal);
+  }
+);
 
 const state = reactive({
   uploadVisible: false,
@@ -119,6 +189,8 @@ async function handleRelease(id) {
   console.log("body", body);
 
   const data = await api.releaseServer(body);
+  ElMessage.success("success!");
+  state.releaseVisible = false;
 }
 const selectionGrid = ref([]);
 function handleSelectionChange(value) {
@@ -128,6 +200,36 @@ const gridStatus = {
   "1": "online",
   "0": "offline",
 };
+
+function batchShutdown() {
+  console.log("releaseList", selectionGrid.value);
+  const body = {
+    req: selectionGrid.value
+      .filter((v) => v.status != 0 && v.status)
+      .map((v) => ({
+        pid: v.pid,
+        gridId: v.id,
+        host: v.gridNode.ip,
+        port: v.port,
+      })),
+  };
+
+  api.shutdownServer(body);
+  console.log("body", body);
+}
+
+function shutDown(v) {
+  const body = {
+    req: {
+      pid: v.pid,
+      gridId: v.id,
+      host: v.gridNode.ip,
+      port: v.port,
+    },
+  };
+  api.shutdownServer(body);
+  console.log("body", body);
+}
 </script>
 <style scoped>
 .card {

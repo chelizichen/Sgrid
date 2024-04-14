@@ -48,18 +48,25 @@ type Grid struct {
 // 服务包
 type ServantPackage struct {
 	Id         int
-	ServantId  int    // 服务Id
-	Hash       string // Hash值
-	FilePath   string // 文件路径
-	Content    string // 上传内容
-	Version    string // 版本号
-	CreateTime string `gorm:"autoCreateTime"` // 创建时间
-	Status     int    // 文件状态 -1 为已删除不可用
+	ServantId  int        // 服务Id
+	Hash       string     // Hash值
+	FilePath   string     // 文件路径
+	Content    string     // 上传内容
+	Version    string     // 版本号
+	CreateTime *time.Time `gorm:"autoCreateTime"` // 创建时间
+	Status     int        // 文件状态 -1 为已删除不可用
 }
 
 type Properties struct {
 	Id         int
 	Key        string
 	Value      string
-	CreateTime string `gorm:"autoCreateTime"` // 创建时间
+	CreateTime *time.Time `gorm:"autoCreateTime"` // 创建时间
+}
+
+type StatLog struct {
+	Id         int        `json:"id,omitempty"` // id
+	GridId     int        `json:"gridId,omitempty"`
+	Stat       string     `json:"stat,omitempty"`
+	CreateTime *time.Time `gorm:"autoCreateTime" json:"createTime,omitempty"`
 }
