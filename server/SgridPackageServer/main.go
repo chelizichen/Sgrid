@@ -140,6 +140,16 @@ func (s *SgridMonitor) Report() {
 			}
 			cpu, _ := statInfo.CPUPercent()
 			threads, _ := statInfo.NumThreads()
+			name, _ := statInfo.Name()
+			isRuning, _ := statInfo.IsRunning()
+			running := "not run"
+			if isRuning {
+				running = "running"
+			}
+			mis, _ := statInfo.MemoryInfo()
+			stack := mis.Stack
+			MemoryData := mis.Data
+
 			now := time.Now()
 			content := fmt.Sprintf("time:%v |serverName:%v | pid:%v | cpu:%v | thread:%v | status:%v \n", now.Format(time.DateTime), s.serverName, s.getPid(), cpu, threads, status)
 			storage.UpdateGrid(&pojo.Grid{
@@ -149,8 +159,15 @@ func (s *SgridMonitor) Report() {
 				UpdateTime: &now,
 			})
 			storage.SaveStatLog(&pojo.StatLog{
-				GridId: s.gridId,
-				Stat:   BEHAVIOR_ALIVE,
+				GridId:      s.gridId,
+				Stat:        BEHAVIOR_ALIVE,
+				Pid:         s.getPid(),
+				CPU:         cpu,
+				Threads:     threads,
+				Name:        name,
+				IsRunning:   running,
+				MemoryStack: stack,
+				MemoryData:  MemoryData,
 			})
 			s.statLog.Write([]byte(content))
 		})
@@ -212,6 +229,7 @@ func (s *SgridMonitor) kill() {
 	storage.SaveStatLog(&pojo.StatLog{
 		GridId: s.gridId,
 		Stat:   BEHAVIOR_KILL,
+		Pid:    s.getPid(),
 	})
 	s.next.Store(true)
 }
@@ -340,6 +358,7 @@ func (s *fileTransferServer) ShutdownGrid(ctx context.Context, req *protocol.Shu
 				storage.SaveStatLog(&pojo.StatLog{
 					GridId: int(i),
 					Stat:   BEHAVIOR_DOWN,
+					Pid:    sm.getPid(),
 				})
 				sm.kill()
 				delete(globalGrids, int(i))
@@ -404,10 +423,7 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 			}
 			cmd.Env = append(cmd.Env, fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, grid.Port), fmt.Sprintf("%v=%v", public.ENV_PRODUCTION, startDir))
 			fmt.Println("cmd.Env", cmd.Env)
-			storage.SaveStatLog(&pojo.StatLog{
-				GridId: int(id),
-				Stat:   BEHAVIOR_PULL,
-			})
+
 			monitor := NewSgridMonitor(
 				WithMonitorInterval(time.Second*5),
 				WithMonitorSetCmd(cmd),
@@ -423,6 +439,11 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 
 			go func() {
 				err = cmd.Start()
+				storage.SaveStatLog(&pojo.StatLog{
+					GridId: int(id),
+					Stat:   BEHAVIOR_PULL,
+					Pid:    monitor.getPid(),
+				})
 				if err != nil {
 					fmt.Println("error", err.Error())
 				}

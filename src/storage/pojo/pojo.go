@@ -65,8 +65,15 @@ type Properties struct {
 }
 
 type StatLog struct {
-	Id         int        `json:"id,omitempty"` // id
-	GridId     int        `json:"gridId,omitempty"`
-	Stat       string     `json:"stat,omitempty"`
-	CreateTime *time.Time `gorm:"autoCreateTime" json:"createTime,omitempty"`
+	Id          int        `json:"id,omitempty"` // id
+	GridId      int        `json:"gridId,omitempty"`
+	Stat        string     `json:"stat,omitempty"`
+	Pid         int        `json:"pid,omitempty"`
+	CreateTime  *time.Time `gorm:"autoCreateTime" json:"createTime,omitempty"`
+	CPU         float64    `json:"cpu,omitempty"`
+	Threads     int32      `json:"threads,omitempty"`
+	Name        string     `json:"name,omitempty"`
+	IsRunning   string     `json:"isRunning,omitempty"`
+	MemoryStack uint64     `json:"memoryStack,omitempty"`
+	MemoryData  uint64     `json:"memoryData,omitempty"`
 }

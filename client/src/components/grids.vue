@@ -37,7 +37,11 @@ export default {
         </div>
       </div>
     </el-card>
-    <el-divider content-position="left">GridNodes</el-divider>
+    <el-divider content-position="left">
+      <el-button type="text" @click="getLogList($props.gridsList)"
+        ><el-icon><Loading /></el-icon> Grids
+      </el-button></el-divider
+    >
     <el-table
       :data="props.gridsList"
       style="width: 100%"
@@ -77,21 +81,24 @@ export default {
       </el-table-column>
     </el-table>
     <el-divider content-position="left">
-      <el-button type="text" @click="getLogList($props.gridsList)">StatLog</el-button>
+      <el-button type="text" @click="getLogList($props.gridsList)"
+        ><el-icon><Loading /></el-icon> StatLog
+      </el-button>
     </el-divider>
     <el-table :data="statLogList" style="width: 100%; margin-top: 20px" border>
       <el-table-column prop="id" label="id" width="180" />
+      <el-table-column prop="name" label="name" width="180" />
+      <el-table-column prop="threads" label="threads" width="180" />
+      <el-table-column prop="isRunning" label="isRunning" width="180" />
       <el-table-column prop="createTime" label="createTime" />
       <el-table-column label="Grid">
         <template #default="scoped">
-          <el-button type="text"
-            >{{ scoped.row.gridInfo.gridNode.ip }}:{{
-              scoped.row.gridInfo.port
-            }}</el-button
-          >
+          <div>{{ scoped.row.gridInfo.gridNode.ip }}:{{ scoped.row.gridInfo.port }}</div>
         </template>
       </el-table-column>
       <el-table-column prop="stat" label="stat" />
+
+      <el-table-column prop="pid" label="pid"> </el-table-column>
     </el-table>
     <uploadComponent
       :upload-visible="state.uploadVisible"
