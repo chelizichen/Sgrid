@@ -50,8 +50,14 @@ message FileResp {
 }
 
 message ShutdownGridReq{
-    int32 pid = 1;
-    int32 gridId = 2;
+    repeated ShutdownGridInfo req = 1;
+}
+
+message ShutdownGridInfo{
+    int32 pid = 1;  // PID
+    int32 gridId = 2; // 网格名称
+    string host = 3; // 主机
+    int32 port = 4; // 端口
 }
 
 // 文件传输服务定义  

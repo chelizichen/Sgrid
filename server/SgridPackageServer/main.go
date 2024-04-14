@@ -32,6 +32,35 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+const (
+	App      = "application"
+	Servants = "servants"
+	Logger   = "logger"
+)
+
+var globalConf *config.SgridConf
+var globalPool *pool.RoutinePool
+var globalGrids map[int]*SgridMonitor = make(map[int]*SgridMonitor)
+
+func getStat(pid int) *p.Process {
+	process, err := p.NewProcess(int32(pid))
+	if err != nil {
+		fmt.Println("Error creating new process:", err)
+		return nil
+	}
+	return process
+}
+
+func CheckProdConf(devConf, prodConf string) {
+	fmt.Println("CheckProdConf", devConf, prodConf)
+	if !public.IsExist(prodConf) {
+		err := public.CopyFile(devConf, prodConf)
+		if err != nil {
+			fmt.Println("CheckProdConf", err.Error())
+		}
+	}
+}
+
 type WithSgridMonitorConfFunc func(*SgridMonitor)
 
 type SgridMonitor struct {
@@ -46,13 +75,42 @@ type SgridMonitor struct {
 	gridId     int
 }
 
-func getStat(pid int) *p.Process {
-	process, err := p.NewProcess(int32(pid))
-	if err != nil {
-		fmt.Println("Error creating new process:", err)
-		return nil
+func WithMonitorInterval(interval time.Duration) func(*SgridMonitor) {
+	return func(monitor *SgridMonitor) {
+		if interval.Seconds() < 5 { // min 5s
+			interval = time.Second * 5
+		}
+		monitor.interval = interval
 	}
-	return process
+}
+
+func WithMonitorSetCmd(cmd *exec.Cmd) func(*SgridMonitor) {
+	return func(monitor *SgridMonitor) {
+		monitor.cmd = cmd
+	}
+}
+
+func WithMonitorGridID(id int) func(*SgridMonitor) {
+	return func(monitor *SgridMonitor) {
+		monitor.gridId = id
+	}
+}
+
+func WithMonitorServerName(serverName string) func(*SgridMonitor) {
+	return func(monitor *SgridMonitor) {
+		monitor.serverName = serverName
+	}
+}
+
+func NewSgridMonitor(opt ...WithSgridMonitorConfFunc) *SgridMonitor {
+	monitor := &SgridMonitor{
+		next: atomic.Bool{},
+	}
+	for _, v := range opt {
+		fn := v
+		fn(monitor)
+	}
+	return monitor
 }
 
 func (s *SgridMonitor) Report() {
@@ -173,72 +231,8 @@ func (s *SgridMonitor) getFile() {
 	s.statLog = spf
 }
 
-func WithMonitorInterval(interval time.Duration) func(*SgridMonitor) {
-	return func(monitor *SgridMonitor) {
-		if interval.Seconds() < 5 { // min 5s
-			interval = time.Second * 5
-		}
-		monitor.interval = interval
-	}
-}
-
-func WithMonitorSetCmd(cmd *exec.Cmd) func(*SgridMonitor) {
-	return func(monitor *SgridMonitor) {
-		monitor.cmd = cmd
-	}
-}
-
-func WithMonitorGridID(id int) func(*SgridMonitor) {
-	return func(monitor *SgridMonitor) {
-		monitor.gridId = id
-	}
-}
-
-func NewSgridMonitor(opt ...WithSgridMonitorConfFunc) *SgridMonitor {
-	monitor := &SgridMonitor{
-		next: atomic.Bool{},
-	}
-	for _, v := range opt {
-		fn := v
-		fn(monitor)
-	}
-	return monitor
-}
-
-func WithMonitorServerName(serverName string) func(*SgridMonitor) {
-	return func(monitor *SgridMonitor) {
-		monitor.serverName = serverName
-	}
-}
-
 type fileTransferServer struct {
 	protocol.UnimplementedFileTransferServiceServer
-}
-
-const (
-	App      = "application"
-	Servants = "servants"
-	Logger   = "logger"
-)
-
-var globalConf *config.SgridConf
-var globalPool *pool.RoutinePool
-var globalGrids map[int]*SgridMonitor = make(map[int]*SgridMonitor)
-
-func initDir() {
-	public.CheckDirectoryOrCreate(public.Join(Logger))
-	public.CheckDirectoryOrCreate(public.Join(App))
-	public.CheckDirectoryOrCreate(public.Join(Servants))
-}
-
-func initSgridConf() *config.SgridConf {
-	initDir()
-	sc, err := public.NewConfig()
-	if err != nil {
-		fmt.Println("Error To NewConfig", err)
-	}
-	configuration.InitStorage(sc)
-	return sc
 }
 
 func (s *fileTransferServer) StreamFile(stream protocol.FileTransferService_StreamFileServer) error {
@@ -319,32 +313,23 @@ func (s *fileTransferServer) DeletePackage(ctx context.Context, req *protocol.De
 }
 
 func (s *fileTransferServer) ShutdownGrid(ctx context.Context, req *protocol.ShutdownGridReq) (res *protocol.BasicResp, err error) {
-	i := req.GetGridId()
-	p := req.GetPid()
-
-	sm := globalGrids[int(i)]
-	if sm.getPid() == int(p) {
-		sm.kill()
-		delete(globalGrids, int(i))
-		return &protocol.BasicResp{
-			Code:    0,
-			Message: "ok",
-		}, nil
-	}
-	return &protocol.BasicResp{
-		Code:    -1,
-		Message: "error",
-	}, nil
-}
-
-func CheckProdConf(devConf, prodConf string) {
-	fmt.Println("CheckProdConf", devConf, prodConf)
-	if !public.IsExist(prodConf) {
-		err := public.CopyFile(devConf, prodConf)
-		if err != nil {
-			fmt.Println("CheckProdConf", err.Error())
+	for _, _grid := range req.GetReq() {
+		grid := _grid
+		h := grid.GetHost()
+		if globalConf.Server.Host == h {
+			i := grid.GetGridId()
+			p := grid.GetPid()
+			sm := globalGrids[int(i)]
+			if sm.getPid() == int(p) {
+				sm.kill()
+				delete(globalGrids, int(i))
+			}
 		}
 	}
+	return &protocol.BasicResp{
+		Code:    0,
+		Message: "ok",
+	}, nil
 }
 
 // 发布 -> 上报给主控
@@ -431,6 +416,21 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 		Message: "ok",
 	}, nil
 
+}
+func initDir() {
+	public.CheckDirectoryOrCreate(public.Join(Logger))
+	public.CheckDirectoryOrCreate(public.Join(App))
+	public.CheckDirectoryOrCreate(public.Join(Servants))
+}
+
+func initSgridConf() *config.SgridConf {
+	initDir()
+	sc, err := public.NewConfig()
+	if err != nil {
+		fmt.Println("Error To NewConfig", err)
+	}
+	configuration.InitStorage(sc)
+	return sc
 }
 
 func main() {
