@@ -7,10 +7,15 @@
 package clientgrpc
 
 import (
+	protocol "Sgrid/src/proto"
+	"context"
 	"fmt"
 	"net/url"
+	"reflect"
+	"sync"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type WithSgridGrpcOptFunc[T any] func(*SgridGrpcClient[T])
@@ -64,6 +69,31 @@ type SgridGrpcClientGroup[T any] struct {
 	address   []string
 	grpcOpt   []grpc.DialOption
 	newClient NewClient[T]
+	context   *context.Context
+}
+
+func (s *SgridGrpcClientGroup[T]) ReqRandom() {
+	for _, v := range s.clients {
+		go func(client SgridGrpcClient[T]) {
+			client.GetClient()
+		}(*v)
+	}
+}
+
+func (s *SgridGrpcClientGroup[T]) ReqAll(methodName string, req interface{}) []reflect.Value {
+	var wg sync.WaitGroup
+	var invokeResponse []reflect.Value
+	for _, v := range s.clients {
+		wg.Add(1)
+		go func(client SgridGrpcClient[T]) {
+			fn := reflect.ValueOf(client.GetClient()).MethodByName(methodName).Elem()
+			resp := fn.Call([]reflect.Value{reflect.ValueOf(s.context), reflect.ValueOf(req)})
+			invokeResponse = append(invokeResponse, resp...)
+			wg.Done()
+		}(*v)
+	}
+	wg.Wait()
+	return invokeResponse
 }
 
 func NewSgridGrpcClientGroup[T any](opts ...WithSgridGrpcGroupOptFunc[T]) *SgridGrpcClientGroup[T] {
@@ -97,7 +127,7 @@ func NewSgridGrpcClientGroup[T any](opts ...WithSgridGrpcGroupOptFunc[T]) *Sgrid
 
 type NewClient[T any] func(cc grpc.ClientConnInterface) T
 
-func WithSgridGrpcNewClientFn[T any](fn NewClient[T]) WithSgridGrpcGroupOptFunc[T] {
+func WithSgridGrpcClientGroupNewFn[T any](fn NewClient[T]) WithSgridGrpcGroupOptFunc[T] {
 	return func(c *SgridGrpcClientGroup[T]) {
 		c.newClient = fn
 	}
@@ -110,14 +140,33 @@ func WithSgridGrpcClientGroupAddress[T any](address []string) WithSgridGrpcGroup
 	}
 }
 
-func WithSgridGrpcClientNameSpace[T any](nameSpace string) WithSgridGrpcGroupOptFunc[T] {
+func WithSgridGrpcClientGroupNameSpace[T any](nameSpace string) WithSgridGrpcGroupOptFunc[T] {
 	return func(c *SgridGrpcClientGroup[T]) {
 		c.nameSpace = nameSpace
 	}
 }
 
-func WithSgridGrpcConnOpt[T any](opts ...grpc.DialOption) WithSgridGrpcGroupOptFunc[T] {
+func WithSgridGrpcClientGroupNewConnOpt[T any](opts ...grpc.DialOption) WithSgridGrpcGroupOptFunc[T] {
 	return func(c *SgridGrpcClientGroup[T]) {
 		c.grpcOpt = opts
 	}
+}
+
+func WithSgridGrpcClientGroupCtx[T any](ctx *context.Context) WithSgridGrpcGroupOptFunc[T] {
+	return func(c *SgridGrpcClientGroup[T]) {
+		c.context = ctx
+	}
+}
+
+// todo SampleInvoke
+// reflect to invoke
+func sampleInvoke() {
+	addresses := []string{"localhost:14938"}
+	g := NewSgridGrpcClientGroup[protocol.FileTransferServiceClient](
+		WithSgridGrpcClientGroupNewFn(protocol.NewFileTransferServiceClient),           // 代理
+		WithSgridGrpcClientGroupAddress[protocol.FileTransferServiceClient](addresses), // 请求
+		WithSgridGrpcClientGroupNewConnOpt[protocol.FileTransferServiceClient](grpc.WithTransportCredentials(insecure.NewCredentials())),
+		WithSgridGrpcClientGroupNameSpace[protocol.FileTransferServiceClient]("server.SgridPackageServer"),
+	)
+	g.ReqAll("DeletePackage", &protocol.DeletePackageReq{})
 }
