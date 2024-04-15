@@ -86,8 +86,8 @@ func (s *SgridGrpcClientGroup[T]) ReqAll(methodName string, req interface{}) []r
 	for _, v := range s.clients {
 		wg.Add(1)
 		go func(client SgridGrpcClient[T]) {
-			fn := reflect.ValueOf(client.GetClient()).MethodByName(methodName).Elem()
-			resp := fn.Call([]reflect.Value{reflect.ValueOf(s.context), reflect.ValueOf(req)})
+			fn := reflect.ValueOf(client.GetClient()).MethodByName(methodName)
+			resp := fn.Call([]reflect.Value{reflect.ValueOf(*s.context), reflect.ValueOf(req)})
 			invokeResponse = append(invokeResponse, resp...)
 			wg.Done()
 		}(*v)
@@ -160,13 +160,18 @@ func WithSgridGrpcClientGroupCtx[T any](ctx *context.Context) WithSgridGrpcGroup
 
 // todo SampleInvoke
 // reflect to invoke
-func sampleInvoke() {
+func SampleInvoke() {
 	addresses := []string{"localhost:14938"}
+	ctx := context.Background()
 	g := NewSgridGrpcClientGroup[protocol.FileTransferServiceClient](
 		WithSgridGrpcClientGroupNewFn(protocol.NewFileTransferServiceClient),           // 代理
 		WithSgridGrpcClientGroupAddress[protocol.FileTransferServiceClient](addresses), // 请求
 		WithSgridGrpcClientGroupNewConnOpt[protocol.FileTransferServiceClient](grpc.WithTransportCredentials(insecure.NewCredentials())),
 		WithSgridGrpcClientGroupNameSpace[protocol.FileTransferServiceClient]("server.SgridPackageServer"),
+		WithSgridGrpcClientGroupCtx[protocol.FileTransferServiceClient](&ctx),
 	)
-	g.ReqAll("DeletePackage", &protocol.DeletePackageReq{})
+	all := g.ReqAll("DeletePackage", &protocol.DeletePackageReq{})
+	for i, v := range all {
+		fmt.Println(i, v)
+	}
 }

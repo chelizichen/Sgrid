@@ -330,6 +330,13 @@ func (s *fileTransferServer) StreamFile(stream protocol.FileTransferService_Stre
 }
 
 func (s *fileTransferServer) DeletePackage(ctx context.Context, req *protocol.DeletePackageReq) (res *protocol.BasicResp, err error) {
+	if len(req.FilePath) == 0 || len(req.ServerName) == 0 {
+		fmt.Println("invoke Error", req)
+		return &protocol.BasicResp{
+			Code:    -1,
+			Message: "invoke Error ",
+		}, err
+	}
 	f := req.FilePath
 	svr := req.ServerName
 	t := public.Join(svr, f)
