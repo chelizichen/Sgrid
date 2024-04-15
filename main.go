@@ -15,7 +15,7 @@ func main() {
 		h.WithCors(),
 	)
 	ctx.Use(service.InitService)
-	ctx.Use(service.UploadService)
+	ctx.Use(service.PackageService)
 	ctx.Use(service.Registry)
 	h.NewSgridServer(ctx, func(port string) {
 		ctx.Engine.Run(port)

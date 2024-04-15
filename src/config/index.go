@@ -10,14 +10,14 @@ import (
 
 type SgridConf struct {
 	Server struct {
-		Name       string                 `yaml:"name" `
-		Host       string                 `yaml:"host"`
-		Port       int                    `yaml:"port" `
-		Type       string                 `yaml:"type"`
-		StaticPath string                 `yaml:"staticPath" `
+		Name       string                 `yaml:"name" `       // ServerName
+		Host       string                 `yaml:"host"`        // Host
+		Port       int                    `yaml:"port" `       // Port
+		Protocol   string                 `yaml:"protoccol"`   // Protocol Http Grpc
+		Language   string                 `yaml:"language"`    // Language Java Node Go
+		StaticPath string                 `yaml:"staticPath" ` //
 		Storage    string                 `yaml:"storage" `
-		Main       bool                   `yaml:"main" `
-		MapConf    map[string]interface{} `yaml:"mapConf"`
+		MapConf    map[string]interface{} `yaml:"mapConf"` // define Conf
 	} `yaml:"server"`
 }
 

@@ -3,6 +3,7 @@ package service
 import (
 	handlers "Sgrid/src/http"
 	protocol "Sgrid/src/proto"
+	clientgrpc "Sgrid/src/public/client_grpc"
 	"Sgrid/src/storage"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
@@ -23,21 +24,23 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func UploadService(ctx *handlers.SgridServerCtx) {
+func PackageService(ctx *handlers.SgridServerCtx) {
 	router := ctx.Engine.Group(strings.ToLower(ctx.Name))
 	// addresses := []string{"http://47.98.174.10:24283", "http://150.158.120.244/:24283"}
 	addresses := []string{"localhost:14938"}
-	clients := []*protocol.FileTransferServiceClient{}
+	clients := []*clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]{}
 	for _, v := range addresses {
-		fmt.Println("111", v)
 		add := v
 		conn, err := grpc.Dial(add, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			log.Fatalf("无法连接: %v", err)
 		}
 		// defer conn.Close() // 移动到循环内部
-		client := protocol.NewFileTransferServiceClient(conn)
-		clients = append(clients, &client)
+		client := clientgrpc.NewSgridClient[protocol.FileTransferServiceClient](
+			protocol.NewFileTransferServiceClient(conn),
+			clientgrpc.WithSgridGrpcClientAddress[protocol.FileTransferServiceClient](add),
+		)
+		clients = append(clients, client)
 	}
 	router.POST("/upload/uploadServer", func(c *gin.Context) {
 		// 从请求中获取服务器名、文件哈希和文件
@@ -67,9 +70,9 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 		var wg sync.WaitGroup
 		for _, client := range clients {
 			wg.Add(1)
-			go func(client protocol.FileTransferServiceClient) {
+			go func(client clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]) {
 				// 设置 gRPC 客户端
-				stream, err := client.StreamFile(ctx)
+				stream, err := client.GetClient().StreamFile(ctx)
 				if err != nil {
 					fmt.Println("err.Error()", err.Error())
 					c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "StreamFile error"+string(err.Error()), nil))
@@ -166,8 +169,8 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 		var wg sync.WaitGroup
 		for _, client := range clients {
 			wg.Add(1)
-			go func(client protocol.FileTransferServiceClient) {
-				client.DeletePackage(&gin.Context{}, &protocol.DeletePackageReq{
+			go func(client clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]) {
+				client.GetClient().DeletePackage(&gin.Context{}, &protocol.DeletePackageReq{
 					FilePath: sp.FilePath,
 				})
 				wg.Done()
@@ -187,8 +190,8 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 		var wg sync.WaitGroup
 		for _, client := range clients {
 			wg.Add(1)
-			go func(client protocol.FileTransferServiceClient) {
-				client.ReleaseServerByPackage(&gin.Context{}, req)
+			go func(client clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]) {
+				client.GetClient().ReleaseServerByPackage(&gin.Context{}, req)
 				wg.Done()
 			}(*client)
 		}
@@ -206,8 +209,8 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 		var wg sync.WaitGroup
 		for _, client := range clients {
 			wg.Add(1)
-			go func(client protocol.FileTransferServiceClient) {
-				client.ShutdownGrid(&gin.Context{}, req)
+			go func(client clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]) {
+				client.GetClient().ShutdownGrid(&gin.Context{}, req)
 				wg.Done()
 			}(*client)
 		}
@@ -221,6 +224,19 @@ func UploadService(ctx *handlers.SgridServerCtx) {
 		size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
 		sl := storage.QueryStatLogById(id, offset, size)
 		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", sl))
+	})
+
+	router.GET("/statlog/getLogFileList", func(c *gin.Context) {
+		host := c.Query("host")
+		for _, client := range clients {
+			go func(client clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]) {
+				u, _ := client.ParseHost()
+				if u.Host == host {
+					client.GetClient().DeletePackage(&gin.Context{}, &protocol.DeletePackageReq{})
+				}
+
+			}(*client)
+		}
 	})
 	ctx.Engine.Use(router.Handlers...)
 }
