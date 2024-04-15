@@ -96,7 +96,8 @@ func (s *SgridGrpcClientGroup[T]) ReqAll(methodName string, req interface{}) []r
 	return invokeResponse
 }
 
-func NewSgridGrpcClientGroup[T any](opts ...WithSgridGrpcGroupOptFunc[T]) *SgridGrpcClientGroup[T] {
+func NewSgridGrpcClientGroup[T any](ctx context.Context, clientConn NewClient[T], opts ...WithSgridGrpcGroupOptFunc[T]) *SgridGrpcClientGroup[T] {
+	opts = append(opts, withSgridGrpcClientGroupNewFn[T](clientConn), withSgridGrpcClientGroupCtx[T](&ctx))
 	s := &SgridGrpcClientGroup[T]{}
 	for _, fn := range opts {
 		fn(s)
@@ -127,7 +128,7 @@ func NewSgridGrpcClientGroup[T any](opts ...WithSgridGrpcGroupOptFunc[T]) *Sgrid
 
 type NewClient[T any] func(cc grpc.ClientConnInterface) T
 
-func WithSgridGrpcClientGroupNewFn[T any](fn NewClient[T]) WithSgridGrpcGroupOptFunc[T] {
+func withSgridGrpcClientGroupNewFn[T any](fn NewClient[T]) WithSgridGrpcGroupOptFunc[T] {
 	return func(c *SgridGrpcClientGroup[T]) {
 		c.newClient = fn
 	}
@@ -152,7 +153,7 @@ func WithSgridGrpcClientGroupNewConnOpt[T any](opts ...grpc.DialOption) WithSgri
 	}
 }
 
-func WithSgridGrpcClientGroupCtx[T any](ctx *context.Context) WithSgridGrpcGroupOptFunc[T] {
+func withSgridGrpcClientGroupCtx[T any](ctx *context.Context) WithSgridGrpcGroupOptFunc[T] {
 	return func(c *SgridGrpcClientGroup[T]) {
 		c.context = ctx
 	}
@@ -164,11 +165,11 @@ func SampleInvoke() {
 	addresses := []string{"localhost:14938"}
 	ctx := context.Background()
 	g := NewSgridGrpcClientGroup[protocol.FileTransferServiceClient](
-		WithSgridGrpcClientGroupNewFn(protocol.NewFileTransferServiceClient),           // 代理
+		ctx,
+		protocol.NewFileTransferServiceClient,
 		WithSgridGrpcClientGroupAddress[protocol.FileTransferServiceClient](addresses), // 请求
 		WithSgridGrpcClientGroupNewConnOpt[protocol.FileTransferServiceClient](grpc.WithTransportCredentials(insecure.NewCredentials())),
 		WithSgridGrpcClientGroupNameSpace[protocol.FileTransferServiceClient]("server.SgridPackageServer"),
-		WithSgridGrpcClientGroupCtx[protocol.FileTransferServiceClient](&ctx),
 	)
 	all := g.ReqAll("DeletePackage", &protocol.DeletePackageReq{})
 	for i, v := range all {
