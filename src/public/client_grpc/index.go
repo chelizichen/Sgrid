@@ -176,3 +176,12 @@ func SampleInvoke() {
 		fmt.Println(i, v)
 	}
 }
+
+func ProxyInvoke(g *SgridGrpcClientGroup[any], methodName string, args interface{}) interface{} {
+	v := g.ReqAll(methodName, args)
+	resu := make([]interface{}, len(g.address))
+	for index, resp := range v {
+		resu[index] = resp
+	}
+	return resu
+}
