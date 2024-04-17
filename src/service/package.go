@@ -228,15 +228,66 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 
 	router.GET("/statlog/getLogFileList", func(c *gin.Context) {
 		host := c.Query("host")
+		serverName := c.Query("serverName")
+		var wg sync.WaitGroup
+		var resp *protocol.GetLogFileByHostResp
 		for _, client := range clients {
+			wg.Add(1)
 			go func(client clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]) {
 				u, _ := client.ParseHost()
-				if u.Host == host {
-					client.GetClient().DeletePackage(&gin.Context{}, &protocol.DeletePackageReq{})
+				fmt.Println("u", u.Host)
+				fmt.Println("host", host)
+				// if u.Host == host {
+				r, err := client.GetClient().GetLogFileByHost(&gin.Context{}, &protocol.GetLogFileByHostReq{
+					Host:       u.Host,
+					ServerName: serverName,
+				})
+				if err != nil {
+					fmt.Println("error", err.Error())
 				}
+				fmt.Println("r", r)
+				resp = r
+				wg.Done()
+				// return
+				// }
+				// wg.Done()
 
 			}(*client)
 		}
+		wg.Wait()
+		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", resp.FileName))
+	})
+
+	router.POST("/statlog/getLog", func(c *gin.Context) {
+		var req *protocol.GetLogByFileReq
+		var resp *protocol.GetLogByFileResp
+		c.BindJSON(req)
+		var wg sync.WaitGroup
+		for _, client := range clients {
+			wg.Add(1)
+			go func(client clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]) {
+				u, _ := client.ParseHost()
+				// if u.Host == host {
+				r, err := client.GetClient().GetLogByFile(&gin.Context{}, &protocol.GetLogByFileReq{
+					Host:       u.Host,
+					ServerName: req.ServerName,
+					Pattern:    req.Pattern,
+					Rows:       req.Rows,
+					LogFile:    req.LogFile,
+				})
+				if err != nil {
+					fmt.Println("error", err.Error())
+				}
+				resp = r
+				wg.Done()
+				// return
+				// }
+				// wg.Done()
+
+			}(*client)
+		}
+		wg.Wait()
+		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", resp.Data))
 	})
 	ctx.Engine.Use(router.Handlers...)
 }

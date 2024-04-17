@@ -50,6 +50,8 @@ var globalConf *config.SgridConf
 var globalPool *pool.RoutinePool
 var globalGrids map[int]*SgridMonitor = make(map[int]*SgridMonitor)
 
+var SgridPackageInstance = &SgridPackage{}
+
 func getStat(pid int) *p.Process {
 	process, err := p.NewProcess(int32(pid))
 	if err != nil {
@@ -241,14 +243,14 @@ func (s *SgridMonitor) getPid() int {
 
 func (s *SgridMonitor) getFile() {
 	today := time.Now().Format(time.DateOnly)
-	directoryPath := public.Join(Logger, s.serverName)
+	directoryPath := SgridPackageInstance.JoinPath(Logger, s.serverName)
 	err := public.CheckDirectoryOrCreate(directoryPath)
 	if err != nil {
 		fmt.Println("CheckDirectoryOrCreate Error", err.Error())
 	}
-	logDataPath := public.Join(Logger, s.serverName, fmt.Sprintf("log-data-%v.log", today))
-	logErrorPath := public.Join(Logger, s.serverName, fmt.Sprintf("log-error-%v.log", today))
-	logStatPath := public.Join(Logger, s.serverName, fmt.Sprintf("log-stat-%v.log", today))
+	logDataPath := SgridPackageInstance.JoinPath(Logger, s.serverName, fmt.Sprintf("log-data-%v.log", today))
+	logErrorPath := SgridPackageInstance.JoinPath(Logger, s.serverName, fmt.Sprintf("log-error-%v.log", today))
+	logStatPath := SgridPackageInstance.JoinPath(Logger, s.serverName, fmt.Sprintf("log-stat-%v.log", today))
 	opf, err := os.OpenFile(logDataPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		fmt.Println("OpenFile Error", logDataPath)
@@ -279,12 +281,12 @@ func (s *fileTransferServer) StreamFile(stream protocol.FileTransferService_Stre
 	// 获取文件名和哈希值
 	filename := md.Get("filename")[0]
 	servername := md.Get("serverName")[0]
-	directoryPath := public.Join(App, servername)
+	directoryPath := SgridPackageInstance.JoinPath(App, servername)
 	err := public.CheckDirectoryOrCreate(directoryPath)
 	if err != nil {
 		fmt.Println("check directory error")
 	}
-	targetFilePath := public.Join(App, servername, filename)
+	targetFilePath := SgridPackageInstance.JoinPath(App, servername, filename)
 	file, err := os.Create(targetFilePath)
 	if err != nil {
 		return err
@@ -384,17 +386,17 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 	if len(req.ServantGrids) == 0 {
 		return
 	}
-	filePath := req.FilePath                              // 服务路径
-	serverLanguage := req.ServerLanguage                  // 服务语言
-	serverName := req.ServerName                          // 服务名称
-	serverProtocol := req.ServerProtocol                  // 协议
-	execFilePath := req.ExecPath                          // 执行路径
-	startDir := public.Join(Servants, serverName)         // 解压目录
-	packageFile := public.Join(App, serverName, filePath) // 路径
-	public.Tar2Dest(packageFile, startDir)                // 解压
-	servantGrid := req.ServantGrids                       // 服务列表  通过Host过滤拿到IP，然后进行服务启动
-	var startFile string                                  // 启动文件
-	CheckProdConf(path.Join(startDir, public.DEV_CONF_NAME), path.Join(startDir, public.PROD_CONF_NAME))
+	filePath := req.FilePath                                                // 服务路径
+	serverLanguage := req.ServerLanguage                                    // 服务语言
+	serverName := req.ServerName                                            // 服务名称
+	serverProtocol := req.ServerProtocol                                    // 协议
+	execFilePath := req.ExecPath                                            // 执行路径
+	startDir := SgridPackageInstance.JoinPath(Servants, serverName)         // 解压目录
+	packageFile := SgridPackageInstance.JoinPath(App, serverName, filePath) // 路径
+	public.Tar2Dest(packageFile, startDir)                                  // 解压
+	servantGrid := req.ServantGrids                                         // 服务列表  通过Host过滤拿到IP，然后进行服务启动
+	var startFile string                                                    // 启动文件
+	CheckProdConf(public.Join(startDir, public.DEV_CONF_NAME), path.Join(startDir, public.PROD_CONF_NAME))
 	for _, grid := range servantGrid { // 通过Host过滤拿到IP，然后进行服务启动
 		GRID := grid
 		id := GRID.GridId
@@ -410,22 +412,22 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 			var cmd *exec.Cmd
 			if serverProtocol == public.PROTOCOL_GRPC {
 				if serverLanguage == public.RELEASE_GO {
-					startFile = public.Join(Servants, serverName, execFilePath) // 启动文件
+					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 					cmd = exec.Command(startFile)
 				}
 				if serverLanguage == public.RELEASE_NODE {
-					startFile = public.Join(Servants, serverName, execFilePath) // 启动文件
+					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 					cmd = exec.Command("node", startFile)
 				}
 			}
 
 			if serverProtocol == public.PROTOCOL_HTTP {
 				if serverLanguage == public.RELEASE_GO {
-					startFile = public.Join(Servants, serverName, execFilePath) // 启动文件
+					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 					cmd = exec.Command(startFile)
 				}
 				if serverLanguage == public.RELEASE_NODE {
-					startFile = public.Join(Servants, serverName, execFilePath) // 启动文件
+					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 					cmd = exec.Command("node", startFile)
 				}
 			}
@@ -471,17 +473,43 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 
 }
 
-func initDir(s string) {
-	public.CheckDirectoryOrCreate(public.Join(s, Logger))
-	public.CheckDirectoryOrCreate(public.Join(s, App))
-	public.CheckDirectoryOrCreate(public.Join(s, Servants))
+func (s *fileTransferServer) GetLogFileByHost(ctx context.Context, in *protocol.GetLogFileByHostReq) (*protocol.GetLogFileByHostResp, error) {
+	dir := SgridPackageInstance.JoinPath(Logger, in.ServerName)
+	fmt.Println("dir", dir)
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	var fs []string
+	for _, v := range files {
+		fs = append(fs, v.Name())
+	}
+	fmt.Println("fs", fs)
+	return &protocol.GetLogFileByHostResp{
+		FileName: fs,
+	}, nil
+}
+
+func (s *fileTransferServer) GetLogByFile(ctx context.Context, in *protocol.GetLogByFileReq) (*protocol.GetLogByFileResp, error) {
+	s2, err := public.GetLogger(in.LogFile, in.Pattern, int(in.Rows))
+	if err != nil {
+		return nil, err
+	}
+	return &protocol.GetLogByFileResp{
+		Data: s2,
+	}, nil
+}
+
+func initDir() {
+	public.CheckDirectoryOrCreate(SgridPackageInstance.JoinPath(Logger))
+	public.CheckDirectoryOrCreate(SgridPackageInstance.JoinPath(App))
+	public.CheckDirectoryOrCreate(SgridPackageInstance.JoinPath(Servants))
 }
 
 type SgridPackage struct{}
 
 func (s *SgridPackage) Registry(sc *config.SgridConf) {
-	dir := strings.ReplaceAll(s.NameSpace(), ".", "/")
-	initDir(dir)
+	initDir()
 	globalPool = pool.NewRoutinePool(1000)
 	globalConf = sc
 	go globalPool.Run()
@@ -502,4 +530,13 @@ func (s *SgridPackage) Registry(sc *config.SgridConf) {
 
 func (s *SgridPackage) NameSpace() string {
 	return "server.SgridPackageServer"
+}
+
+func (s *SgridPackage) ServerPath() string {
+	return strings.ReplaceAll(s.NameSpace(), ".", "/")
+}
+
+func (s *SgridPackage) JoinPath(args ...string) string {
+	p := path.Join(args...)
+	return public.Join(s.ServerPath(), p)
 }

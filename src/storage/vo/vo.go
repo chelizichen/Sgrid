@@ -79,16 +79,16 @@ type CoverConfigVo struct {
 }
 
 type VoServantPackage struct {
-	ID           uint      `gorm:"id" json:"id,omitempty"`
-	ServantID    uint      `gorm:"servant_id" json:"servantId,omitempty"`
-	Hash         string    `gorm:"hash" json:"hash,omitempty"`
-	FilePath     string    `gorm:"file_path" json:"filePath,omitempty"`
-	Content      string    `gorm:"content" json:"content,omitempty"`
-	CreateTime   time.Time `gorm:"create_time" json:"createTime,omitempty"`
-	Version      uint      `gorm:"version" json:"version,omitempty"`
-	GSServerName string    `gorm:"gs_server_name" json:"serverName,omitempty"`
-	GSCreateTime time.Time `gorm:"gs_create_time" json:"serverCreateTime,omitempty"`
-	GSLanguage   string    `gorm:"gs_language" json:"language,omitempty"`
-	GSExecPath   string    `gorm:"gs_exec_path" json:"execPath,omitempty"`
-	GSProtocol   string    `gorm:"gs_protocol" json:"protocol,omitempty"`
+	ID           uint       `gorm:"id" json:"id,omitempty"`
+	ServantID    uint       `gorm:"servant_id" json:"servantId,omitempty"`
+	Hash         string     `gorm:"hash" json:"hash,omitempty"`
+	FilePath     string     `gorm:"file_path" json:"filePath,omitempty"`
+	Content      string     `gorm:"content" json:"content,omitempty"`
+	CreateTime   *time.Time `gorm:"create_time" json:"createTime,omitempty"`
+	Version      uint       `gorm:"version" json:"version,omitempty"`
+	GSServerName string     `gorm:"gs_server_name" json:"serverName,omitempty"`
+	GSCreateTime *time.Time `gorm:"gs_create_time" json:"serverCreateTime,omitempty"`
+	GSLanguage   string     `gorm:"gs_language" json:"language,omitempty"`
+	GSExecPath   string     `gorm:"gs_exec_path" json:"execPath,omitempty"`
+	GSProtocol   string     `gorm:"gs_protocol" json:"protocol,omitempty"`
 }

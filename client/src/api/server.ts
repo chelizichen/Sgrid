@@ -131,7 +131,14 @@ const API = {
       method:'get',
       params
     })
-  }
+  },
+  getLogFileList:function(params:any){
+    return HttpReq({
+      url:'/statlog/getLogFileList',
+      method:'get',
+      params
+    })
+  },
 }
 
 export default API

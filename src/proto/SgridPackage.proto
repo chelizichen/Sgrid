@@ -60,6 +60,28 @@ message ShutdownGridInfo{
     int32 port = 4; // 端口
 }
 
+
+message GetLogFileByHostReq{
+    string host = 1;
+    string serverName = 2;
+}
+
+message GetLogFileByHostResp{
+    repeated string fileName = 1;
+}
+
+message GetLogByFileReq{
+    string logFile = 1;
+    string pattern = 2;
+    int32 rows = 3;
+    string host = 4;
+    string serverName = 5;
+}
+
+message GetLogByFileResp{
+    string data = 1;
+}
+
 // 文件传输服务定义  
 service FileTransferService {  
     // 双向流式 RPC 用于文件传输  
@@ -73,4 +95,10 @@ service FileTransferService {
 
     // 关闭指定节点服务
     rpc ShutdownGrid(ShutdownGridReq)returns(basicResp){}
+
+    // 获取服务日志列表
+    rpc GetLogFileByHost(GetLogFileByHostReq)returns(GetLogFileByHostResp){}
+
+    // 获取服务日志
+    rpc GetLogByFile(GetLogByFileReq)returns(GetLogByFileResp){}
 }  

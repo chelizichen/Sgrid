@@ -16,7 +16,7 @@ func main() {
 		h.WithCors(),
 	)
 	ctx.RegistryHttpRouter(service.InitService)
-	ctx.RegistrySubServer(&SgridPackageServer.SgridPackage{})
+	ctx.RegistrySubServer(SgridPackageServer.SgridPackageInstance)
 	h.NewSgridServer(ctx, func(port string) {
 		ctx.Engine.Run(port)
 		fmt.Println("Sgrid Gin Http Server started on " + port)

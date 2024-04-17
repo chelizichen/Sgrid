@@ -30,6 +30,10 @@ type FileTransferServiceClient interface {
 	ReleaseServerByPackage(ctx context.Context, in *ReleaseServerReq, opts ...grpc.CallOption) (*BasicResp, error)
 	// 关闭指定节点服务
 	ShutdownGrid(ctx context.Context, in *ShutdownGridReq, opts ...grpc.CallOption) (*BasicResp, error)
+	// 获取服务日志列表
+	GetLogFileByHost(ctx context.Context, in *GetLogFileByHostReq, opts ...grpc.CallOption) (*GetLogFileByHostResp, error)
+	// 获取服务日志
+	GetLogByFile(ctx context.Context, in *GetLogByFileReq, opts ...grpc.CallOption) (*GetLogByFileResp, error)
 }
 
 type fileTransferServiceClient struct {
@@ -98,6 +102,24 @@ func (c *fileTransferServiceClient) ShutdownGrid(ctx context.Context, in *Shutdo
 	return out, nil
 }
 
+func (c *fileTransferServiceClient) GetLogFileByHost(ctx context.Context, in *GetLogFileByHostReq, opts ...grpc.CallOption) (*GetLogFileByHostResp, error) {
+	out := new(GetLogFileByHostResp)
+	err := c.cc.Invoke(ctx, "/SgridProtocol.FileTransferService/GetLogFileByHost", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *fileTransferServiceClient) GetLogByFile(ctx context.Context, in *GetLogByFileReq, opts ...grpc.CallOption) (*GetLogByFileResp, error) {
+	out := new(GetLogByFileResp)
+	err := c.cc.Invoke(ctx, "/SgridProtocol.FileTransferService/GetLogByFile", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FileTransferServiceServer is the server API for FileTransferService service.
 // All implementations must embed UnimplementedFileTransferServiceServer
 // for forward compatibility
@@ -110,6 +132,10 @@ type FileTransferServiceServer interface {
 	ReleaseServerByPackage(context.Context, *ReleaseServerReq) (*BasicResp, error)
 	// 关闭指定节点服务
 	ShutdownGrid(context.Context, *ShutdownGridReq) (*BasicResp, error)
+	// 获取服务日志列表
+	GetLogFileByHost(context.Context, *GetLogFileByHostReq) (*GetLogFileByHostResp, error)
+	// 获取服务日志
+	GetLogByFile(context.Context, *GetLogByFileReq) (*GetLogByFileResp, error)
 	mustEmbedUnimplementedFileTransferServiceServer()
 }
 
@@ -128,6 +154,12 @@ func (UnimplementedFileTransferServiceServer) ReleaseServerByPackage(context.Con
 }
 func (UnimplementedFileTransferServiceServer) ShutdownGrid(context.Context, *ShutdownGridReq) (*BasicResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ShutdownGrid not implemented")
+}
+func (UnimplementedFileTransferServiceServer) GetLogFileByHost(context.Context, *GetLogFileByHostReq) (*GetLogFileByHostResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLogFileByHost not implemented")
+}
+func (UnimplementedFileTransferServiceServer) GetLogByFile(context.Context, *GetLogByFileReq) (*GetLogByFileResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLogByFile not implemented")
 }
 func (UnimplementedFileTransferServiceServer) mustEmbedUnimplementedFileTransferServiceServer() {}
 
@@ -222,6 +254,42 @@ func _FileTransferService_ShutdownGrid_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FileTransferService_GetLogFileByHost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLogFileByHostReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FileTransferServiceServer).GetLogFileByHost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/SgridProtocol.FileTransferService/GetLogFileByHost",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FileTransferServiceServer).GetLogFileByHost(ctx, req.(*GetLogFileByHostReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FileTransferService_GetLogByFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLogByFileReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FileTransferServiceServer).GetLogByFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/SgridProtocol.FileTransferService/GetLogByFile",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FileTransferServiceServer).GetLogByFile(ctx, req.(*GetLogByFileReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FileTransferService_ServiceDesc is the grpc.ServiceDesc for FileTransferService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -240,6 +308,14 @@ var FileTransferService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ShutdownGrid",
 			Handler:    _FileTransferService_ShutdownGrid_Handler,
+		},
+		{
+			MethodName: "GetLogFileByHost",
+			Handler:    _FileTransferService_GetLogFileByHost_Handler,
+		},
+		{
+			MethodName: "GetLogByFile",
+			Handler:    _FileTransferService_GetLogByFile_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

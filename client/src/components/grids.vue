@@ -51,14 +51,16 @@ export default {
       <el-table-column type="selection" width="55" />
       <el-table-column label="Grid">
         <template #default="scoped">
-          <el-button type="text"
+          <el-button type="text" @click="toLog(scoped.row.gridNode.ip)"
             >{{ scoped.row.gridNode.ip }}:{{ scoped.row.port }}</el-button
           >
         </template>
       </el-table-column>
       <el-table-column label="Status">
         <template #default="scoped">
-          <div>{{ gridStatus[scoped.row.status] || "offline" }}</div>
+          <div :class="gridStatus[scoped.row.status] || 'offline'">
+            {{ gridStatus[scoped.row.status] || "offline" }}
+          </div>
         </template>
       </el-table-column>
       <el-table-column prop="pid" label="PID"></el-table-column>
@@ -124,6 +126,7 @@ import releaseComponent from "./release.vue";
 import moment from "moment";
 import api from "@/api/server";
 import { ElMessage } from "element-plus";
+import { useRouter } from "vue-router";
 
 const props = defineProps<{
   gridsList: any[];
@@ -237,6 +240,17 @@ function shutDown(v) {
   api.shutdownServer(body);
   console.log("body", body);
 }
+
+const router = useRouter();
+function toLog(host: string) {
+  router.push({
+    path: "/logpage",
+    query: {
+      host: host,
+      serverName: props.serverName,
+    },
+  });
+}
 </script>
 <style scoped>
 .card {
@@ -253,5 +267,11 @@ function shutDown(v) {
   text-align: center;
   width: 15%;
   padding: 10px;
+}
+.online {
+  color: #55bd55;
+}
+.offline {
+  color: red;
 }
 </style>
