@@ -13,4 +13,6 @@ func InitService(ctx *handlers.SgridServerCtx) {
 		fmt.Println("Error To NewConfig", err)
 	}
 	configuration.InitStorage(sc)
+	ctx.RegistryHttpRouter(PackageService)
+	ctx.RegistryHttpRouter(Registry)
 }

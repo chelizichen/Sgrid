@@ -4,21 +4,59 @@ import (
 	"Sgrid/src/utils"
 	"fmt"
 	"os"
+	"reflect"
 
 	jsonToYaml "github.com/ghodss/yaml"
 )
 
+var GlobalConf *SgridConf = &SgridConf{}
+
+type server struct {
+	Name     string `yaml:"name" `     // ServerName
+	Host     string `yaml:"host"`      // Host
+	Port     int    `yaml:"port" `     // Port
+	Protocol string `yaml:"protoccol"` // Protocol Http Grpc
+	Language string `yaml:"language"`  // Language Java Node Go
+}
+
 type SgridConf struct {
-	Server struct {
-		Name       string                 `yaml:"name" `       // ServerName
-		Host       string                 `yaml:"host"`        // Host
-		Port       int                    `yaml:"port" `       // Port
-		Protocol   string                 `yaml:"protoccol"`   // Protocol Http Grpc
-		Language   string                 `yaml:"language"`    // Language Java Node Go
-		StaticPath string                 `yaml:"staticPath" ` //
-		Storage    string                 `yaml:"storage" `
-		MapConf    map[string]interface{} `yaml:"mapConf"` // define Conf
-	} `yaml:"server"`
+	Server  server                 `yaml:"server"`
+	Conf    map[string]interface{} `yaml:"config"`  // define Conf
+	Servant map[string]*SgridConf  `yaml:"servant"` // define Conf
+}
+
+func (s *SgridConf) Get(key string) interface{} {
+	return s.Conf[key]
+}
+
+func (s *SgridConf) GetString(key string) string {
+	v := s.Conf[key]
+	t := reflect.TypeOf(v)
+	switch t.Kind() {
+	case reflect.String:
+		{
+			return v.(string)
+		}
+	default:
+		{
+			return ""
+		}
+	}
+}
+
+func (s *SgridConf) GetStringArray(key string) []string {
+	v := s.Conf[key]
+	t := reflect.TypeOf(v)
+	switch t.Kind() {
+	case reflect.Slice:
+		{
+			return v.([]string)
+		}
+	default:
+		{
+			return []string{}
+		}
+	}
 }
 
 func ResetConfig(yamlContent string, filePath string) error {

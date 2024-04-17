@@ -4,7 +4,7 @@
 // Operations and Deployment Services
 // ************************ SgridCloud **********************
 
-package main
+package SgridPackageServer
 
 import (
 	"Sgrid/src/config"
@@ -23,6 +23,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -469,29 +470,23 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 	}, nil
 
 }
-func initDir() {
-	public.CheckDirectoryOrCreate(public.Join(Logger))
-	public.CheckDirectoryOrCreate(public.Join(App))
-	public.CheckDirectoryOrCreate(public.Join(Servants))
+
+func initDir(s string) {
+	public.CheckDirectoryOrCreate(public.Join(s, Logger))
+	public.CheckDirectoryOrCreate(public.Join(s, App))
+	public.CheckDirectoryOrCreate(public.Join(s, Servants))
 }
 
-func initSgridConf() *config.SgridConf {
-	initDir()
-	sc, err := public.NewConfig()
-	if err != nil {
-		fmt.Println("Error To NewConfig", err)
-	}
-	configuration.InitStorage(sc)
-	return sc
-}
+type SgridPackage struct{}
 
-func main() {
+func (s *SgridPackage) Registry(sc *config.SgridConf) {
+	dir := strings.ReplaceAll(s.NameSpace(), ".", "/")
+	initDir(dir)
 	globalPool = pool.NewRoutinePool(1000)
-	go globalPool.Run()
-	sc := initSgridConf()
-	fmt.Println("sc", sc)
-	port := fmt.Sprintf(":%v", sc.Server.Port)
 	globalConf = sc
+	go globalPool.Run()
+	configuration.InitStorage(sc)
+	port := fmt.Sprintf(":%v", sc.Server.Port)
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -503,4 +498,8 @@ func main() {
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
+}
+
+func (s *SgridPackage) NameSpace() string {
+	return "server.SgridPackageServer"
 }

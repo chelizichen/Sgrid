@@ -16,8 +16,7 @@ var GORM *gorm.DB
 var RDBContext = context.Background()
 
 func InitStorage(ctx *config.SgridConf) {
-
-	db, err := gorm.Open(mysql.Open(ctx.Server.Storage), &gorm.Config{
+	db, err := gorm.Open(mysql.Open(ctx.GetString("db")), &gorm.Config{
 		SkipDefaultTransaction: true,
 		NamingStrategy: schema.NamingStrategy{
 			TablePrefix:   "grid_",
@@ -42,5 +41,4 @@ func InitStorage(ctx *config.SgridConf) {
 	db.Debug().AutoMigrate(&pojo.Properties{})
 	db.Debug().AutoMigrate(&pojo.StatLog{})
 	GORM = db
-
 }

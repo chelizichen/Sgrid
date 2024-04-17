@@ -69,8 +69,15 @@ func WithTargetPath(targetPath string) ConfOpt {
 	}
 }
 
+func WithNameSpace(nameSpace string) ConfOpt {
+	return func(conf *withConf) {
+		conf.nameSpace = nameSpace
+	}
+}
+
 type withConf struct {
 	targetPath string
+	nameSpace  string
 }
 
 func NewConfig(opts ...ConfOpt) (conf *config.SgridConf, err error) {
@@ -81,6 +88,8 @@ func NewConfig(opts ...ConfOpt) (conf *config.SgridConf, err error) {
 	var path string
 	if len(wc.targetPath) != 0 {
 		path = wc.targetPath
+	} else if len(wc.nameSpace) != 0 {
+		path = Join(DEV_CONF_NAME)
 	} else if SgridProduction() {
 		path = Join(PROD_CONF_NAME)
 	} else {
@@ -107,6 +116,7 @@ func NewConfig(opts ...ConfOpt) (conf *config.SgridConf, err error) {
 }
 
 func CheckDirectoryOrCreate(directoryPath string) error {
+	fmt.Println("directoryPath", directoryPath)
 	_, err := os.Stat(directoryPath)
 	if os.IsNotExist(err) {
 		err := os.Mkdir(directoryPath, os.ModePerm)

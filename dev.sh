@@ -2,7 +2,7 @@
 
 # if permission denied
 # run script with ` chmod +x build.sh ` 
-readonly ServerName="SgridPackageServer"
+readonly ServerName="Sgrid"
 readonly SgridFile="sgrid_app"
 # rm
 rm ./$ServerName.tar.gz ./SgridFile

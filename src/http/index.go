@@ -1,12 +1,15 @@
 package http
 
 import (
+	"Sgrid/src/config"
 	"Sgrid/src/public"
+	"Sgrid/src/public/servant"
 	"Sgrid/src/utils"
 	"fmt"
 	"net"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -15,13 +18,12 @@ import (
 )
 
 type SgridServerCtx struct {
-	Port        string
-	Name        string
-	Engine      *gin.Engine
-	StoragePath string
-	StaticPath  string
-	Host        string
-	MapConf     map[string]interface{}
+	Port       string
+	Name       string
+	Engine     *gin.Engine
+	Host       string
+	ServerConf map[string]interface{}
+	SgridConf  *config.SgridConf
 }
 
 func Resp(code int, message string, data interface{}) *gin.H {
@@ -32,8 +34,17 @@ func Resp(code int, message string, data interface{}) *gin.H {
 	}
 }
 
-func (c *SgridServerCtx) Use(callback func(engine *SgridServerCtx)) {
+func (c *SgridServerCtx) RegistryHttpRouter(callback func(engine *SgridServerCtx)) {
 	callback(c)
+}
+
+func (c *SgridServerCtx) RegistrySubServer(registry servant.SgridRegistryServiceInf) {
+	pkgPath := reflect.TypeOf(registry).Elem().PkgPath()
+	packagePath := strings.ReplaceAll(pkgPath, "/", ".")
+	if !strings.HasSuffix(packagePath, registry.NameSpace()) {
+		panic("sgrid/error package path is not equal with server path")
+	}
+	go registry.Registry(config.GlobalConf.Servant[registry.NameSpace()])
 }
 
 // 主控服务需要做日志系统与监控
@@ -83,13 +94,13 @@ func (c *SgridServerCtx) InitController() {
 	}()
 }
 
-func (c *SgridServerCtx) Static(realPath string, args ...string) {
+func (c *SgridServerCtx) Static(realPath string, filePath string) {
 	s := c.Name
 	pre := strings.ToLower(s)
 	f := utils.Join(pre)
 	target := f(realPath)
 
-	staticPath := public.Join(args...)
+	staticPath := public.Join(filePath)
 	c.Engine.Static(target, staticPath)
 }
 
@@ -97,7 +108,7 @@ type InitConf struct {
 	SgridController    bool
 	ServerType         string
 	SgridConfPath      string
-	SgridGinStaticPath string
+	SgridGinStaticPath [2]string
 	SgridGinWithCors   bool
 }
 type NewSgrid func(conf *InitConf)
@@ -120,9 +131,9 @@ func WithConfPath(P string) NewSgrid {
 	}
 }
 
-func WithSgridGinStatic(P string) NewSgrid {
+func WithSgridGinStatic(paths [2]string) NewSgrid {
 	return func(conf *InitConf) {
-		conf.SgridGinStaticPath = P
+		conf.SgridGinStaticPath = paths
 	}
 }
 
@@ -139,6 +150,8 @@ func NewSgridServerCtx(opt ...NewSgrid) *SgridServerCtx {
 		fn(initConf)
 	}
 	conf, err := public.NewConfig(public.WithTargetPath(initConf.SgridConfPath))
+	config.GlobalConf = conf
+	ctx.SgridConf = conf
 	if err != nil {
 		fmt.Println("NewConfig Error:", err.Error())
 		panic(err.Error())
@@ -146,9 +159,7 @@ func NewSgridServerCtx(opt ...NewSgrid) *SgridServerCtx {
 	if initConf.ServerType == public.PROTOCOL_HTTP {
 		ctx.Engine = gin.Default()
 		ctx.Port = ":" + strconv.Itoa(conf.Server.Port)
-		ctx.StoragePath = conf.Server.Storage
-		ctx.StaticPath = conf.Server.StaticPath
-		ctx.MapConf = conf.Server.MapConf
+		ctx.ServerConf = conf.Conf
 		ctx.Host = conf.Server.Host
 		ctx.Name = conf.Server.Name
 	}
@@ -158,8 +169,8 @@ func NewSgridServerCtx(opt ...NewSgrid) *SgridServerCtx {
 	}
 	if len(initConf.SgridGinStaticPath) != 0 {
 		GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
-		staticRoot := public.Join(ctx.StaticPath)
-		GROUP.Static(initConf.SgridGinStaticPath, staticRoot)
+		staticRoot := public.Join(initConf.SgridGinStaticPath[0])
+		GROUP.Static(initConf.SgridGinStaticPath[0], staticRoot)
 		ctx.Engine.Use(GROUP.Handlers...)
 	}
 

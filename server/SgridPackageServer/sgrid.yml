@@ -1,8 +1,0 @@
-server:
-  main: true
-  name: SgridPackageServer
-  host: 150.158.120.244
-  port: 14938
-  type: tcp
-  staticPath: static # 静态资源
-  storage: root:123456@tcp(127.0.0.1:3306)/sgrid?charset=utf8&parseTime=true # 存储

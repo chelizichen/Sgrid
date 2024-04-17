@@ -2,5 +2,19 @@ server:
   name: SgirdCloud
   host: 47.98.174.10
   port: 12111
-  staticPath: static # 静态资源
-  storage:  root:123456@tcp(127.0.0.1:3306)/sgrid?charset=utf8&parseTime=true # 存储
+  protoccol: http
+  language: go
+config:
+  webStatic: static # gin 托管路径
+  db:  root:123456@tcp(127.0.0.1:3306)/sgrid?charset=utf8&parseTime=true
+# 子服务
+servant:
+  server.SgridPackageServer: 
+    server:
+      main: true
+      name: SgridPackageServer
+      host: 150.158.120.244
+      port: 14938
+      type: tcp
+    config:
+      db:  root:123456@tcp(127.0.0.1:3306)/sgrid?charset=utf8&parseTime=true
