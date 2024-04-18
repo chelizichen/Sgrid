@@ -85,7 +85,13 @@ const API = {
       method:'post',
       data
     })
-  }
+  },
+  Login: function (data:any) {
+    return HttpReq({
+      url:'/login',
+      data
+    }) as unknown as BasicResp<any>
+  },
 }
 
 export default API

@@ -2,26 +2,36 @@
   <div style="display: flex">
     <div style="width: 30%">
       <el-card>
-        <el-input v-model="state.logFile" :disabled="true"></el-input>
-        <el-input v-model="state.pattern"></el-input>
-        <el-select v-model="state.rows">
-          <el-option
-            v-for="item in rowSelect"
-            :label="item"
-            :value="item"
-            :key="item"
-          ></el-option>
-        </el-select>
-        <div v-for="(item, index) in logFileList" :key="index">
-          <el-button
-            :key="index"
-            type="text"
-            style="display: block"
-            @click="state.logFile = item"
-            >{{ item }}
-          </el-button>
-        </div>
-        <el-button @click="getLog">Search</el-button>
+        <el-form label-width="88px">
+          <el-form-item label="logFile">
+            <el-input v-model="state.logFile" :disabled="true"></el-input>
+          </el-form-item>
+          <el-form-item label="pattern">
+            <el-input v-model="state.pattern"></el-input
+          ></el-form-item>
+          <el-form-item label="rows">
+            <el-select v-model="state.rows">
+              <el-option
+                v-for="item in rowSelect"
+                :label="item"
+                :value="item"
+                :key="item"
+              ></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="logList" v-for="(item, index) in logFileList" :key="index">
+            <el-button
+              :key="index"
+              type="text"
+              style="display: block"
+              @click="state.logFile = item"
+              >{{ item }}
+            </el-button>
+          </el-form-item>
+          <el-form-item>
+            <el-button @click="getLog">Search</el-button>
+          </el-form-item>
+        </el-form>
       </el-card>
     </div>
     <div
