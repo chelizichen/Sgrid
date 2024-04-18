@@ -491,7 +491,8 @@ func (s *fileTransferServer) GetLogFileByHost(ctx context.Context, in *protocol.
 }
 
 func (s *fileTransferServer) GetLogByFile(ctx context.Context, in *protocol.GetLogByFileReq) (*protocol.GetLogByFileResp, error) {
-	s2, err := public.GetLogger(in.LogFile, in.Pattern, int(in.Rows))
+	filePath := SgridPackageInstance.JoinPath(Logger, in.ServerName, in.LogFile)
+	s2, err := public.GetLogger(filePath, in.Pattern, int(in.Rows))
 	if err != nil {
 		return nil, err
 	}

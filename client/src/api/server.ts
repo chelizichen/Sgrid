@@ -52,66 +52,6 @@ const API = {
       data
     }) as unknown as BasicResp<any>
   },
-  GetLogger: function (data, url = '/getServerLog') {
-    return HttpReq({
-      url,
-      data
-    }) as unknown as BasicResp<any>
-  },
-  GetApiJson: function (data, url = '/getApiJson') {
-    return HttpReq({
-      url,
-      data
-    }) as unknown as BasicResp<any>
-  },
-  GetDoc: function (data, url = '/getDoc') {
-    return HttpReq({
-      url,
-      data
-    }) as unknown as BasicResp<any>
-  },
-  GetLogList: function (data, url = '/getLogList') {
-    return HttpReq({
-      url,
-      data
-    }) as unknown as BasicResp<any>
-  },
-  CoverConfig: function (data, url = '/coverConfig') {
-    return HttpReq({
-      url,
-      data
-    }) as unknown as BasicResp<any>
-  },
-  DeleteServer: function (data, url = '/deleteServer') {
-    return HttpReq({
-      url,
-      data
-    }) as unknown as BasicResp<any>
-  },
-  GetMainLogList: function (data, url = '/main/getLogList') {
-    return HttpReq({
-      url,
-      data
-    }) as unknown as BasicResp<any>
-  },
-  GetMainLogger: function (data, url = '/main/getServerLog') {
-    return HttpReq({
-      url,
-      data
-    }) as unknown as BasicResp<any>
-  },
-  Login: function (data, url = '/login') {
-    return HttpReq({
-      url,
-      data
-    }) as unknown as BasicResp<any>
-  },
-  getChildStats: function (data, url = '/getChildStats') {
-    return HttpReq({
-      url,
-      data
-    })
-  },
   queryGrid:function(params:any){
     return HttpReq({
       url:'/main/queryGrid',
@@ -139,6 +79,13 @@ const API = {
       params
     })
   },
+  getLog:function(data:any){
+    return HttpReq({
+      url:'/statlog/getLog',
+      method:'post',
+      data
+    })
+  }
 }
 
 export default API

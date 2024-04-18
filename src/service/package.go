@@ -261,7 +261,7 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 	router.POST("/statlog/getLog", func(c *gin.Context) {
 		var req *protocol.GetLogByFileReq
 		var resp *protocol.GetLogByFileResp
-		c.BindJSON(req)
+		c.BindJSON(&req)
 		var wg sync.WaitGroup
 		for _, client := range clients {
 			wg.Add(1)
