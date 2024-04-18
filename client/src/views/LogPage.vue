@@ -75,11 +75,11 @@ async function init() {
     host: query.value.host,
     serverName: query.value.serverName,
   });
-  logFileList.value = data.Data;
+  logFileList.value = data.data;
 }
 async function getLog() {
   const res = await API.getLog(body.value);
-  logger.value = res.Data.split("\n");
+  logger.value = res.data.split("\n");
 }
 onMounted(() => {
   init();

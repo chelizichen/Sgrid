@@ -289,5 +289,25 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 		wg.Wait()
 		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", resp.Data))
 	})
+
+	router.POST("/statlog/check", func(c *gin.Context) {
+		var req *protocol.GetPidInfoReq
+		var resp []*protocol.GetPidInfoResp
+		c.BindJSON(&req)
+		var wg sync.WaitGroup
+		for _, client := range clients {
+			wg.Add(1)
+			go func(client clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]) {
+				r, err := client.GetClient().GetPidInfo(&gin.Context{}, req)
+				if err != nil {
+					fmt.Println("error", err.Error())
+				}
+				resp = append(resp, r)
+				wg.Done()
+			}(*client)
+		}
+		wg.Wait()
+		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", resp))
+	})
 	ctx.Engine.Use(router.Handlers...)
 }

@@ -102,10 +102,10 @@ async function uploadFile(){
     formData.append('servantId', String(props.servantId))
     formData.append('fileHash', String(state.hash))
     const data = await api.uploadSgridServer(formData)
-    if (data.Code) {
+    if (data.code) {
       ElMessage({
         type: 'error',
-        message: '上传失败' + data.Message
+        message: '上传失败' + data.message
       })
     } else {
       ElMessage({

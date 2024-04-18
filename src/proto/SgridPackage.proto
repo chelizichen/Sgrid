@@ -82,6 +82,31 @@ message GetLogByFileResp{
     string data = 1;
 }
 
+message GetPidInfoReq{
+    repeated HostPids hostPids = 1;
+}
+
+message HostPids{
+    int32 pid = 1;
+    string host = 2;
+    int64 gridId = 3;
+}
+
+message HostPidInfo{
+    int32 pid = 1;
+    string stat = 2;
+    float cpu = 3;
+    int64 threads = 4;
+    string name = 5;
+    string isRuning = 6;
+    uint64 memoryStack = 7;
+    uint64 memoryData = 8;
+}
+
+message GetPidInfoResp{
+    repeated HostPidInfo data = 1;
+}
+
 // 文件传输服务定义  
 service FileTransferService {  
     // 双向流式 RPC 用于文件传输  
@@ -101,4 +126,7 @@ service FileTransferService {
 
     // 获取服务日志
     rpc GetLogByFile(GetLogByFileReq)returns(GetLogByFileResp){}
+
+    // 获取Pid信息 checkAlive
+    rpc GetPidInfo(GetPidInfoReq)returns(GetPidInfoResp){}
 }  

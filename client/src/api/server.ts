@@ -86,6 +86,13 @@ const API = {
       data
     })
   },
+  checkStat:function(data:any){
+    return HttpReq({
+      url:'/statlog/check',
+      method:'post',
+      data
+    })
+  },
   Login: function (data:any) {
     return HttpReq({
       url:'/login',

@@ -34,6 +34,8 @@ type FileTransferServiceClient interface {
 	GetLogFileByHost(ctx context.Context, in *GetLogFileByHostReq, opts ...grpc.CallOption) (*GetLogFileByHostResp, error)
 	// 获取服务日志
 	GetLogByFile(ctx context.Context, in *GetLogByFileReq, opts ...grpc.CallOption) (*GetLogByFileResp, error)
+	// 获取Pid信息 checkAlive
+	GetPidInfo(ctx context.Context, in *GetPidInfoReq, opts ...grpc.CallOption) (*GetPidInfoResp, error)
 }
 
 type fileTransferServiceClient struct {
@@ -120,6 +122,15 @@ func (c *fileTransferServiceClient) GetLogByFile(ctx context.Context, in *GetLog
 	return out, nil
 }
 
+func (c *fileTransferServiceClient) GetPidInfo(ctx context.Context, in *GetPidInfoReq, opts ...grpc.CallOption) (*GetPidInfoResp, error) {
+	out := new(GetPidInfoResp)
+	err := c.cc.Invoke(ctx, "/SgridProtocol.FileTransferService/GetPidInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FileTransferServiceServer is the server API for FileTransferService service.
 // All implementations must embed UnimplementedFileTransferServiceServer
 // for forward compatibility
@@ -136,6 +147,8 @@ type FileTransferServiceServer interface {
 	GetLogFileByHost(context.Context, *GetLogFileByHostReq) (*GetLogFileByHostResp, error)
 	// 获取服务日志
 	GetLogByFile(context.Context, *GetLogByFileReq) (*GetLogByFileResp, error)
+	// 获取Pid信息 checkAlive
+	GetPidInfo(context.Context, *GetPidInfoReq) (*GetPidInfoResp, error)
 	mustEmbedUnimplementedFileTransferServiceServer()
 }
 
@@ -160,6 +173,9 @@ func (UnimplementedFileTransferServiceServer) GetLogFileByHost(context.Context, 
 }
 func (UnimplementedFileTransferServiceServer) GetLogByFile(context.Context, *GetLogByFileReq) (*GetLogByFileResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLogByFile not implemented")
+}
+func (UnimplementedFileTransferServiceServer) GetPidInfo(context.Context, *GetPidInfoReq) (*GetPidInfoResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPidInfo not implemented")
 }
 func (UnimplementedFileTransferServiceServer) mustEmbedUnimplementedFileTransferServiceServer() {}
 
@@ -290,6 +306,24 @@ func _FileTransferService_GetLogByFile_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FileTransferService_GetPidInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPidInfoReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FileTransferServiceServer).GetPidInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/SgridProtocol.FileTransferService/GetPidInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FileTransferServiceServer).GetPidInfo(ctx, req.(*GetPidInfoReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FileTransferService_ServiceDesc is the grpc.ServiceDesc for FileTransferService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -316,6 +350,10 @@ var FileTransferService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetLogByFile",
 			Handler:    _FileTransferService_GetLogByFile_Handler,
+		},
+		{
+			MethodName: "GetPidInfo",
+			Handler:    _FileTransferService_GetPidInfo_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

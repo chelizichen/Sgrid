@@ -16,7 +16,7 @@ async function saveToken() {
   const tkn = md5(token.value);
   data.append("token", tkn);
   const ret = await API.Login(data);
-  if (ret.Data) {
+  if (ret.data) {
     ElMessage.error("Please enter a valid token.");
   } else {
     router.push("/server");

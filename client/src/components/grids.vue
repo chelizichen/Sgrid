@@ -120,7 +120,7 @@ export default {
   </div>
 </template>
 <script lang="ts" setup>
-import { reactive, ref, watch } from "vue";
+import { onMounted, reactive, ref, watch } from "vue";
 import uploadComponent from "./upload.vue";
 import releaseComponent from "./release.vue";
 import moment from "moment";
@@ -140,7 +140,7 @@ async function getLogList(gridList) {
       const list = await api.getStatLogList({
         id: v.id,
       });
-      const ret = list.Data.list.map((item) => {
+      const ret = list.data.list.map((item) => {
         item.gridInfo = v;
         return item;
       });
@@ -163,6 +163,7 @@ watch(
   () => props.gridsList,
   async function (newVal) {
     getLogList(newVal);
+    checkStat(newVal);
   }
 );
 
@@ -176,7 +177,7 @@ async function releaseServer() {
     id: props.servantId,
   });
   state.releaseVisible = true;
-  releaseList.value = data.Data;
+  releaseList.value = data.data;
 }
 async function handleRelease(id) {
   const releaseItem = releaseList.value.find((v) => v.id == id);
@@ -249,6 +250,19 @@ function toLog(host: string) {
       host: host,
       serverName: props.serverName,
     },
+  });
+}
+
+function checkStat(list) {
+  const body = list.map((v) => {
+    return {
+      pid: v.pid,
+      host: v.gridNode.ip,
+      gridId: v.id,
+    };
+  });
+  api.checkStat({
+    hostPids: body,
   });
 }
 </script>

@@ -44,6 +44,7 @@ const (
 	BEHAVIOR_KILL  = "kill"
 	BEHAVIOR_DOWN  = "down"
 	BEHAVIOR_ALIVE = "alive"
+	BEHAVIOR_CHECK = "check"
 )
 
 var globalConf *config.SgridConf
@@ -396,7 +397,7 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 	public.Tar2Dest(packageFile, startDir)                                  // 解压
 	servantGrid := req.ServantGrids                                         // 服务列表  通过Host过滤拿到IP，然后进行服务启动
 	var startFile string                                                    // 启动文件
-	CheckProdConf(public.Join(startDir, public.DEV_CONF_NAME), path.Join(startDir, public.PROD_CONF_NAME))
+	CheckProdConf(path.Join(startDir, public.DEV_CONF_NAME), path.Join(startDir, public.PROD_CONF_NAME))
 	for _, grid := range servantGrid { // 通过Host过滤拿到IP，然后进行服务启动
 		GRID := grid
 		id := GRID.GridId
@@ -499,6 +500,84 @@ func (s *fileTransferServer) GetLogByFile(ctx context.Context, in *protocol.GetL
 	return &protocol.GetLogByFileResp{
 		Data: s2,
 	}, nil
+}
+
+func (s *fileTransferServer) GetPidInfo(ctx context.Context, in *protocol.GetPidInfoReq) (resp *protocol.GetPidInfoResp, err error) {
+	if len(in.HostPids) == 0 {
+		return nil, nil
+	}
+	ret := &protocol.GetPidInfoResp{
+		Data: []*protocol.HostPidInfo{},
+	}
+	for _, v := range in.HostPids {
+		if v.Host == globalConf.Server.Host {
+			statInfo := getStat(int(v.Pid))
+			if statInfo == nil {
+				fmt.Println("error process", v.Pid)
+				now := time.Now()
+				storage.UpdateGrid(&pojo.Grid{
+					Id:         int(v.GridId),
+					Status:     0,
+					Pid:        int(v.Pid),
+					UpdateTime: &now,
+				})
+				storage.SaveStatLog(&pojo.StatLog{
+					GridId: int(v.GridId),
+					Stat:   BEHAVIOR_CHECK,
+					Pid:    int(v.Pid),
+				})
+				return
+			}
+			Stat, _ := statInfo.Status()
+			cpu, _ := statInfo.CPUPercent()
+			threads, _ := statInfo.NumThreads()
+			name, _ := statInfo.Name()
+			isRuning, _ := statInfo.IsRunning()
+			mis, _ := statInfo.MemoryInfo()
+			stack := mis.Stack
+			running := "not run"
+			if isRuning {
+				running = "running"
+			}
+			MemoryData := mis.Data
+			ret.Data = append(ret.Data, &protocol.HostPidInfo{
+				Pid:         v.Pid,
+				MemoryStack: stack,
+				MemoryData:  MemoryData,
+				Threads:     int64(threads),
+				IsRuning:    running,
+				Cpu:         float32(cpu),
+				Name:        name,
+				Stat:        Stat,
+			})
+			var gridStat int = 0
+			if Stat == "Z" { // down 了 进行物理kill
+				gridStat = 0
+			} else {
+				gridStat = 1
+			}
+			now := time.Now()
+			storage.UpdateGrid(&pojo.Grid{
+				Id:         int(v.GridId),
+				Status:     gridStat,
+				Pid:        int(statInfo.Pid),
+				UpdateTime: &now,
+			})
+			storage.SaveStatLog(&pojo.StatLog{
+				GridId:      int(v.GridId),
+				Stat:        BEHAVIOR_CHECK,
+				Pid:         int(statInfo.Pid),
+				CPU:         cpu,
+				Threads:     threads,
+				Name:        name,
+				IsRunning:   running,
+				MemoryStack: stack,
+				MemoryData:  MemoryData,
+			})
+		}
+
+	}
+	return ret, nil
 }
 
 func initDir() {

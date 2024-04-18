@@ -28,9 +28,9 @@ type SgridServerCtx struct {
 
 func Resp(code int, message string, data interface{}) *gin.H {
 	return &gin.H{
-		"Code":    code,
-		"Message": message,
-		"Data":    data,
+		"code":    code,
+		"message": message,
+		"data":    data,
 	}
 }
 

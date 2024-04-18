@@ -45,7 +45,7 @@ const state = reactive({
 async function handleOpen(item: Item) {
   console.log("item", item);
   const grids = await API.queryGrid({ id: item.id });
-  state.gridsList = grids.Data;
+  state.gridsList = grids.data;
   state.servantId = item.id;
   console.log("state.grids", state.gridsList);
   state.serverName = item.serverName;
@@ -53,7 +53,7 @@ async function handleOpen(item: Item) {
 
 async function fetchServerList() {
   const resp = await API.GetServerList();
-  state.serverList = resp.Data || [];
+  state.serverList = resp.data || [];
 }
 
 onMounted(() => {
