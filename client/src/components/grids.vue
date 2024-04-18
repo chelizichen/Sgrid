@@ -120,7 +120,7 @@ export default {
   </div>
 </template>
 <script lang="ts" setup>
-import { onMounted, reactive, ref, watch } from "vue";
+import { reactive, ref, watch } from "vue";
 import uploadComponent from "./upload.vue";
 import releaseComponent from "./release.vue";
 import moment from "moment";
@@ -244,13 +244,14 @@ function shutDown(v) {
 
 const router = useRouter();
 function toLog(host: string) {
-  router.push({
+  const text = router.resolve({
     path: "/logpage",
     query: {
       host: host,
       serverName: props.serverName,
     },
   });
+  window.open(text.href, "_blank");
 }
 
 function checkStat(list) {

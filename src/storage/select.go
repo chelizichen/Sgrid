@@ -175,3 +175,10 @@ func QueryStatLogById(id int, offset int, size int) any {
 	resp["total"] = total
 	return resp
 }
+
+func QueryPropertiesByKey(key string) (resp []*pojo.Properties) {
+	c.GORM.Model(&pojo.Properties{}).Where(&pojo.Properties{
+		Key: key,
+	}).Find(&resp)
+	return resp
+}

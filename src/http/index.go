@@ -169,7 +169,7 @@ func NewSgridServerCtx(opt ...NewSgrid) *SgridServerCtx {
 	}
 	if len(initConf.SgridGinStaticPath) != 0 {
 		GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
-		staticRoot := public.Join(initConf.SgridGinStaticPath[0])
+		staticRoot := public.Join(initConf.SgridGinStaticPath[1])
 		GROUP.Static(initConf.SgridGinStaticPath[0], staticRoot)
 		ctx.Engine.Use(GROUP.Handlers...)
 	}

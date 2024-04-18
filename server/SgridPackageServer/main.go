@@ -127,10 +127,10 @@ func NewSgridMonitor(opt ...WithSgridMonitorConfFunc) *SgridMonitor {
 func (s *SgridMonitor) Report() {
 	for {
 		fmt.Println("Next Load Report", s.next.Load())
+		time.Sleep(s.interval)
 		if s.next.Load() {
 			break
 		}
-		time.Sleep(s.interval)
 		globalPool.Add(func() {
 			id := s.getPid()
 			statInfo := getStat(id)
@@ -187,7 +187,6 @@ func (s *SgridMonitor) PrintLogger() {
 	if err != nil {
 		fmt.Println("StderrPipe | Error", err.Error())
 	}
-	s.getFile()
 	go func() {
 		for {
 			// 读取输出
@@ -195,11 +194,16 @@ func (s *SgridMonitor) PrintLogger() {
 			time := time.Now().Format(time.DateTime)
 			n, err := op.Read(buf)
 			if err != nil {
+				fmt.Println("s.dataLog.Read erorr", err.Error())
 				break
 			}
 			// 打印输出
 			content := time + "|ServerName|" + s.serverName + "|" + string(buf[:n]) + "\n"
-			s.dataLog.Write([]byte(content))
+			nn, err := s.dataLog.Write([]byte(content))
+			if err != nil {
+				fmt.Println("s.datalog.write error", err.Error())
+			}
+			fmt.Println("nn", nn)
 		}
 	}()
 	go func() {
@@ -220,21 +224,30 @@ func (s *SgridMonitor) PrintLogger() {
 	go func() {
 		spec := public.CRON_EVERY_DAY
 		s.cron = cron.New()
-		err = s.cron.AddFunc(spec, func() {
+		err := s.cron.AddFunc(spec, func() {
 			s.getFile()
 		})
+		if err != nil {
+			fmt.Println("Error", err.Error())
+		}
 		go s.cron.Start()
 	}()
 }
 
 func (s *SgridMonitor) kill() {
-	s.cmd.Process.Kill()
 	s.cron.Stop()
 	storage.SaveStatLog(&pojo.StatLog{
 		GridId: s.gridId,
 		Stat:   BEHAVIOR_KILL,
 		Pid:    s.getPid(),
 	})
+	s.dataLog.Close()
+	s.errLog.Close()
+	s.statLog.Close()
+	err := s.cmd.Process.Kill()
+	if err != nil {
+		fmt.Println("kill error", err.Error())
+	}
 	s.next.Store(true)
 }
 
@@ -252,21 +265,22 @@ func (s *SgridMonitor) getFile() {
 	logDataPath := SgridPackageInstance.JoinPath(Logger, s.serverName, fmt.Sprintf("log-data-%v.log", today))
 	logErrorPath := SgridPackageInstance.JoinPath(Logger, s.serverName, fmt.Sprintf("log-error-%v.log", today))
 	logStatPath := SgridPackageInstance.JoinPath(Logger, s.serverName, fmt.Sprintf("log-stat-%v.log", today))
-	opf, err := os.OpenFile(logDataPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	opf, err := os.OpenFile(logDataPath, os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		fmt.Println("OpenFile Error", logDataPath)
 	}
-	epf, err := os.OpenFile(logErrorPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	epf, err := os.OpenFile(logErrorPath, os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		fmt.Println("OpenFile Error", logErrorPath)
 	}
-	spf, err := os.OpenFile(logStatPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	spf, err := os.OpenFile(logStatPath, os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		fmt.Println("OpenFile Error", logStatPath)
 	}
 	s.dataLog = opf
 	s.errLog = epf
 	s.statLog = spf
+	fmt.Println("Then PrintLogger")
 }
 
 type fileTransferServer struct {
@@ -361,11 +375,11 @@ func (s *fileTransferServer) ShutdownGrid(ctx context.Context, req *protocol.Shu
 	for _, _grid := range req.GetReq() {
 		grid := _grid
 		h := grid.GetHost()
+
 		if globalConf.Server.Host == h {
 			i := grid.GetGridId()
-			p := grid.GetPid()
-			sm := globalGrids[int(i)]
-			if sm.getPid() == int(p) {
+			sm, ok := globalGrids[int(i)]
+			if ok {
 				storage.SaveStatLog(&pojo.StatLog{
 					GridId: int(i),
 					Stat:   BEHAVIOR_DOWN,
@@ -401,11 +415,17 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 	for _, grid := range servantGrid { // 通过Host过滤拿到IP，然后进行服务启动
 		GRID := grid
 		id := GRID.GridId
-		fmt.Println("GRID", GRID)
 		if GRID.Ip != globalConf.Server.Host {
 			fmt.Println("server is not equal")
 			return
 		} else {
+			item, ok := globalGrids[int(id)]
+			if ok { // 终止
+				item.kill()
+				delete(globalGrids, int(id))
+			}
+			fmt.Println("GRID", GRID)
+			fmt.Println("serverProtocol", serverProtocol)
 			err = public.CheckDirectoryOrCreate(startDir)
 			if err != nil {
 				fmt.Println("error", err.Error())
@@ -432,6 +452,7 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 					cmd = exec.Command("node", startFile)
 				}
 			}
+			fmt.Println("startFile", startFile)
 			cmd.Env = append(cmd.Env, fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, grid.Port), fmt.Sprintf("%v=%v", public.ENV_PRODUCTION, startDir))
 			fmt.Println("cmd.Env", cmd.Env)
 
@@ -442,14 +463,14 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 				WithMonitorGridID(int(id)),
 			)
 
-			delete(globalGrids, int(id))
 			globalGrids[int(id)] = monitor
-
+			monitor.getFile()
 			monitor.PrintLogger()
 			go monitor.Report()
 
 			go func() {
 				err = cmd.Start()
+				fmt.Println("服务启动")
 				storage.SaveStatLog(&pojo.StatLog{
 					GridId: int(id),
 					Stat:   BEHAVIOR_PULL,

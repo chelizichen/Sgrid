@@ -1,6 +1,6 @@
 server:
   name: SgirdCloud
-  host: 47.98.174.10
+  host: 127.0.0.1
   port: 12111
   protoccol: http
   language: go
@@ -13,7 +13,7 @@ servant:
     server:
       main: true
       name: SgridPackageServer
-      host: 150.158.120.244
+      host: 127.0.0.1
       port: 14938
       type: tcp
     config:

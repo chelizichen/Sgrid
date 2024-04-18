@@ -24,10 +24,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const SgridPackageServerHosts = "SgridPackageServerHosts"
+
 func PackageService(ctx *handlers.SgridServerCtx) {
 	router := ctx.Engine.Group(strings.ToLower(ctx.Name))
-	// addresses := []string{"http://47.98.174.10:24283", "http://150.158.120.244/:24283"}
-	addresses := []string{"localhost:14938"}
+	gn := storage.QueryPropertiesByKey(SgridPackageServerHosts)
+	addresses := []string{}
+
+	for _, v := range gn {
+		addresses = append(addresses, v.Value)
+	}
+
 	clients := []*clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]{}
 	for _, v := range addresses {
 		add := v
@@ -234,23 +241,26 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 		for _, client := range clients {
 			wg.Add(1)
 			go func(client clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]) {
-				u, _ := client.ParseHost()
-				fmt.Println("u", u.Host)
-				fmt.Println("host", host)
-				// if u.Host == host {
-				r, err := client.GetClient().GetLogFileByHost(&gin.Context{}, &protocol.GetLogFileByHostReq{
-					Host:       u.Host,
-					ServerName: serverName,
-				})
+				u, err := client.ParseHost("grpc")
+				fmt.Println("SgridGrpcClient", u.Hostname(), "|", host)
 				if err != nil {
-					fmt.Println("error", err.Error())
+					fmt.Println("ParseHost Error", err.Error())
+					wg.Done()
+					return
 				}
-				fmt.Println("r", r)
-				resp = r
+				if u.Hostname() == host {
+					r, err := client.GetClient().GetLogFileByHost(&gin.Context{}, &protocol.GetLogFileByHostReq{
+						Host:       u.Host,
+						ServerName: serverName,
+					})
+					if err != nil {
+						fmt.Println("error", err.Error())
+					}
+					resp = r
+					wg.Done()
+					return
+				}
 				wg.Done()
-				// return
-				// }
-				// wg.Done()
 
 			}(*client)
 		}
@@ -266,23 +276,26 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 		for _, client := range clients {
 			wg.Add(1)
 			go func(client clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]) {
-				u, _ := client.ParseHost()
-				// if u.Host == host {
-				r, err := client.GetClient().GetLogByFile(&gin.Context{}, &protocol.GetLogByFileReq{
-					Host:       u.Host,
-					ServerName: req.ServerName,
-					Pattern:    req.Pattern,
-					Rows:       req.Rows,
-					LogFile:    req.LogFile,
-				})
-				if err != nil {
-					fmt.Println("error", err.Error())
+				u, _ := client.ParseHost("grpc")
+				if u.Hostname() == req.Host {
+					fmt.Println("req", req)
+					r, err := client.GetClient().GetLogByFile(&gin.Context{}, &protocol.GetLogByFileReq{
+						Host:       u.Host,
+						ServerName: req.ServerName,
+						Pattern:    req.Pattern,
+						Rows:       req.Rows,
+						LogFile:    req.LogFile,
+					})
+					if err != nil {
+						fmt.Println("error", err.Error())
+						wg.Done()
+						return
+					}
+					resp = r
+					wg.Done()
+					return
 				}
-				resp = r
 				wg.Done()
-				// return
-				// }
-				// wg.Done()
 
 			}(*client)
 		}

@@ -56,8 +56,9 @@ func (c *SgridGrpcClient[T]) GetAddress() string {
 	return c.serverAddress
 }
 
-func (c *SgridGrpcClient[T]) ParseHost() (*url.URL, error) {
-	s := c.GetAddress()
+func (c *SgridGrpcClient[T]) ParseHost(pre string) (*url.URL, error) {
+	s := fmt.Sprintf("%v://%v", pre, c.GetAddress())
+	fmt.Println("s", s)
 	return url.Parse(s)
 }
 
