@@ -11,4 +11,4 @@ rm ./$ServerName.tar.gz ./SgridFile
 GOOS=linux GOARCH=amd64  go build -o $SgridFile
 
 # build
-tar -cvf $ServerName.tar.gz ./sgrid.yaml ./$SgridFile
+tar -cvf $ServerName.tar.gz ./sgrid.yml ./$SgridFile dist

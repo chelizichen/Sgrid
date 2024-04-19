@@ -35,6 +35,10 @@ const (
 	CRON_EVERY_DAY = "0 0 0 * * *"
 )
 
+const (
+	ChunkFileSize = 1024 * 1024
+)
+
 func SgridProduction() bool {
 	s := os.Getenv(ENV_PRODUCTION)
 	fmt.Println("s", s)

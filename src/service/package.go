@@ -3,6 +3,7 @@ package service
 import (
 	handlers "Sgrid/src/http"
 	protocol "Sgrid/src/proto"
+	"Sgrid/src/public"
 	clientgrpc "Sgrid/src/public/client_grpc"
 	"Sgrid/src/storage"
 	"Sgrid/src/storage/dto"
@@ -93,22 +94,21 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 					}
 				}()
 				// 缓冲区大小，即每次发送的文件块大小
-				bufferSize := 1024 * 10
-				buffer := make([]byte, bufferSize)
-
+				buffer := make([]byte, public.ChunkFileSize)
 				// 逐个发送文件块
 				for {
 					// 从文件中读取数据到缓冲区
 					n, err := file.Read(buffer)
-					if err != nil {
-						// 如果读取到文件末尾，则跳出循环
-						if err == io.EOF {
-							fmt.Println("end")
-							break
-						}
-						return
+					if err != io.EOF {
+						break
 					}
-
+					if err != nil {
+						fmt.Println("error", err.Error())
+						break
+					}
+					if n == 0 {
+						break
+					}
 					// 构造文件块
 					chunk := &protocol.FileChunk{
 						Data:       buffer[:n],
@@ -124,12 +124,16 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 					}
 					log.Printf("已发送带有偏移量的文件块: %d", chunk.Offset)
 				}
-				response, err := stream.Recv()
+				response, err := stream.CloseAndRecv()
 				if err != nil {
 					c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "recv error"+string(err.Error()), nil))
+					return
 				}
 				fmt.Println("response", response)
-				wg.Done()
+				if response.Code == 200 {
+					wg.Done()
+					return
+				}
 			}(*client)
 		}
 

@@ -21,6 +21,7 @@ export default {
             :grids-list="state.gridsList"
             :server-name="state.serverName"
             :servant-id="state.servantId"
+            @check-status="handleOpen(currentItem)"
           ></gridsComponent>
         </el-card>
       </el-main>
@@ -41,8 +42,9 @@ const state = reactive({
   gridsList: [],
   servantId: 0,
 });
-
+const currentItem = ref();
 async function handleOpen(item: Item) {
+  currentItem.value = item;
   console.log("item", item);
   const grids = await API.queryGrid({ id: item.id });
   state.gridsList = grids.data;

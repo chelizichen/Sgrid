@@ -11,7 +11,7 @@ import (
 func main() {
 	ctx := h.NewSgridServerCtx(
 		h.WithSgridServerType(public.PROTOCOL_HTTP),
-		h.WithSgridGinStatic([2]string{"/static", "dist"}),
+		h.WithSgridGinStatic([2]string{"/web", "dist"}),
 		// h.WithSgridController(),
 		h.WithCors(),
 	)

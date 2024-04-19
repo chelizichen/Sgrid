@@ -110,7 +110,7 @@ message GetPidInfoResp{
 // 文件传输服务定义  
 service FileTransferService {  
     // 双向流式 RPC 用于文件传输  
-    rpc StreamFile(stream FileChunk) returns (stream FileResp) {}  
+    rpc StreamFile(stream FileChunk) returns (FileResp) {}  
     
     // 删除包
     rpc DeletePackage(deletePackageReq)returns(basicResp){}

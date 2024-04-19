@@ -38,7 +38,7 @@ export default {
       </div>
     </el-card>
     <el-divider content-position="left">
-      <el-button type="text" @click="getLogList($props.gridsList)"
+      <el-button type="text" @click="$emit('checkStatus')"
         ><el-icon><Loading /></el-icon> Grids
       </el-button></el-divider
     >
@@ -133,7 +133,7 @@ const props = defineProps<{
   serverName: string;
   servantId: number;
 }>();
-
+const emits = defineEmits(["checkStatus"]);
 async function getLogList(gridList) {
   const resp = await Promise.all(
     gridList.map(async (v) => {
@@ -162,8 +162,8 @@ const statLogList = ref([]);
 watch(
   () => props.gridsList,
   async function (newVal) {
-    getLogList(newVal);
-    checkStat(newVal);
+    await checkStat(newVal);
+    await getLogList(newVal);
   }
 );
 
@@ -212,8 +212,7 @@ const gridStatus = {
   "0": "offline",
 };
 
-function batchShutdown() {
-  console.log("releaseList", selectionGrid.value);
+async function batchShutdown() {
   const body = {
     req: selectionGrid.value
       .filter((v) => v.status != 0 && v.status)
@@ -225,21 +224,29 @@ function batchShutdown() {
       })),
   };
 
-  api.shutdownServer(body);
-  console.log("body", body);
+  const data = await api.shutdownServer(body);
+  if (data.code) {
+    ElMessage.error(data.message);
+  }
+  ElMessage.success("关闭成功");
 }
 
-function shutDown(v) {
+async function shutDown(v) {
   const body = {
-    req: {
-      pid: v.pid,
-      gridId: v.id,
-      host: v.gridNode.ip,
-      port: v.port,
-    },
+    req: [
+      {
+        pid: v.pid,
+        gridId: v.id,
+        host: v.gridNode.ip,
+        port: v.port,
+      },
+    ],
   };
-  api.shutdownServer(body);
-  console.log("body", body);
+  const data = await api.shutdownServer(body);
+  if (data.code) {
+    ElMessage.error(data.message);
+  }
+  ElMessage.success("关闭成功");
 }
 
 const router = useRouter();

@@ -14,7 +14,9 @@ import (
 	"Sgrid/src/public/pool"
 	"Sgrid/src/storage"
 	"Sgrid/src/storage/pojo"
+	"Sgrid/src/utils"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -46,6 +48,8 @@ const (
 	BEHAVIOR_ALIVE = "alive"
 	BEHAVIOR_CHECK = "check"
 )
+
+const CONSTANT_MONITOR_INTERVAL = 30
 
 var globalConf *config.SgridConf
 var globalPool *pool.RoutinePool
@@ -88,8 +92,8 @@ type SgridMonitor struct {
 
 func WithMonitorInterval(interval time.Duration) func(*SgridMonitor) {
 	return func(monitor *SgridMonitor) {
-		if interval.Seconds() < 5 { // min 5s
-			interval = time.Second * 5
+		if interval.Seconds() < CONSTANT_MONITOR_INTERVAL { // min 5s
+			interval = time.Second * CONSTANT_MONITOR_INTERVAL
 		}
 		monitor.interval = interval
 	}
@@ -121,6 +125,7 @@ func NewSgridMonitor(opt ...WithSgridMonitorConfFunc) *SgridMonitor {
 		fn := v
 		fn(monitor)
 	}
+	monitor.getFile()
 	return monitor
 }
 
@@ -178,46 +183,47 @@ func (s *SgridMonitor) Report() {
 	}
 }
 
-func (s *SgridMonitor) PrintLogger() {
-	op, err := s.cmd.StdoutPipe()
-	if err != nil {
-		fmt.Println("StdoutPipe | Error", err.Error())
-	}
-	ep, err := s.cmd.StderrPipe()
-	if err != nil {
-		fmt.Println("StderrPipe | Error", err.Error())
-	}
+func (s *SgridMonitor) PrintLogger(op *io.ReadCloser, ep *io.ReadCloser) {
 	go func() {
 		for {
 			// 读取输出
 			buf := make([]byte, 1024)
-			time := time.Now().Format(time.DateTime)
-			n, err := op.Read(buf)
+			now := time.Now().Format(time.DateTime)
+			n, err := (*op).Read(buf)
 			if err != nil {
-				fmt.Println("s.dataLog.Read erorr", err.Error())
-				break
+				fmt.Println("read ep err", err.Error())
+				time.Sleep(time.Millisecond * 500)
+			} else {
+				// 打印输出
+				content := now + "|ServerName|" + s.serverName + "|" + string(buf[:n]) + "\n"
+				nn, err := s.dataLog.Write([]byte(content))
+				if err != nil {
+					fmt.Println("s.datalog.write error", err.Error())
+				}
+				fmt.Println("nn", nn)
 			}
-			// 打印输出
-			content := time + "|ServerName|" + s.serverName + "|" + string(buf[:n]) + "\n"
-			nn, err := s.dataLog.Write([]byte(content))
-			if err != nil {
-				fmt.Println("s.datalog.write error", err.Error())
-			}
-			fmt.Println("nn", nn)
+
 		}
 	}()
 	go func() {
 		for {
 			// 读取输出
 			buf := make([]byte, 1024)
-			time := time.Now().Format(time.DateTime)
-			n, err := ep.Read(buf)
+			now := time.Now().Format(time.DateTime)
+			n, err := (*ep).Read(buf)
 			if err != nil {
-				break
+				fmt.Println("read ep err", err.Error())
+				time.Sleep(time.Millisecond * 500)
+			} else {
+				// 打印输出
+				content := now + "|ServerName|" + s.serverName + "|" + string(buf[:n]) + "\n"
+				nn, err := s.errLog.Write([]byte(content))
+				if err != nil {
+					fmt.Println("s.datalog.write error", err.Error())
+				}
+				fmt.Println("nn", nn)
 			}
-			// 打印输出
-			content := time + "|ServerName|" + s.serverName + "|" + string(buf[:n]) + "\n"
-			s.errLog.Write([]byte(content))
+
 		}
 	}()
 
@@ -256,6 +262,7 @@ func (s *SgridMonitor) getPid() int {
 }
 
 func (s *SgridMonitor) getFile() {
+
 	today := time.Now().Format(time.DateOnly)
 	directoryPath := SgridPackageInstance.JoinPath(Logger, s.serverName)
 	err := public.CheckDirectoryOrCreate(directoryPath)
@@ -265,21 +272,49 @@ func (s *SgridMonitor) getFile() {
 	logDataPath := SgridPackageInstance.JoinPath(Logger, s.serverName, fmt.Sprintf("log-data-%v.log", today))
 	logErrorPath := SgridPackageInstance.JoinPath(Logger, s.serverName, fmt.Sprintf("log-error-%v.log", today))
 	logStatPath := SgridPackageInstance.JoinPath(Logger, s.serverName, fmt.Sprintf("log-stat-%v.log", today))
-	opf, err := os.OpenFile(logDataPath, os.O_WRONLY|os.O_APPEND, 0644)
-	if err != nil {
-		fmt.Println("OpenFile Error", logDataPath)
+	if !utils.IsExist(logDataPath) {
+		f, err := os.Create(logDataPath)
+		if err != nil {
+			fmt.Println("create logDataPath Error", logDataPath)
+			fmt.Println("create logDataPath Error", err.Error())
+		}
+		s.dataLog = f
+	} else {
+		opf, err := os.OpenFile(logDataPath, os.O_WRONLY|os.O_APPEND, 0644)
+		if err != nil {
+			fmt.Println("OpenFile Error", logDataPath)
+		}
+		s.dataLog = opf
 	}
-	epf, err := os.OpenFile(logErrorPath, os.O_WRONLY|os.O_APPEND, 0644)
-	if err != nil {
-		fmt.Println("OpenFile Error", logErrorPath)
+	if !utils.IsExist(logErrorPath) {
+		f, err := os.Create(logErrorPath)
+		if err != nil {
+			fmt.Println("create logErrorPath Error", logErrorPath)
+			fmt.Println("create logErrorPath Error", err.Error())
+		}
+		s.errLog = f
+	} else {
+		epf, err := os.OpenFile(logErrorPath, os.O_WRONLY|os.O_APPEND, 0644)
+		if err != nil {
+			fmt.Println("OpenFile Error", logErrorPath)
+		}
+		s.errLog = epf
 	}
-	spf, err := os.OpenFile(logStatPath, os.O_WRONLY|os.O_APPEND, 0644)
-	if err != nil {
-		fmt.Println("OpenFile Error", logStatPath)
+	if !utils.IsExist(logStatPath) {
+		f, err := os.Create(logStatPath)
+		if err != nil {
+			fmt.Println("create logStatPath Error", logStatPath)
+			fmt.Println("create logStatPath Error", err.Error())
+		}
+		s.statLog = f
+	} else {
+		spf, err := os.OpenFile(logStatPath, os.O_WRONLY|os.O_APPEND, 0644)
+		if err != nil {
+			fmt.Println("OpenFile Error", logStatPath)
+		}
+		s.statLog = spf
 	}
-	s.dataLog = opf
-	s.errLog = epf
-	s.statLog = spf
+
 	fmt.Println("Then PrintLogger")
 }
 
@@ -311,10 +346,17 @@ func (s *fileTransferServer) StreamFile(stream protocol.FileTransferService_Stre
 	// 循环接收文件块，直到流结束
 	for {
 		fileChunk, err := stream.Recv()
-		if err == io.EOF {
-			// 流结束，退出循环
-			break
+		if err != nil {
+			if err != io.EOF {
+				fmt.Println("error :: server-side :: EOF")
+			} else {
+				fmt.Println("error :: server-side::", err.Error())
+				// 流结束，退出循环
+				break
+			}
+
 		}
+		fmt.Println("chunk", fileChunk.Offset)
 		if err != nil {
 			return err
 		}
@@ -325,14 +367,6 @@ func (s *fileTransferServer) StreamFile(stream protocol.FileTransferService_Stre
 			return err
 		}
 
-		// Respond to the client (optional)
-		response := &protocol.FileResp{
-			Msg:  "Chunk received",
-			Code: 200,
-		}
-		if err := stream.Send(response); err != nil {
-			return err
-		}
 	}
 
 	// 发送文件接收完成的响应
@@ -340,7 +374,7 @@ func (s *fileTransferServer) StreamFile(stream protocol.FileTransferService_Stre
 		Msg:  "File received successfully",
 		Code: 200,
 	}
-	if err := stream.Send(finalResponse); err != nil {
+	if err := stream.RecvMsg(finalResponse); err != nil {
 		return err
 	}
 
@@ -379,7 +413,7 @@ func (s *fileTransferServer) ShutdownGrid(ctx context.Context, req *protocol.Shu
 		if globalConf.Server.Host == h {
 			i := grid.GetGridId()
 			sm, ok := globalGrids[int(i)]
-			if ok {
+			if ok && sm != nil {
 				storage.SaveStatLog(&pojo.StatLog{
 					GridId: int(i),
 					Stat:   BEHAVIOR_DOWN,
@@ -401,6 +435,11 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 	if len(req.ServantGrids) == 0 {
 		return
 	}
+	ReleaseServerByPackageReq, err := json.Marshal(req)
+	if err != nil {
+		fmt.Println("error", err.Error())
+	}
+	fmt.Println("ReleaseServerByPackage Req ||", string(ReleaseServerByPackageReq))
 	filePath := req.FilePath                                                // 服务路径
 	serverLanguage := req.ServerLanguage                                    // 服务语言
 	serverName := req.ServerName                                            // 服务名称
@@ -415,12 +454,13 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 	for _, grid := range servantGrid { // 通过Host过滤拿到IP，然后进行服务启动
 		GRID := grid
 		id := GRID.GridId
+		fmt.Println("GRID.IP", GRID.Ip)
+		fmt.Println("globalConf.Server.Host", globalConf.Server.Host)
 		if GRID.Ip != globalConf.Server.Host {
 			fmt.Println("server is not equal")
-			return
 		} else {
 			item, ok := globalGrids[int(id)]
-			if ok { // 终止
+			if ok && item != nil { // 终止
 				item.kill()
 				delete(globalGrids, int(id))
 			}
@@ -464,22 +504,28 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 			)
 
 			globalGrids[int(id)] = monitor
-			monitor.getFile()
-			monitor.PrintLogger()
-			go monitor.Report()
+			op, err := cmd.StdoutPipe()
+			if err != nil {
+				fmt.Println("GetPipeError", err.Error())
+			}
+			ep, err := cmd.StderrPipe()
+			if err != nil {
+				fmt.Println("GetPipeError", err.Error())
+			}
+			monitor.PrintLogger(&op, &ep)
+			err = cmd.Start()
+			fmt.Println("*************服务启动**************")
+			if err != nil {
+				fmt.Println("服务启动失败 ｜", err.Error())
+			}
+			storage.SaveStatLog(&pojo.StatLog{
+				GridId: int(id),
+				Stat:   BEHAVIOR_PULL,
+				// Pid:    monitor.getPid(),
+			})
 
-			go func() {
-				err = cmd.Start()
-				fmt.Println("服务启动")
-				storage.SaveStatLog(&pojo.StatLog{
-					GridId: int(id),
-					Stat:   BEHAVIOR_PULL,
-					Pid:    monitor.getPid(),
-				})
-				if err != nil {
-					fmt.Println("error", err.Error())
-				}
-			}()
+			fmt.Println("*************开始日志上报**************")
+			go monitor.Report()
 		}
 	}
 
