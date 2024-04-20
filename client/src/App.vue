@@ -8,9 +8,11 @@ import { RouterView } from "vue-router";
         <div style="left: 0%" class="title title-pos" @click="$router.push('/server')">
           Sgrid
         </div>
-        <div style="left: 50%" class="title title-pos" @click="$router.push('/server')">
-          <el-icon><Tools /></el-icon>
+        <div style="left: 45%" class="title title-pos" @click="$router.push('/devops')">
           DevOps
+        </div>
+        <div style="right: 0%" class="title title-pos">
+          <el-icon><Tools /></el-icon>
         </div>
       </div>
     </el-header>

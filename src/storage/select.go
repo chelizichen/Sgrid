@@ -184,14 +184,16 @@ func QueryPropertiesByKey(key string) (resp []*pojo.Properties) {
 }
 
 func QueryUser(user *pojo.User) (resp *pojo.User) {
-
 	c.GORM.Model(&pojo.User{}).Where(&pojo.User{
 		UserName: user.UserName,
 	}).Find(&resp)
-	fmt.Println("user.pass", user.Password)
-	fmt.Println("resp.pass", resp.Password)
 	if user.Password == resp.Password {
 		return resp
 	}
 	return &pojo.User{}
+}
+
+func QueryGroups() (resp []vo.VoServantGroup) {
+	c.GORM.Model(&pojo.ServantGroup{}).Find(&resp)
+	return
 }

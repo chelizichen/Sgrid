@@ -10,12 +10,12 @@ func SaveHashPackage(pkg pojo.ServantPackage) int {
 	return pkg.Id
 }
 
-func SaveServant(svr pojo.Servant) int {
+func SaveServant(svr *pojo.Servant) int {
 	c.GORM.Create(&svr)
 	return svr.Id
 }
 
-func SaveServantGroup(group pojo.ServantGroup) int {
+func SaveServantGroup(group *pojo.ServantGroup) int {
 	c.GORM.Create(&group)
 	return group.Id
 }

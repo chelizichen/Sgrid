@@ -1,7 +1,8 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import ServerView from '@/views/Server.vue'
-import Login from '@/views/Login.vue'
-import LogPage from '@/views/LogPage.vue'
+import ServerView from '@/views/server.vue'
+import Login from '@/views/login.vue'
+import LogPage from '@/views/logger.vue'
+import Devops from '@/views/devops.vue'
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
   routes: [
@@ -23,7 +24,12 @@ const router = createRouter({
       path:'/logpage',
       name:'logpage',
       component: LogPage
-    }
+    },
+    {
+      path:'/devops',
+      name:'devops',
+      component: Devops
+    },
   ]
 })
 

@@ -16,22 +16,22 @@ type Node struct {
 // 服务组
 type ServantGroup struct {
 	Id             int
-	TagName        string // 服务标签
-	TagEnglishName string // 英文
-	CreateTime     string `gorm:"autoCreateTime"` // 创建时间
+	TagName        string     // 服务标签
+	TagEnglishName string     // 英文
+	CreateTime     *time.Time `gorm:"autoCreateTime"` // 创建时间
 }
 
 // 服务
 type Servant struct {
 	Id             int
-	ServerName     string // 服务名称
-	CreateTime     string `gorm:"autoCreateTime"` // 创建时间
-	Language       string // 语言
-	UpStreamName   string // 转发名称
-	Location       string // 路径
-	Protocol       string // 协议
-	ExecPath       string // 可执行路径
-	ServantGroupId int    `gorm:"foreignKey:ServantGroupId"` // 服务组ID
+	ServerName     string     // 服务名称
+	CreateTime     *time.Time `gorm:"autoCreateTime"` // 创建时间
+	Language       string     // 语言
+	UpStreamName   string     // 转发名称
+	Location       string     // 路径
+	Protocol       string     // 协议
+	ExecPath       string     // 可执行路径
+	ServantGroupId int        `gorm:"foreignKey:ServantGroupId"` // 服务组ID
 }
 
 // 服务网格 用于查看所有节点信息
@@ -43,6 +43,7 @@ type Grid struct {
 	UpdateTime *time.Time `gorm:"autoCreateTime"`            // 更新时间
 	NodeId     int        `gorm:"foreignKey:NodeId"`         // 网格所属节点ID
 	ServantId  int        `gorm:"foreignKey:ServantGroupId"` // 网格容纳服务ID
+	CreateTime *time.Time `gorm:"autoCreateTime"`            // 网格容纳服务ID
 }
 
 // 服务包
