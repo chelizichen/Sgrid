@@ -34,6 +34,7 @@ func InitStorage(ctx *config.SgridConf) {
 	sqlDB.SetMaxOpenConns(100)
 	sqlDB.SetConnMaxLifetime(time.Hour)
 	db.Debug().AutoMigrate(&pojo.Node{})
+	db.Debug().AutoMigrate(&pojo.User{})
 	db.Debug().AutoMigrate(&pojo.Grid{})
 	db.Debug().AutoMigrate(&pojo.ServantPackage{})
 	db.Debug().AutoMigrate(&pojo.ServantGroup{})

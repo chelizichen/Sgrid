@@ -8,12 +8,10 @@ export default {
   <div>
     <el-container>
       <el-aside width="200px" class="aside">
-        <el-card>
-          <aside-component
-            :server-list="state.serverList"
-            @handle-open="handleOpen"
-          ></aside-component>
-        </el-card>
+        <aside-component
+          :server-list="state.serverList"
+          @handle-open="handleOpen"
+        ></aside-component>
       </el-aside>
       <el-main>
         <el-card>
@@ -55,7 +53,11 @@ async function handleOpen(item: Item) {
 
 async function fetchServerList() {
   const resp = await API.GetServerList();
-  state.serverList = resp.data || [];
+  state.serverList = (resp.data || []).sort((a, b) => a.id - b.id);
+}
+
+function toGit() {
+  window.open("https://github.com/chelizichen/Sgrid");
 }
 
 onMounted(() => {
@@ -70,5 +72,19 @@ onMounted(() => {
 .aside >>> .el-card__body {
   padding: 10px 0;
   height: 100vh;
+}
+.title {
+  color: rgb(207, 15, 124);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  font-size: 30px;
+  width: 200px;
+  justify-content: center;
+  cursor: pointer;
+}
+.title-pos {
+  position: absolute;
+  top: 10px;
 }
 </style>

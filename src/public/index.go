@@ -192,8 +192,6 @@ func IsExist(filePath string) bool {
 }
 
 func GetLogger(filePath string, pattern string, rows int) (string, error) {
-	cmdString := fmt.Sprintf("tail -n %v  %v  | grep %v", rows, filePath, pattern)
-	fmt.Println("cmdString", cmdString)
 	output, err := TailAndGrep(filePath, rows, pattern)
 	if err != nil {
 		fmt.Println("执行命令失败:", err)

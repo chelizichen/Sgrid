@@ -12,18 +12,10 @@ const emits = defineEmits(["handleOpen"]);
 function handleOpen(item: Partial<Item>) {
   emits("handleOpen", item);
 }
-
-function toGit() {
-  window.open("https://github.com/chelizichen/Simp");
-}
 </script>
 
 <template>
   <div>
-    <div class="app-bigger-size title" @click="toGit()">
-      <el-icon style="color: rgb(207, 90, 124); font-size: 36px"><Help /></el-icon>
-      Sgrid
-    </div>
     <el-menu
       class="el-menu-vertical-demo"
       active-text-color="rgb(207, 15, 124)"
@@ -88,15 +80,4 @@ function toGit() {
   </div>
 </template>
 
-<style>
-.title {
-  color: rgb(207, 15, 124);
-  text-align: center;
-  display: flex;
-  align-items: center;
-  font-size: 30px;
-  width: 200px;
-  justify-content: center;
-  cursor: pointer;
-}
-</style>
+<style scoped></style>

@@ -77,3 +77,10 @@ type StatLog struct {
 	MemoryStack uint64     `json:"memoryStack,omitempty"`
 	MemoryData  uint64     `json:"memoryData,omitempty"`
 }
+
+type User struct {
+	Id         int
+	UserName   string
+	Password   string
+	CreateTimt string
+}

@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"strconv"
 	"time"
 )
 
@@ -84,20 +83,6 @@ func NewSimpMonitor(serverName string, date string, port string) (s SimpMonitor,
 		F.WriteString("// SimpLog Created on " + path + " at " + now + "\n")
 	}
 	return s, nil
-}
-
-// 返回一个Logger
-// tail -n rows log_file | grep "pattern"
-func (s *SimpMonitor) GetLogger(pattern string, rows string) (string, error) {
-	cmdString := "tail" + " -n " + rows + " " + s.LogPath + " | grep " + pattern
-	fmt.Println("cmdString", cmdString)
-	n, _ := strconv.Atoi(rows)
-	output, err := TailAndGrep(s.LogPath, n, pattern)
-	if err != nil {
-		fmt.Println("执行命令失败:", err)
-		return output, err
-	}
-	return output, err
 }
 
 // 返回一个Logger

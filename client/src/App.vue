@@ -1,70 +1,43 @@
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
+import { RouterView } from "vue-router";
 </script>
 <template>
-  <RouterView />
+  <el-container>
+    <el-header>
+      <div style="position: relative">
+        <div style="left: 0%" class="title title-pos" @click="$router.push('/server')">
+          Sgrid
+        </div>
+        <div style="left: 50%" class="title title-pos" @click="$router.push('/server')">
+          <el-icon><Tools /></el-icon>
+          DevOps
+        </div>
+      </div>
+    </el-header>
+    <RouterView />
+  </el-container>
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
+.el-container {
+  min-height: 100vh;
 }
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
+.aside >>> .el-card__body {
+  padding: 10px 0;
+  height: 100vh;
 }
-
-nav {
-  width: 100%;
-  font-size: 12px;
+.title {
+  color: rgb(207, 15, 124);
   text-align: center;
-  margin-top: 2rem;
+  display: flex;
+  align-items: center;
+  font-size: 30px;
+  width: 200px;
+  justify-content: center;
+  cursor: pointer;
 }
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
+.title-pos {
+  position: absolute;
+  top: 10px;
 }
 </style>

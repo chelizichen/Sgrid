@@ -6,6 +6,7 @@ import (
 	"Sgrid/src/public"
 	"Sgrid/src/storage"
 	"Sgrid/src/storage/dto"
+	"Sgrid/src/storage/pojo"
 	"Sgrid/src/storage/vo"
 	utils "Sgrid/src/utils"
 	"fmt"
@@ -27,12 +28,17 @@ const (
 func Registry(ctx *handlers.SgridServerCtx) {
 	GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
 	GROUP.POST("/login", func(c *gin.Context) {
-		token := c.PostForm("token")
-		if token == TOKEN {
-			c.JSON(http.StatusOK, handlers.Resp(0, "Ok", nil))
-			return
+		username := c.PostForm("username")
+		password := c.PostForm("password")
+		v := storage.QueryUser(&pojo.User{
+			UserName: username,
+			Password: password,
+		})
+		if len(v.Password) != 0 && len(v.UserName) != 0 {
+			c.JSON(http.StatusOK, handlers.Resp(0, "ok", v))
+		} else {
+			c.JSON(http.StatusOK, handlers.Resp(-1, "Error", v))
 		}
-		c.JSON(http.StatusBadRequest, handlers.Resp(-1, "Error", nil))
 	})
 
 	GROUP.POST("/deletePackage", func(c *gin.Context) {
@@ -97,23 +103,6 @@ func Registry(ctx *handlers.SgridServerCtx) {
 		c.JSON(200, handlers.Resp(0, "ok", nil))
 	})
 
-	// tail -n rows log_file | grep "pattern"
-	GROUP.POST("/getServerLog", func(c *gin.Context) {
-		serverName := c.PostForm("serverName")
-		fileName := c.PostForm("fileName")
-		pattern := c.DefaultPostForm("pattern", "")
-		rows := c.DefaultPostForm("rows", "100")
-		sm, err := utils.NewSearchLogMonitor(serverName, fileName)
-		if err != nil {
-			fmt.Println("Error To New SimMonitor", err.Error())
-		}
-		s, err := sm.GetLogger(pattern, rows)
-		if err != nil {
-			fmt.Println("Error To GetLogger", err.Error())
-		}
-		c.JSON(200, handlers.Resp(0, "ok", s))
-	})
-
 	GROUP.POST("/getLogList", func(c *gin.Context) {
 		cwd, err := os.Getwd()
 		if err != nil {
@@ -157,25 +146,6 @@ func Registry(ctx *handlers.SgridServerCtx) {
 			}
 		}
 		c.JSON(200, handlers.Resp(0, "ok", loggers))
-	})
-
-	GROUP.POST("/main/getServerLog", func(c *gin.Context) {
-		logFile := c.PostForm("logFile")
-		pattern := c.DefaultPostForm("pattern", "")
-		rows := c.DefaultPostForm("rows", "100")
-		sm, err := utils.NewMainSearchLogMonitor(logFile)
-		if err != nil {
-			fmt.Println("Error To New SimMonitor", err.Error())
-			c.JSON(200, handlers.Resp(-2, err.Error(), nil))
-			return
-		}
-		s, err := sm.GetLogger(pattern, rows)
-		if err != nil {
-			fmt.Println("Error To GetLogger", err.Error())
-			c.JSON(200, handlers.Resp(-1, err.Error(), nil))
-			return
-		}
-		c.JSON(200, handlers.Resp(0, "ok", s))
 	})
 
 	GROUP.GET("/main/queryGrid", func(c *gin.Context) {

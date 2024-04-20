@@ -37,11 +37,6 @@ export default {
         </div>
       </div>
     </el-card>
-    <el-divider content-position="left">
-      <el-button type="text" @click="$emit('checkStatus')"
-        ><el-icon><Loading /></el-icon> Grids
-      </el-button></el-divider
-    >
     <el-table
       :data="props.gridsList"
       style="width: 100%"
@@ -58,7 +53,10 @@ export default {
       </el-table-column>
       <el-table-column label="Status">
         <template #default="scoped">
-          <div :class="gridStatus[scoped.row.status] || 'offline'">
+          <div
+            :class="gridStatus[scoped.row.status] || 'offline'"
+            @click="$emit('checkStatus')"
+          >
             {{ gridStatus[scoped.row.status] || "offline" }}
           </div>
         </template>
@@ -84,23 +82,24 @@ export default {
     </el-table>
     <el-divider content-position="left">
       <el-button type="text" @click="getLogList($props.gridsList)"
-        ><el-icon><Loading /></el-icon> StatLog
+        ><el-icon style="font-size: large; font-weight: 900; color: gray"
+          ><Loading
+        /></el-icon>
       </el-button>
     </el-divider>
     <el-table :data="statLogList" style="width: 100%; margin-top: 20px" border>
       <el-table-column prop="id" label="id" width="180" />
       <el-table-column prop="name" label="name" width="180" />
-      <el-table-column prop="threads" label="threads" width="180" />
-      <el-table-column prop="isRunning" label="isRunning" width="180" />
-      <el-table-column prop="createTime" label="createTime" />
       <el-table-column label="Grid">
         <template #default="scoped">
           <div>{{ scoped.row.gridInfo.gridNode.ip }}:{{ scoped.row.gridInfo.port }}</div>
         </template>
       </el-table-column>
-      <el-table-column prop="stat" label="stat" />
-
       <el-table-column prop="pid" label="pid"> </el-table-column>
+      <el-table-column prop="threads" label="threads" width="180" />
+      <el-table-column prop="isRunning" label="isRunning" width="180" />
+      <el-table-column prop="createTime" label="createTime" />
+      <el-table-column prop="stat" label="behavior" />
     </el-table>
     <uploadComponent
       :upload-visible="state.uploadVisible"
@@ -152,10 +151,12 @@ async function getLogList(gridList) {
     newArr.push(...v);
   });
 
-  statLogList.value = newArr.map((v) => {
-    v.createTime = moment(v.createTime).format("YYYY-MM-DD HH:mm:ss");
-    return v;
-  });
+  statLogList.value = newArr
+    .map((v) => {
+      v.createTime = moment(v.createTime).format("YYYY-MM-DD HH:mm:ss");
+      return v;
+    })
+    .sort((a, b) => b.id - a.id);
 }
 
 const statLogList = ref([]);
@@ -207,7 +208,7 @@ const selectionGrid = ref([]);
 function handleSelectionChange(value) {
   selectionGrid.value = value;
 }
-const gridStatus = {
+const gridStatus: any = {
   "1": "online",
   "0": "offline",
 };
@@ -292,8 +293,10 @@ function checkStat(list) {
 }
 .online {
   color: #55bd55;
+  cursor: pointer;
 }
 .offline {
   color: red;
+  cursor: pointer;
 }
 </style>

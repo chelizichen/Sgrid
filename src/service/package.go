@@ -289,6 +289,7 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 					})
 					if err != nil {
 						fmt.Println("error", err.Error())
+						c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "err"+err.Error(), nil))
 						wg.Done()
 						return
 					}
