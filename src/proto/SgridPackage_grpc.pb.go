@@ -57,7 +57,7 @@ func (c *fileTransferServiceClient) StreamFile(ctx context.Context, opts ...grpc
 
 type FileTransferService_StreamFileClient interface {
 	Send(*FileChunk) error
-	CloseAndRecv() (*FileResp, error)
+	Recv() (*FileResp, error)
 	grpc.ClientStream
 }
 
@@ -69,10 +69,7 @@ func (x *fileTransferServiceStreamFileClient) Send(m *FileChunk) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *fileTransferServiceStreamFileClient) CloseAndRecv() (*FileResp, error) {
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
+func (x *fileTransferServiceStreamFileClient) Recv() (*FileResp, error) {
 	m := new(FileResp)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -198,7 +195,7 @@ func _FileTransferService_StreamFile_Handler(srv interface{}, stream grpc.Server
 }
 
 type FileTransferService_StreamFileServer interface {
-	SendAndClose(*FileResp) error
+	Send(*FileResp) error
 	Recv() (*FileChunk, error)
 	grpc.ServerStream
 }
@@ -207,7 +204,7 @@ type fileTransferServiceStreamFileServer struct {
 	grpc.ServerStream
 }
 
-func (x *fileTransferServiceStreamFileServer) SendAndClose(m *FileResp) error {
+func (x *fileTransferServiceStreamFileServer) Send(m *FileResp) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -363,6 +360,7 @@ var FileTransferService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "StreamFile",
 			Handler:       _FileTransferService_StreamFile_Handler,
+			ServerStreams: true,
 			ClientStreams: true,
 		},
 	},

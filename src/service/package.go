@@ -56,13 +56,11 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 		fileHash := c.PostForm("fileHash")
 		servantId, _ := strconv.Atoi(c.PostForm("servantId"))
 		F, err := c.FormFile("file")
-		contetnt := c.PostForm("content")
+		content := c.PostForm("content")
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "file error"+string(err.Error()), nil))
 			return
 		}
-
-		// 打开文件
 		file, err := F.Open()
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "open error"+string(err.Error()), nil))
@@ -72,20 +70,13 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 		now := time.Now()
 		dateTime := strings.ReplaceAll(now.Format(time.DateTime), " ", "")
 		fileName := fmt.Sprintf("%v_%v_%v.tgz", serverName, dateTime, fileHash)
-		fmt.Println("fileName ", fileName)
 		META := metadata.Pairs("filename", fileName, "serverName", serverName)
 		ctx := metadata.NewOutgoingContext(context.Background(), META)
-		var wg sync.WaitGroup
+		var syncPackage sync.WaitGroup
 		for _, client := range clients {
-			wg.Add(1)
-			go func(client clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]) {
-				// 设置 gRPC 客户端
-				stream, err := client.GetClient().StreamFile(ctx)
-				if err != nil {
-					fmt.Println("err.Error()", err.Error())
-					c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "StreamFile error"+string(err.Error()), nil))
-					return
-				}
+			syncPackage.Add(1)
+			go func(client *clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]) {
+				stream, _ := client.GetClient().StreamFile(ctx)
 				defer func() {
 					if err := stream.CloseSend(); err != nil {
 						fmt.Println("err.Error()", err.Error())
@@ -93,51 +84,57 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 						c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "StreamFile error"+string(err.Error()), nil))
 					}
 				}()
-				// 缓冲区大小，即每次发送的文件块大小
 				buffer := make([]byte, public.ChunkFileSize)
-				// 逐个发送文件块
+				var of int64 = 0
 				for {
-					// 从文件中读取数据到缓冲区
-					n, err := file.Read(buffer)
-					if err != io.EOF {
-						break
-					}
-					if err != nil {
-						fmt.Println("error", err.Error())
-						break
-					}
-					if n == 0 {
-						break
-					}
 					// 构造文件块
+					n, readErr := file.ReadAt(buffer, of)
+					if readErr == io.EOF && n != 0 {
+						fmt.Println("读取完成至最后一个Chunk", readErr.Error(), n)
+						of += int64(n)
+					} else if readErr == io.EOF && n == 0 {
+						fmt.Println("读取完成", readErr.Error())
+						break
+					} else if readErr != nil && readErr != io.EOF {
+						fmt.Println("读取错误", readErr.Error())
+						break
+					} else {
+						of += int64(n)
+
+					}
+					fmt.Println("read offset", n)
 					chunk := &protocol.FileChunk{
 						Data:       buffer[:n],
 						Offset:     int64(n), // 当前文件块在文件中的偏移量
 						ServerName: serverName,
 						FileHash:   fileHash,
 					}
-
-					// 发送文件块
-					if err := stream.Send(chunk); err != nil {
-						c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "Write error"+string(err.Error()), nil))
-						return
+					if sendError := stream.Send(chunk); sendError != nil {
+						if sendError == io.EOF {
+							fmt.Println("Send EOF " + string(sendError.Error()))
+						} else {
+							break
+						}
 					}
-					log.Printf("已发送带有偏移量的文件块: %d", chunk.Offset)
 				}
-				response, err := stream.CloseAndRecv()
-				if err != nil {
-					c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "recv error"+string(err.Error()), nil))
-					return
-				}
-				fmt.Println("response", response)
-				if response.Code == 200 {
-					wg.Done()
-					return
-				}
-			}(*client)
-		}
+				for {
+					res, recvErr := stream.Recv()
+					if recvErr != nil {
+						fmt.Println("recvErr", recvErr.Error())
+						break
+					}
+					if res != nil {
+						fmt.Println("fr.Message Success", res)
+						if res.Code == 200 {
+							syncPackage.Done()
+							break
+						}
+					}
 
-		wg.Wait()
+				}
+			}(client)
+		}
+		syncPackage.Wait()
 		// 接收服务器的响应
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "server error"+string(err.Error()), nil))
@@ -147,7 +144,7 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 			ServantId:  servantId,
 			Hash:       fileHash,
 			FilePath:   fileName,
-			Content:    contetnt,
+			Content:    content,
 			CreateTime: &now,
 		})
 		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", nil))

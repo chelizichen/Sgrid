@@ -42,6 +42,7 @@ message FileChunk {
     int64 offset = 2; // 该块在文件中的偏移量  
     string serverName = 3;
     string fileHash = 4;
+    int32 index = 5;
 }
 
 message FileResp {
@@ -110,7 +111,7 @@ message GetPidInfoResp{
 // 文件传输服务定义  
 service FileTransferService {  
     // 双向流式 RPC 用于文件传输  
-    rpc StreamFile(stream FileChunk) returns (FileResp) {}  
+    rpc StreamFile(stream FileChunk) returns (stream FileResp) {}  
     
     // 删除包
     rpc DeletePackage(deletePackageReq)returns(basicResp){}

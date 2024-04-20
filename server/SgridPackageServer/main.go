@@ -14,7 +14,6 @@ import (
 	"Sgrid/src/public/pool"
 	"Sgrid/src/storage"
 	"Sgrid/src/storage/pojo"
-	"Sgrid/src/utils"
 	"context"
 	"encoding/json"
 	"errors"
@@ -191,7 +190,7 @@ func (s *SgridMonitor) PrintLogger(op *io.ReadCloser, ep *io.ReadCloser) {
 			now := time.Now().Format(time.DateTime)
 			n, err := (*op).Read(buf)
 			if err != nil {
-				fmt.Println("read ep err", err.Error())
+				fmt.Println("read op err", err.Error())
 				time.Sleep(time.Millisecond * 500)
 			} else {
 				// 打印输出
@@ -272,48 +271,24 @@ func (s *SgridMonitor) getFile() {
 	logDataPath := SgridPackageInstance.JoinPath(Logger, s.serverName, fmt.Sprintf("log-data-%v.log", today))
 	logErrorPath := SgridPackageInstance.JoinPath(Logger, s.serverName, fmt.Sprintf("log-error-%v.log", today))
 	logStatPath := SgridPackageInstance.JoinPath(Logger, s.serverName, fmt.Sprintf("log-stat-%v.log", today))
-	if !utils.IsExist(logDataPath) {
-		f, err := os.Create(logDataPath)
-		if err != nil {
-			fmt.Println("create logDataPath Error", logDataPath)
-			fmt.Println("create logDataPath Error", err.Error())
-		}
-		s.dataLog = f
-	} else {
-		opf, err := os.OpenFile(logDataPath, os.O_WRONLY|os.O_APPEND, 0644)
-		if err != nil {
-			fmt.Println("OpenFile Error", logDataPath)
-		}
-		s.dataLog = opf
+
+	opf, err := os.OpenFile(logDataPath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0777)
+	if err != nil {
+		fmt.Println("OpenFile Error", logDataPath)
 	}
-	if !utils.IsExist(logErrorPath) {
-		f, err := os.Create(logErrorPath)
-		if err != nil {
-			fmt.Println("create logErrorPath Error", logErrorPath)
-			fmt.Println("create logErrorPath Error", err.Error())
-		}
-		s.errLog = f
-	} else {
-		epf, err := os.OpenFile(logErrorPath, os.O_WRONLY|os.O_APPEND, 0644)
-		if err != nil {
-			fmt.Println("OpenFile Error", logErrorPath)
-		}
-		s.errLog = epf
+	s.dataLog = opf
+
+	epf, err := os.OpenFile(logErrorPath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0777)
+	if err != nil {
+		fmt.Println("OpenFile Error", logErrorPath)
 	}
-	if !utils.IsExist(logStatPath) {
-		f, err := os.Create(logStatPath)
-		if err != nil {
-			fmt.Println("create logStatPath Error", logStatPath)
-			fmt.Println("create logStatPath Error", err.Error())
-		}
-		s.statLog = f
-	} else {
-		spf, err := os.OpenFile(logStatPath, os.O_WRONLY|os.O_APPEND, 0644)
-		if err != nil {
-			fmt.Println("OpenFile Error", logStatPath)
-		}
-		s.statLog = spf
+	s.errLog = epf
+
+	spf, err := os.OpenFile(logStatPath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0777)
+	if err != nil {
+		fmt.Println("OpenFile Error", logStatPath)
 	}
+	s.statLog = spf
 
 	fmt.Println("Then PrintLogger")
 }
@@ -347,12 +322,21 @@ func (s *fileTransferServer) StreamFile(stream protocol.FileTransferService_Stre
 	for {
 		fileChunk, err := stream.Recv()
 		if err != nil {
+			fmt.Println("err", err.Error())
 			if err != io.EOF {
 				fmt.Println("error :: server-side :: EOF")
-			} else {
-				fmt.Println("error :: server-side::", err.Error())
-				// 流结束，退出循环
 				break
+			} else {
+				message := fmt.Sprintf("error :: server-side:: %s", err.Error())
+				finalResponse := &protocol.FileResp{
+					Msg:  message,
+					Code: 200,
+				}
+				if err := stream.RecvMsg(finalResponse); err != nil {
+					return err
+				}
+				// 流结束，退出循环
+				return nil
 			}
 
 		}
@@ -366,6 +350,18 @@ func (s *fileTransferServer) StreamFile(stream protocol.FileTransferService_Stre
 		if err != nil {
 			return err
 		}
+		if public.ChunkFileSize == fileChunk.Offset {
+			// 发送文件接收完成的响应
+			finalResponse := &protocol.FileResp{
+				Msg:  "Chunk received successfully",
+				Code: 100,
+			}
+			if err := stream.Send(finalResponse); err != nil {
+				return err
+			}
+		} else {
+			break
+		}
 
 	}
 
@@ -374,7 +370,7 @@ func (s *fileTransferServer) StreamFile(stream protocol.FileTransferService_Stre
 		Msg:  "File received successfully",
 		Code: 200,
 	}
-	if err := stream.RecvMsg(finalResponse); err != nil {
+	if err := stream.Send(finalResponse); err != nil {
 		return err
 	}
 
