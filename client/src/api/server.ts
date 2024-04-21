@@ -99,6 +99,13 @@ const API = {
       url:"/devops/getServants",
       method:'get',
     })
+  },
+  saveGrid(data:any){
+    return HttpReq({
+      url:"/devops/saveGrid",
+      method:'post',
+      data
+    })
   }
 }
 

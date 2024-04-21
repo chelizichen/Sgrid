@@ -34,7 +34,8 @@ func InitStorage(ctx *config.SgridConf) {
 
 	if len(db_slave) != 0 {
 		db.Use(dbresolver.Register(dbresolver.Config{
-			Sources: []gorm.Dialector{mysql.Open(db_slave)},
+			Sources:  []gorm.Dialector{mysql.Open(db_master)},
+			Replicas: []gorm.Dialector{mysql.Open(db_slave)},
 		}))
 	}
 

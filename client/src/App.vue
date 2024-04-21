@@ -4,16 +4,28 @@ import { RouterView } from "vue-router";
 <template>
   <el-container>
     <el-header>
-      <div style="position: relative">
-        <div style="left: 0%" class="title title-pos" @click="$router.push('/server')">
+      <div style="position: relative; height: 100%">
+        <div
+          style="left: 3%; text-decoration: underline"
+          class="title title-pos"
+          @click="$router.push('/server')"
+        >
+          <el-icon><Sunny /></el-icon>
           Sgrid
         </div>
+
         <div
-          style="left: 45%; font-size: 20px; color: rgb(207, 15, 124)"
+          style="
+            left: 50%;
+            bottom: 25%;
+            font-size: 24px;
+            color: rgb(207, 15, 124);
+            text-decoration: underline;
+          "
           class="title title-pos"
           @click="$router.push('/devops')"
         >
-          devops
+          <el-icon><Lightning /></el-icon> devops
         </div>
         <div style="right: 0%" class="title title-pos">
           <el-icon><Tools /></el-icon>
@@ -38,7 +50,6 @@ import { RouterView } from "vue-router";
   display: flex;
   align-items: center;
   font-size: 30px;
-  width: 200px;
   justify-content: center;
   cursor: pointer;
 }

@@ -20,7 +20,7 @@ function handleOpen(item: Partial<Item>) {
       class="el-menu-vertical-demo"
       active-text-color="rgb(207, 15, 124)"
       style="border: none"
-      :default-openeds="['2']"
+      :default-openeds="['-1']"
     >
       <el-sub-menu index="-1">
         <template #title>
@@ -38,14 +38,14 @@ function handleOpen(item: Partial<Item>) {
             })
           "
         >
-          <el-icon class="app-not-show">
+          <el-icon>
             <TrendCharts />
           </el-icon>
           <template #title>{{ "DashBoard" }}</template>
         </el-menu-item>
       </el-sub-menu>
-      <template v-for="parent in props.serverList" :key="parent.id">
-        <el-sub-menu :index="parent.id">
+      <template v-for="(parent, index) in props.serverList" :key="parent.id">
+        <el-sub-menu :index="parent.id + '-' + index">
           <template #title>
             <template v-if="parent.tagEnglishName === 'Controller'">
               <el-icon><Setting /></el-icon>
@@ -63,12 +63,12 @@ function handleOpen(item: Partial<Item>) {
             @click="handleOpen(item)"
           >
             <template v-if="parent.tagEnglishName === 'Controller'">
-              <el-icon class="app-not-show">
+              <el-icon>
                 <TrendCharts />
               </el-icon>
             </template>
             <template v-else>
-              <el-icon class="app-not-show">
+              <el-icon>
                 <Menu />
               </el-icon>
             </template>

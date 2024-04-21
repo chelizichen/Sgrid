@@ -182,15 +182,22 @@ func (s *SgridMonitor) Report() {
 	}
 }
 
-func (s *SgridMonitor) PrintLogger(op *io.ReadCloser, ep *io.ReadCloser) {
+func (s *SgridMonitor) PrintLogger() {
+	op, err := s.cmd.StdoutPipe()
+	if err != nil {
+		fmt.Println("GetPipeError", err.Error())
+	}
+	ep, err := s.cmd.StderrPipe()
+	if err != nil {
+		fmt.Println("GetPipeError", err.Error())
+	}
 	go func() {
 		for {
 			// 读取输出
 			buf := make([]byte, 1024)
 			now := time.Now().Format(time.DateTime)
-			n, err := (*op).Read(buf)
+			n, err := op.Read(buf)
 			if err != nil {
-				fmt.Println("read op err", err.Error())
 				time.Sleep(time.Millisecond * 500)
 			} else {
 				// 打印输出
@@ -209,9 +216,8 @@ func (s *SgridMonitor) PrintLogger(op *io.ReadCloser, ep *io.ReadCloser) {
 			// 读取输出
 			buf := make([]byte, 1024)
 			now := time.Now().Format(time.DateTime)
-			n, err := (*ep).Read(buf)
+			n, err := ep.Read(buf)
 			if err != nil {
-				fmt.Println("read ep err", err.Error())
 				time.Sleep(time.Millisecond * 500)
 			} else {
 				// 打印输出
@@ -257,7 +263,12 @@ func (s *SgridMonitor) kill() {
 }
 
 func (s *SgridMonitor) getPid() int {
-	return s.cmd.Process.Pid
+	if s.cmd != nil {
+		if s.cmd.Process != nil {
+			return s.cmd.Process.Pid
+		}
+	}
+	return 0
 }
 
 func (s *SgridMonitor) getFile() {
@@ -500,15 +511,8 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 			)
 
 			globalGrids[int(id)] = monitor
-			op, err := cmd.StdoutPipe()
-			if err != nil {
-				fmt.Println("GetPipeError", err.Error())
-			}
-			ep, err := cmd.StderrPipe()
-			if err != nil {
-				fmt.Println("GetPipeError", err.Error())
-			}
-			monitor.PrintLogger(&op, &ep)
+
+			monitor.PrintLogger()
 			err = cmd.Start()
 			fmt.Println("*************服务启动**************")
 			if err != nil {
@@ -574,8 +578,10 @@ func (s *fileTransferServer) GetPidInfo(ctx context.Context, in *protocol.GetPid
 	ret := &protocol.GetPidInfoResp{
 		Data: []*protocol.HostPidInfo{},
 	}
+	fmt.Println("in", in)
 	for _, v := range in.HostPids {
 		if v.Host == globalConf.Server.Host {
+			fmt.Println("int(v.Pid)", int(v.Pid))
 			statInfo := getStat(int(v.Pid))
 			if statInfo == nil {
 				fmt.Println("error process", v.Pid)
@@ -591,7 +597,7 @@ func (s *fileTransferServer) GetPidInfo(ctx context.Context, in *protocol.GetPid
 					Stat:   BEHAVIOR_CHECK,
 					Pid:    int(v.Pid),
 				})
-				return
+				continue
 			}
 			Stat, _ := statInfo.Status()
 			cpu, _ := statInfo.CPUPercent()

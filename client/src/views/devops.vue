@@ -138,9 +138,9 @@ import { ElMessage } from "element-plus";
 import { ref, watch } from "vue";
 
 const selectOpt = () => {
-  return `服务组ID :  ${groupId.value} 
-  | 服务名称： ${servantItem.value.serverName} 
-  | 语言：${servantItem.value.language} 
+  return `服务组ID :  ${groupId.value}
+  | 服务名称： ${servantItem.value.serverName}
+  | 语言：${servantItem.value.language}
   | 协议：${servantItem.value.protocol}
   | 可执行路径(golang 默认 sgrid_app) : ${servantItem.value.execPath}`;
 };
@@ -204,6 +204,7 @@ const addGridVisible = ref(false);
 const addGridForm = ref({
   port: [],
   servantId: 1,
+  selectionNodes: [],
 });
 function addGrid() {
   addGridVisible.value = true;
@@ -211,9 +212,23 @@ function addGrid() {
 
 function handleSelectionChange(value: never[]) {
   selectionNodes.value = value;
+  addGridForm.value.selectionNodes = value;
 }
 
-function devopsAddGrid() {}
+async function devopsAddGrid() {
+  const body = addGridForm.value.selectionNodes.map((item, index) => {
+    return {
+      nodeId: item.id,
+      port: addGridForm.value.port[index],
+      servantId: addGridForm.value.servantId,
+    };
+  });
+  const ret = await Promise.all(body.map((v) => API.saveGrid(v)));
+  if (ret.every((item) => item.code == 0)) {
+    ElMessage.success("部署成功");
+    addGridVisible.value = false;
+  }
+}
 watch(
   () => modelIndex.value,
   async function (newVal) {

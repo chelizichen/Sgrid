@@ -64,34 +64,34 @@ type ServantPackageVo struct {
 }
 
 type Grid struct {
-	ID          int `gorm:"column:id" json:"id,omitempty"`
-	ServantID   int `gorm:"column:servant_id" json:"servantId,omitempty"`
-	Port        int `gorm:"column:port" json:"port,omitempty"`
-	NodeID      int `gorm:"column:node_id" json:"nodeId,omitempty"`
-	Status      int `gorm:"column:status" json:"status,omitempty"`
-	Pid         int `gorm:"column:pid" json:"pid,omitempty"`
-	UpdateTime  int `gorm:"column:update_time" json:"updateTime,omitempty"`
+	ID          int        `gorm:"column:id" json:"id,omitempty"`
+	ServantID   int        `gorm:"column:servant_id" json:"servantId,omitempty"`
+	Port        int        `gorm:"column:port" json:"port,omitempty"`
+	NodeID      int        `gorm:"column:node_id" json:"nodeId,omitempty"`
+	Status      int        `gorm:"column:status" json:"status,omitempty"`
+	Pid         int        `gorm:"column:pid" json:"pid,omitempty"`
+	UpdateTime  *time.Time `gorm:"column:update_time" json:"updateTime,omitempty"`
 	GridServant `gorm:"embedded" json:"gridServant,omitempty"`
 	GridNode    `gorm:"embedded" json:"gridNode,omitempty"`
 }
 
 type GridServant struct {
-	ID                int    `gorm:"column:gs_id" json:"servantId,omitempty"`
-	Language          string `gorm:"column:gs_language" json:"language,omitempty"`
-	ServantGroupID    int    `gorm:"column:gs_servant_group_id" json:"servantGroupId,omitempty"`
-	ServerName        string `gorm:"column:gs_server_name" json:"serverName,omitempty"`
-	ServantCreateTime string `gorm:"column:gs_create_time" json:"servantCreateTime,omitempty"`
-	ExecPath          string `gorm:"column:gs_exec_path" json:"execPath,omitempty"`
-	Protocol          string `gorm:"column:gs_protocol" json:"protocol,omitempty"`
+	ID                int        `gorm:"column:gs_id" json:"servantId,omitempty"`
+	Language          string     `gorm:"column:gs_language" json:"language,omitempty"`
+	ServantGroupID    int        `gorm:"column:gs_servant_group_id" json:"servantGroupId,omitempty"`
+	ServerName        string     `gorm:"column:gs_server_name" json:"serverName,omitempty"`
+	ServantCreateTime *time.Time `gorm:"column:gs_create_time" json:"servantCreateTime,omitempty"`
+	ExecPath          string     `gorm:"column:gs_exec_path" json:"execPath,omitempty"`
+	Protocol          string     `gorm:"column:gs_protocol" json:"protocol,omitempty"`
 }
 
 type GridNode struct {
-	NodeID         int    `gorm:"column:gn_id" json:"id,omitempty"`
-	NodeIP         string `gorm:"column:gn_ip" json:"ip,omitempty"`
-	Main           string `gorm:"column:gn_main" json:"main,omitempty"`
-	Platform       string `gorm:"column:gn_pslat_form" json:"platform,omitempty"`
-	NodeStatus     int    `gorm:"column:gn_status" json:"nodeStatus,omitempty"`
-	NodeCreateTime string `gorm:"column:gn_create_time" json:"nodeCreateTime,omitempty"`
+	NodeID         int        `gorm:"column:gn_id" json:"id,omitempty"`
+	NodeIP         string     `gorm:"column:gn_ip" json:"ip,omitempty"`
+	Main           string     `gorm:"column:gn_main" json:"main,omitempty"`
+	Platform       string     `gorm:"column:gn_pslat_form" json:"platform,omitempty"`
+	NodeStatus     int        `gorm:"column:gn_status" json:"nodeStatus,omitempty"`
+	NodeCreateTime *time.Time `gorm:"column:gn_create_time" json:"nodeCreateTime,omitempty"`
 }
 
 type CoverConfigVo struct {
@@ -106,7 +106,7 @@ type VoServantPackage struct {
 	FilePath     string     `gorm:"file_path" json:"filePath,omitempty"`
 	Content      string     `gorm:"content" json:"content,omitempty"`
 	CreateTime   *time.Time `gorm:"create_time" json:"createTime,omitempty"`
-	Version      uint       `gorm:"version" json:"version,omitempty"`
+	Version      string     `gorm:"version" json:"version,omitempty"`
 	GSServerName string     `gorm:"gs_server_name" json:"serverName,omitempty"`
 	GSCreateTime *time.Time `gorm:"gs_create_time" json:"serverCreateTime,omitempty"`
 	GSLanguage   string     `gorm:"gs_language" json:"language,omitempty"`

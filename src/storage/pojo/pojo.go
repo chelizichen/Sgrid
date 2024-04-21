@@ -5,12 +5,12 @@ import "time"
 // 节点
 type Node struct {
 	Id         int
-	Ip         string // IP地址
-	Status     int    // 状态
-	CreateTime string `gorm:"autoCreateTime"` // 创建时间
-	PlatForm   string // 平台
-	Main       string // 是否为主机
-	UploadPath string // 上传路径
+	Ip         string     // IP地址
+	Status     int        // 状态
+	CreateTime *time.Time `gorm:"autoCreateTime"` // 创建时间
+	PlatForm   string     // 平台
+	Main       string     // 是否为主机
+	UploadPath string     // 上传路径
 }
 
 // 服务组
