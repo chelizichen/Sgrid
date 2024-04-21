@@ -35,6 +35,8 @@ const (
 	CRON_EVERY_DAY = "0 0 0 * * *"
 )
 
+type GRPC_CLIENT_PROXYS struct{}
+
 const (
 	ChunkFileSize = 1024 * 1024
 )

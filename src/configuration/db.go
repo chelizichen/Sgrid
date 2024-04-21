@@ -12,6 +12,10 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+const (
+	AUTO_MIGRATE = "autoMigrate"
+)
+
 var GORM *gorm.DB
 var RDBContext = context.Background()
 
@@ -33,13 +37,15 @@ func InitStorage(ctx *config.SgridConf) {
 	sqlDB.SetMaxIdleConns(10)
 	sqlDB.SetMaxOpenConns(100)
 	sqlDB.SetConnMaxLifetime(time.Hour)
-	db.Debug().AutoMigrate(&pojo.Node{})
-	db.Debug().AutoMigrate(&pojo.User{})
-	db.Debug().AutoMigrate(&pojo.Grid{})
-	db.Debug().AutoMigrate(&pojo.ServantPackage{})
-	db.Debug().AutoMigrate(&pojo.ServantGroup{})
-	db.Debug().AutoMigrate(&pojo.Servant{})
-	db.Debug().AutoMigrate(&pojo.Properties{})
-	db.Debug().AutoMigrate(&pojo.StatLog{})
+	if ctx.GetBool(AUTO_MIGRATE) {
+		db.Debug().AutoMigrate(&pojo.Node{})
+		db.Debug().AutoMigrate(&pojo.User{})
+		db.Debug().AutoMigrate(&pojo.Grid{})
+		db.Debug().AutoMigrate(&pojo.ServantPackage{})
+		db.Debug().AutoMigrate(&pojo.ServantGroup{})
+		db.Debug().AutoMigrate(&pojo.Servant{})
+		db.Debug().AutoMigrate(&pojo.Properties{})
+		db.Debug().AutoMigrate(&pojo.StatLog{})
+	}
 	GORM = db
 }

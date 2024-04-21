@@ -85,3 +85,10 @@ type User struct {
 	Password   string
 	CreateTimt string
 }
+
+type ServantConf struct {
+	Id         int
+	ServantId  string
+	CreateTime *time.Time
+	Conf       string
+}

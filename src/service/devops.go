@@ -1,15 +1,11 @@
-// devops component
-// 1.选择服务组 ｜ 创建
-// 2.创建服务
-// 3.选择节点
-// 4.添加至服务网格
-// 5.选择端口
 package service
 
 import (
 	"Sgrid/src/config"
 	handlers "Sgrid/src/http"
+	protocol "Sgrid/src/proto"
 	"Sgrid/src/public"
+	clientgrpc "Sgrid/src/public/client_grpc"
 	"Sgrid/src/storage"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
@@ -27,15 +23,23 @@ import (
 
 func DevopsService(ctx *handlers.SgridServerCtx) {
 	GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
+	// devops component
 	GROUP.GET("/devops/getGroups", getGroups)
+	// 1.选择服务组 ｜ 创建
 	GROUP.POST("/devops/saveGroup", saveGroup)
+	// 2.创建服务
 	GROUP.POST("/devops/saveServant", saveServant)
+	// 3.选择节点
 	GROUP.GET("/devops/queryNodes", queryNodes)
+	// 4.添加至服务网格
 	GROUP.POST("/devops/saveGrid", saveGrid)
+	// 5.选择端口
 
-	// todo 中心数据库 or 文件形式
+	// 中心数据库
 	GROUP.GET("/devops/getConfig", getConfig)
 	GROUP.POST("/devops/updateConfig", updateConfig)
+	// 集群通知变更
+	GROUP.POST("/devops/notifyConfig", notifyConfig(ctx.Context.Value(public.GRPC_CLIENT_PROXYS{}).([]*clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient])))
 
 }
 
@@ -150,4 +154,41 @@ func updateConfig(c *gin.Context) {
 		c.JSON(200, handlers.Resp(-1, "CoverConfig Error", nil))
 	}
 	c.JSON(200, handlers.Resp(0, "ok", nil))
+}
+
+func notifyConfig(clients []*clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		var reqVo vo.CoverConfigVo
+		if err := c.BindJSON(&reqVo); err != nil {
+			c.JSON(http.StatusOK, handlers.Resp(0, "-1", err.Error()))
+			return
+		}
+		serverName := reqVo.ServerName
+		uploadConfig := reqVo.Conf
+		if serverName == "" {
+			fmt.Println("Server Name is Empty")
+			c.JSON(http.StatusOK, handlers.Resp(0, "Server Name is Empty", nil))
+			return
+		}
+		marshal, err := yaml.Marshal(uploadConfig)
+		if err != nil {
+			fmt.Println("Error To Stringify config", err.Error())
+			c.JSON(http.StatusOK, handlers.Resp(0, "Error To Stringify config", nil))
+			return
+		}
+		fmt.Println("serverName", serverName)
+		fmt.Println("uploadConfig", string(marshal))
+		if len(marshal) == 0 {
+			fmt.Println("Error To Stringify config", err.Error())
+			c.JSON(http.StatusOK, handlers.Resp(0, "Error To Stringify config", nil))
+			return
+		}
+		configPath := filepath.Join(utils.PublishPath, serverName, "simpProd.yaml")
+		err = config.CoverConfig(string(marshal), configPath)
+		if err != nil {
+			fmt.Println("CoverConfig Error", err.Error())
+			c.JSON(200, handlers.Resp(-1, "CoverConfig Error", nil))
+		}
+		c.JSON(200, handlers.Resp(0, "ok", nil))
+	}
 }

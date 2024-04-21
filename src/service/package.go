@@ -18,8 +18,6 @@ import (
 	"sync"
 	"time"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/gin-gonic/gin"
@@ -29,27 +27,8 @@ const SgridPackageServerHosts = "SgridPackageServerHosts"
 
 func PackageService(ctx *handlers.SgridServerCtx) {
 	router := ctx.Engine.Group(strings.ToLower(ctx.Name))
-	gn := storage.QueryPropertiesByKey(SgridPackageServerHosts)
-	addresses := []string{}
+	clients := ctx.Context.Value(public.GRPC_CLIENT_PROXYS{}).([]*clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient])
 
-	for _, v := range gn {
-		addresses = append(addresses, v.Value)
-	}
-
-	clients := []*clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]{}
-	for _, v := range addresses {
-		add := v
-		conn, err := grpc.Dial(add, grpc.WithTransportCredentials(insecure.NewCredentials()))
-		if err != nil {
-			log.Fatalf("无法连接: %v", err)
-		}
-		// defer conn.Close() // 移动到循环内部
-		client := clientgrpc.NewSgridClient[protocol.FileTransferServiceClient](
-			protocol.NewFileTransferServiceClient(conn),
-			clientgrpc.WithSgridGrpcClientAddress[protocol.FileTransferServiceClient](add),
-		)
-		clients = append(clients, client)
-	}
 	router.POST("/upload/uploadServer", func(c *gin.Context) {
 		// 从请求中获取服务器名、文件哈希和文件
 		serverName := c.PostForm("serverName")

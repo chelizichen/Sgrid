@@ -5,6 +5,7 @@ import (
 	"Sgrid/src/public"
 	"Sgrid/src/public/servant"
 	"Sgrid/src/utils"
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -24,6 +25,7 @@ type SgridServerCtx struct {
 	Host       string
 	ServerConf map[string]interface{}
 	SgridConf  *config.SgridConf
+	Context    context.Context
 }
 
 func Resp(code int, message string, data interface{}) *gin.H {
@@ -145,7 +147,9 @@ func WithCors() NewSgrid {
 
 func NewSgridServerCtx(opt ...NewSgrid) *SgridServerCtx {
 	initConf := &InitConf{}
-	ctx := &SgridServerCtx{}
+	ctx := &SgridServerCtx{
+		Context: context.Background(),
+	}
 	for _, fn := range opt {
 		fn(initConf)
 	}

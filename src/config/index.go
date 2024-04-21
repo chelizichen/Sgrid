@@ -44,6 +44,25 @@ func (s *SgridConf) GetString(key string) string {
 	}
 }
 
+func (s *SgridConf) GetBool(key string) bool {
+	v, ok := s.Conf[key]
+	if !ok || v == nil {
+		return false
+	}
+	fmt.Println("v", v)
+	t := reflect.TypeOf(v)
+	switch t.Kind() {
+	case reflect.Bool:
+		{
+			return v.(bool)
+		}
+	default:
+		{
+			return false
+		}
+	}
+}
+
 func (s *SgridConf) GetStringArray(key string) []string {
 	v := s.Conf[key]
 	t := reflect.TypeOf(v)
