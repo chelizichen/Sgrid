@@ -29,6 +29,10 @@ func DevopsService(ctx *handlers.SgridServerCtx) {
 	GROUP.POST("/devops/saveGroup", saveGroup)
 	// 2.创建服务
 	GROUP.POST("/devops/saveServant", saveServant)
+
+	// 2.1 选择服务
+	GROUP.GET("/devops/getServants", getServants)
+
 	// 3.选择节点
 	GROUP.GET("/devops/queryNodes", queryNodes)
 	// 4.添加至服务网格
@@ -45,6 +49,11 @@ func DevopsService(ctx *handlers.SgridServerCtx) {
 
 func getGroups(c *gin.Context) {
 	vsg := storage.QueryGroups()
+	c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", vsg))
+}
+
+func getServants(c *gin.Context) {
+	vsg := storage.QueryServants()
 	c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", vsg))
 }
 
@@ -78,6 +87,7 @@ func saveServant(c *gin.Context) {
 		Language:       req.Language,
 		Protocol:       req.Protocol,
 		ServantGroupId: req.ServantGroupId,
+		ExecPath:       req.ExecPath,
 		CreateTime:     &now,
 	}
 	vsg := storage.SaveServant(record)

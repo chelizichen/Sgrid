@@ -24,15 +24,15 @@ type SaveServantGroupDto struct {
 }
 
 type SaveServantDto struct {
-	Id             int
-	ServerName     string // 服务名称
-	CreateTime     string // 创建时间
-	Language       string // 语言
-	UpStreamName   string // 转发名称
-	Location       string // 路径
-	Protocol       string // 协议
-	ExecPath       string // 可执行路径
-	ServantGroupId int    // 服务组ID
+	Id             int    `json:"id,omitempty"`
+	ServerName     string `json:"serverName,omitempty"`     // 服务名称
+	CreateTime     string `json:"createTime,omitempty"`     // 创建时间
+	Language       string `json:"language,omitempty"`       // 语言
+	UpStreamName   string `json:"upStreamName,omitempty"`   // 转发名称
+	Location       string `json:"location,omitempty"`       // 路径
+	Protocol       string `json:"protocol,omitempty"`       // 协议
+	ExecPath       string `json:"execPath,omitempty"`       // 可执行路径
+	ServantGroupId int    `json:"servantGroupId,omitempty"` // 服务组ID
 }
 
 type GridDTO struct {

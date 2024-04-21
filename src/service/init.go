@@ -46,4 +46,5 @@ func InitService(ctx *handlers.SgridServerCtx) {
 	ctx.Context = context.WithValue(ctx.Context, public.GRPC_CLIENT_PROXYS{}, clients)
 	ctx.RegistryHttpRouter(PackageService)
 	ctx.RegistryHttpRouter(Registry)
+	ctx.RegistryHttpRouter(DevopsService)
 }

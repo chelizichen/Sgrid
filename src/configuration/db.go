@@ -10,23 +10,34 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
+	"gorm.io/plugin/dbresolver"
 )
 
 const (
-	AUTO_MIGRATE = "autoMigrate"
+	AUTO_MIGRATE = "db_migrate"
 )
 
 var GORM *gorm.DB
 var RDBContext = context.Background()
 
 func InitStorage(ctx *config.SgridConf) {
-	db, err := gorm.Open(mysql.Open(ctx.GetString("db")), &gorm.Config{
+	db_master := ctx.GetString("db_master")
+	db_slave := ctx.GetString("db_slave")
+
+	db, err := gorm.Open(mysql.Open(db_master), &gorm.Config{
 		SkipDefaultTransaction: true,
 		NamingStrategy: schema.NamingStrategy{
 			TablePrefix:   "grid_",
 			SingularTable: true,
 		},
 	})
+
+	if len(db_slave) != 0 {
+		db.Use(dbresolver.Register(dbresolver.Config{
+			Sources: []gorm.Dialector{mysql.Open(db_slave)},
+		}))
+	}
+
 	if err != nil {
 		fmt.Println("Error To init gorm", err)
 	}

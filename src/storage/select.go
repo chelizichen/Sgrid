@@ -35,10 +35,10 @@ func QueryNodes() []*vo.GridNode {
 	return respList
 }
 
-func QueryServants() []vo.VoServant {
-	var dataList []vo.VoServant
-	c.GORM.Model(dataList).Find(&dataList)
-	return dataList
+func QueryServants() *[]vo.VoServantObj {
+	var dataList []vo.VoServantObj
+	c.GORM.Model(&pojo.Servant{}).Find(&dataList)
+	return &dataList
 }
 
 func QueryGrid(req *dto.PageBasicReq) (resp []vo.Grid) {
@@ -193,7 +193,8 @@ func QueryUser(user *pojo.User) (resp *pojo.User) {
 	return &pojo.User{}
 }
 
-func QueryGroups() (resp []vo.VoServantGroup) {
+func QueryGroups() (resp *[]vo.VoGroupObj) {
 	c.GORM.Model(&pojo.ServantGroup{}).Find(&resp)
+	fmt.Println("resp", resp)
 	return
 }

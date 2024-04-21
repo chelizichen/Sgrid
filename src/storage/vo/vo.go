@@ -17,12 +17,20 @@ type VoGroupByServant struct {
 // 节点
 type VoServantGroup struct {
 	Id             int       `gorm:"column:id" json:"id,omitempty"`
-	TagName        string    `gorm:"column:tag_name" json:"tagName,omitempty"`                 // 服务标签
-	TagEnglishName string    `gorm:"column:tag_english_name" json:"tagEnglish_name,omitempty"` // 英文
-	CreateTime     string    `gorm:"autoCreateTime" json:"creatTime,omitempty"`                // 创建时间
+	TagName        string    `gorm:"column:tag_name" json:"tagName,omitempty"`                // 服务标签
+	TagEnglishName string    `gorm:"column:tag_english_name" json:"tagEnglishName,omitempty"` // 英文
+	CreateTime     string    `gorm:"autoCreateTime" json:"creatTime,omitempty"`               // 创建时间
 	VoServant      VoServant `gorm:"embedded" json:"servantGroup,omitempty"`
 }
 
+type VoGroupObj struct {
+	Id             int    `gorm:"column:id" json:"id,omitempty"`
+	TagName        string `gorm:"column:tag_name" json:"tagName,omitempty"`                // 服务标签
+	TagEnglishName string `gorm:"column:tag_english_name" json:"tagEnglishName,omitempty"` // 英文
+	CreateTime     string `gorm:"autoCreateTime" json:"creatTime,omitempty"`               // 创建时间
+}
+
+// 联表查用的
 type VoServant struct {
 	Id             int    `gorm:"column:gs_id" json:"id,omitempty"`
 	ServerName     string `gorm:"column:gs_server_name" json:"serverName,omitempty"`      // 服务名称
@@ -30,7 +38,20 @@ type VoServant struct {
 	Language       string `gorm:"column:gs_language" json:"language,omitempty"`           // 语言
 	UpStreamName   string `gorm:"column:gs_up_stream_name" json:"upStreamName,omitempty"` // 转发名称
 	Location       string `gorm:"column:gs_location"  json:"location,omitempty"`          // 路径
-	ServantGroupId int    `gorm:"column:gs_groupId" json:"servant_group,omitempty"`       // 服务组ID
+	ServantGroupId int    `gorm:"column:gs_groupId" json:"servantGroupId,omitempty"`      // 服务组ID
+}
+
+// 纯Obj
+type VoServantObj struct {
+	Id             int        `json:"id,omitempty"`
+	ServerName     string     `json:"serverName,omitempty"`     // 服务名称
+	CreateTime     *time.Time `json:"createTime,omitempty"`     // 创建时间
+	Language       string     `json:"language,omitempty"`       // 语言
+	UpStreamName   string     `json:"upStreamName,omitempty"`   // 转发名称
+	Location       string     `json:"location,omitempty"`       // 路径
+	Protocol       string     `json:"protocol,omitempty"`       // 协议
+	ExecPath       string     `json:"execPath,omitempty"`       // 可执行路径
+	ServantGroupId int        `json:"servantGroupId,omitempty"` // 服务组ID
 }
 
 type ServantPackageVo struct {

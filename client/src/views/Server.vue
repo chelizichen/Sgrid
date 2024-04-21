@@ -52,7 +52,7 @@ async function handleOpen(item: Item) {
 }
 
 async function fetchServerList() {
-  const resp = await API.GetServerList();
+  const resp = await API.getServerList();
   state.serverList = (resp.data || []).sort((a, b) => a.id - b.id);
 }
 

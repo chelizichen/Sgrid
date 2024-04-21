@@ -30,7 +30,10 @@ func (s *SgridConf) Get(key string) interface{} {
 }
 
 func (s *SgridConf) GetString(key string) string {
-	v := s.Conf[key]
+	v, ok := s.Conf[key]
+	if !ok || v == nil {
+		return ""
+	}
 	t := reflect.TypeOf(v)
 	switch t.Kind() {
 	case reflect.String:

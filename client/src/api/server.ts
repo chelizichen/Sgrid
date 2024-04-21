@@ -15,7 +15,7 @@ const API = {
       data,
     }) as unknown as BasicResp<any>
   },
-  GetServerList: function () {
+  getServerList: function () {
     return HttpReq({
       url:'/main/queryServantGroup',
       method:'get'
@@ -26,30 +26,6 @@ const API = {
       url:'/upload/getList',
       params,
       method:'get',
-    }) as unknown as BasicResp<any>
-  },
-  CheckServer: function (data:any) {
-    return HttpReq({
-      url:'/checkServer',
-      data
-    }) as unknown as BasicResp<any>
-  },
-  CreateServer: function (data:any) {
-    return HttpReq({
-      url:'/createServer',
-      data
-    }) as unknown as BasicResp<any>
-  },
-  CheckConfig: function (data:any) {
-    return HttpReq({
-      url:'/checkConfig',
-      data
-    }) as unknown as BasicResp<any>
-  },
-  DeletePackage: function (data:any) {
-    return HttpReq({
-      url:'/deletePackage',
-      data
     }) as unknown as BasicResp<any>
   },
   queryGrid:function(params:any){
@@ -99,6 +75,31 @@ const API = {
       data
     }) as unknown as BasicResp<any>
   },
+  getGroup(){
+    return HttpReq({
+      url:"/devops/getGroups",
+      method:'get'
+    })
+  },
+  saveServant(data:any){
+    return HttpReq({
+      url:"/devops/saveServant",
+      method:'post',
+      data:data,
+    })
+  },
+  queryNodes(){
+    return HttpReq({
+      url:"/devops/queryNodes",
+      method:'get',
+    })
+  },
+  getServants(){
+    return HttpReq({
+      url:"/devops/getServants",
+      method:'get',
+    })
+  }
 }
 
 export default API
