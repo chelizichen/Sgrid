@@ -47,12 +47,7 @@ function handleOpen(item: Partial<Item>) {
       <template v-for="(parent, index) in props.serverList" :key="parent.id">
         <el-sub-menu :index="parent.id + '-' + index">
           <template #title>
-            <template v-if="parent.tagEnglishName === 'Controller'">
-              <el-icon><Setting /></el-icon>
-            </template>
-            <template v-else>
-              <el-icon><Grid /></el-icon>
-            </template>
+            <el-icon><Grid /></el-icon>
             <span>{{ parent.tagEnglishName }}</span>
           </template>
           <el-menu-item
@@ -62,16 +57,9 @@ function handleOpen(item: Partial<Item>) {
             :key="index"
             @click="handleOpen(item)"
           >
-            <template v-if="parent.tagEnglishName === 'Controller'">
-              <el-icon>
-                <TrendCharts />
-              </el-icon>
-            </template>
-            <template v-else>
-              <el-icon>
-                <Menu />
-              </el-icon>
-            </template>
+            <el-icon>
+              <TrendCharts />
+            </el-icon>
             <template #title>{{ item.serverName }}</template>
           </el-menu-item>
         </el-sub-menu>

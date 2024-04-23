@@ -93,14 +93,16 @@ func QueryServantGroup(req *dto.PageBasicReq) (resp []vo.VoServantGroup) {
 // 转换函数
 func ConvertToVoGroupByServant(voServantGroups []vo.VoServantGroup) []vo.VoGroupByServant {
 	resultMap := make(map[int]vo.VoGroupByServant)
+	ept := vo.VoServant{}
 	for _, group := range voServantGroups {
 		var servants []vo.VoServant
 		if existingGroup, ok := resultMap[group.Id]; ok {
 			servants = existingGroup.Servants
 		}
 
-		servants = append(servants, group.VoServant)
-
+		if group.VoServant != ept {
+			servants = append(servants, group.VoServant)
+		}
 		resultMap[group.Id] = vo.VoGroupByServant{
 			Id:             group.Id,
 			TagName:        group.TagName,

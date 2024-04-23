@@ -86,7 +86,7 @@ const API = {
       url:"/devops/saveServant",
       method:'post',
       data:data,
-    })
+    }) as unknown as BasicResp<any>
   },
   queryNodes(){
     return HttpReq({
@@ -106,6 +106,13 @@ const API = {
       method:'post',
       data
     })
+  },
+  saveGroup(data:any){
+    return HttpReq({
+      url:"/devops/saveGroup",
+      method:'post',
+      data
+    }) as unknown as BasicResp<any>
   }
 }
 

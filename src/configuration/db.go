@@ -23,7 +23,6 @@ var RDBContext = context.Background()
 func InitStorage(ctx *config.SgridConf) {
 	db_master := ctx.GetString("db_master")
 	db_slave := ctx.GetString("db_slave")
-
 	db, err := gorm.Open(mysql.Open(db_master), &gorm.Config{
 		SkipDefaultTransaction: true,
 		NamingStrategy: schema.NamingStrategy{
@@ -33,10 +32,14 @@ func InitStorage(ctx *config.SgridConf) {
 	})
 
 	if len(db_slave) != 0 {
-		db.Use(dbresolver.Register(dbresolver.Config{
+		fmt.Println("db_slave", db_slave)
+		fmt.Println("db_master", db_master)
+		if e := db.Use(dbresolver.Register(dbresolver.Config{
 			Sources:  []gorm.Dialector{mysql.Open(db_master)},
 			Replicas: []gorm.Dialector{mysql.Open(db_slave)},
-		}))
+		})); e != nil {
+			fmt.Println("e", e.Error())
+		}
 	}
 
 	if err != nil {

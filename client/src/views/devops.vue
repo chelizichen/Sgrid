@@ -42,7 +42,9 @@ export default {
             </el-form-item>
             <el-form-item label="操作">
               <el-button @click="resetForm">重置</el-button>
-              <el-button type="primary">确定</el-button></el-form-item
+              <el-button type="primary" @click="devopsAddGroup"
+                >确定</el-button
+              ></el-form-item
             >
           </el-form>
         </div>
@@ -104,8 +106,10 @@ export default {
           <el-dialog v-model="addGridVisible" title="服务部署">
             <el-form label-width="100px">
               <template v-for="(item, index) in selectionNodes" :key="index">
-                <el-form-item :label="'节点 ' + item.ip">
-                  <el-input v-model.number="addGridForm.port[index]"></el-input>
+                <el-form-item label="分配节点">
+                  <el-input v-model.number="addGridForm.port[index]">
+                    <template #prepend>{{ item.ip }}</template>
+                  </el-input>
                 </el-form-item>
               </template>
               <el-form-item label="选择服务">
@@ -156,6 +160,15 @@ const rules = ref({
   tagEnglishName: [{ required: true, message: "请输入英文标签", trigger: "blur" }],
 });
 
+async function devopsAddGroup() {
+  const data = await API.saveGroup(formData.value);
+  if (data.code) {
+    return ElMessage.error(data.message);
+  }
+  resetForm();
+  return ElMessage.success("创建成功");
+}
+
 const resetForm = () => {
   formData.value.tagName = "";
   formData.value.tagEnglishName = "";
@@ -195,6 +208,8 @@ async function devopsAddServant() {
   if (data.code) {
     return ElMessage.error(data.message);
   }
+  resetServant();
+  return ElMessage.success("创建成功");
 }
 
 const nodes = ref([]);
