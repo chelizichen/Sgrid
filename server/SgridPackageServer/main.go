@@ -487,6 +487,12 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 					cmd = exec.Command("node", startFile)
 				}
+				if serverLanguage == public.RELEASE_JAVA {
+					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
+					prodConf := path.Join(startDir, public.PROD_CONF_NAME)
+					cmd = exec.Command("java", "-jar", startFile, fmt.Sprintf("-Dspring.config.location=file:%v", prodConf))
+					cmd.Env = append(cmd.Env, fmt.Sprintf("SGRID_PROD_CONF_PATH=%v", prodConf))
+				}
 			}
 
 			if serverProtocol == public.PROTOCOL_HTTP {
@@ -497,6 +503,10 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 				if serverLanguage == public.RELEASE_NODE {
 					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 					cmd = exec.Command("node", startFile)
+				}
+				if serverLanguage == public.RELEASE_JAVA {
+					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
+					exec.Command("java", "-jar", startFile, "-Dspring.config.location="+"file:"+path.Join(startDir, public.PROD_CONF_NAME))
 				}
 			}
 			fmt.Println("startFile", startFile)
