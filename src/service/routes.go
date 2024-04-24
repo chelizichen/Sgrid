@@ -2,10 +2,13 @@ package service
 
 import (
 	handlers "Sgrid/src/http"
+	"Sgrid/src/public/jwt"
 	"Sgrid/src/storage"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
+	"Sgrid/src/storage/vo"
 	utils "Sgrid/src/utils"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -28,7 +31,20 @@ func Registry(ctx *handlers.SgridServerCtx) {
 			Password: password,
 		})
 		if len(v.Password) != 0 && len(v.UserName) != 0 {
-			c.JSON(http.StatusOK, handlers.Resp(0, "ok", v))
+
+			s, err := jwt.GenToken(*v)
+			if err != nil {
+				fmt.Println("gen token error")
+				c.JSON(http.StatusOK, handlers.Resp(-1, "Error", v))
+			}
+			rsp := vo.VoUser{
+				UserName:   v.UserName,
+				Password:   v.Password,
+				CreateTime: v.CreateTime,
+				Id:         v.Id,
+				Token:      s,
+			}
+			c.JSON(http.StatusOK, handlers.Resp(0, "ok", rsp))
 		} else {
 			c.JSON(http.StatusOK, handlers.Resp(-1, "Error", v))
 		}

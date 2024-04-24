@@ -89,8 +89,13 @@ export default {
         </div>
         <div v-if="modelIndex === '3'">
           <el-card style="margin-bottom: 10px">
-            <div style="color: rgb(207, 15, 124); cursor: pointer" @click="addGrid">
-              服务部署
+            <div style="display: flex; justify-content: space-around">
+              <div style="color: rgb(207, 15, 124); cursor: pointer" @click="addGrid">
+                服务部署
+              </div>
+              <div style="color: rgb(207, 15, 124); cursor: pointer" @click="addNode">
+                添加节点
+              </div>
             </div>
           </el-card>
 
@@ -125,6 +130,35 @@ export default {
               <el-form-item label="操作">
                 <el-button @click="resetServant">重置</el-button>
                 <el-button type="primary" @click="devopsAddGrid"
+                  >确定</el-button
+                ></el-form-item
+              >
+            </el-form>
+          </el-dialog>
+
+          <el-dialog v-model="addNodeVisible" title="节点部署">
+            <el-form label-width="100px">
+              <el-form-item label="主机地址">
+                <el-input v-model="addNodeForm.ip"></el-input>
+              </el-form-item>
+              <el-form-item label="操作系统">
+                <el-input v-model="addNodeForm.platForm"></el-input>
+              </el-form-item>
+              <el-form-item label="主备">
+                <el-select v-model="addNodeForm.main">
+                  <el-option label="主" value="1"></el-option>
+                  <el-option label="备" value="0"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="节点状态">
+                <el-select v-model="addNodeForm.nodeStatus">
+                  <el-option label="启用" :value="1"></el-option>
+                  <el-option label="停止" :value="2"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="操作">
+                <el-button @click="resetNode">重置</el-button>
+                <el-button type="primary" @click="devopsAddNode"
                   >确定</el-button
                 ></el-form-item
               >
@@ -179,6 +213,13 @@ const resetServant = () => {
   servantItem.value.language = "";
   servantItem.value.protocol = "";
   servantItem.value.execPath = "";
+};
+
+const resetNode = () => {
+  addNodeForm.value.ip = "";
+  addNodeForm.value.main = "";
+  addNodeForm.value.nodeStatus = "";
+  addNodeForm.value.platForm = "";
 };
 
 function switchShow(value: any) {
@@ -244,6 +285,23 @@ async function devopsAddGrid() {
     addGridVisible.value = false;
   }
 }
+
+const addNodeVisible = ref(false);
+const addNodeForm = ref({ ip: "", platForm: "", main: "0", nodeStatus: 0 });
+function addNode() {
+  addNodeVisible.value = true;
+}
+
+async function devopsAddNode() {
+  const data = await API.saveNode(addNodeForm.value);
+  if (data.code) {
+    return ElMessage.error(data.message);
+  }
+  resetNode();
+  ElMessage.success("部署成功");
+  return (addNodeVisible.value = false);
+}
+
 watch(
   () => modelIndex.value,
   async function (newVal) {

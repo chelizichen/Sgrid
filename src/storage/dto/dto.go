@@ -44,3 +44,14 @@ type GridDTO struct {
 	NodeId     int        `json:"nodeId,omitempty"`      // 网格所属节点ID
 	ServantId  int        `json:"servantId,omitempty"`   // 网格容纳服务ID
 }
+
+// 节点
+type NodeDTO struct {
+	Id         int        `json:"id,omitempty"`
+	Ip         string     `json:"ip,omitempty"`         // IP地址
+	Status     int        `json:"nodeStatus,omitempty"` // 状态
+	CreateTime *time.Time `json:"createTime,omitempty"` // 创建时间
+	PlatForm   string     `json:"platForm,omitempty"`   // 平台
+	Main       string     `json:"main,omitempty"`       // 是否为主机
+	UploadPath string     `json:"uploadPath,omitempty"` // 上传路径
+}

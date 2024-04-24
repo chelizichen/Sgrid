@@ -113,3 +113,11 @@ type VoServantPackage struct {
 	GSExecPath   string     `gorm:"gs_exec_path" json:"execPath,omitempty"`
 	GSProtocol   string     `gorm:"gs_protocol" json:"protocol,omitempty"`
 }
+
+type VoUser struct {
+	Id         int    `json:"id,omitempty"`
+	UserName   string `json:"userName,omitempty"`
+	Password   string `json:"password,omitempty"`
+	CreateTime string `json:"createTime,omitempty"`
+	Token      string `json:"token,omitempty"`
+}

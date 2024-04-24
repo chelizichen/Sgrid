@@ -35,6 +35,7 @@ func DevopsService(ctx *handlers.SgridServerCtx) {
 
 	// 3.选择节点
 	GROUP.GET("/devops/queryNodes", queryNodes)
+	GROUP.POST("/devops/saveNode", saveNode)
 	// 4.添加至服务网格
 	GROUP.POST("/devops/saveGrid", saveGrid)
 	// 5.选择端口
@@ -116,6 +117,17 @@ func saveGrid(c *gin.Context) {
 		Pid:        0,
 	}
 	i := storage.UpdateGrid(record)
+	c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", i))
+}
+
+func saveNode(c *gin.Context) {
+	var req *dto.NodeDTO
+	err := c.BindJSON(&req)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "err"+err.Error(), nil))
+		return
+	}
+	i := storage.UpdateNode(req)
 	c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", i))
 }
 

@@ -9,6 +9,7 @@ import { ElMessage } from "element-plus";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { md5 } from "js-md5";
+import { constants, localSet } from "@/constant";
 const router = useRouter();
 const username = ref("");
 const password = ref("");
@@ -23,7 +24,7 @@ async function login() {
     ElMessage.error("Please enter a valid token.");
   } else {
     router.push("/server");
-    localStorage.setItem("token", tkn);
+    localSet(constants.TOKEN, ret.data.token);
   }
 }
 </script>

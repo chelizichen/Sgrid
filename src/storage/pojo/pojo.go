@@ -83,7 +83,7 @@ type User struct {
 	Id         int
 	UserName   string
 	Password   string
-	CreateTimt string
+	CreateTime string
 }
 
 type ServantConf struct {

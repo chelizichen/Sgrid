@@ -105,11 +105,18 @@ const API = {
       url:"/devops/saveGrid",
       method:'post',
       data
-    })
+    })  as unknown as BasicResp<any>
   },
   saveGroup(data:any){
     return HttpReq({
       url:"/devops/saveGroup",
+      method:'post',
+      data
+    }) as unknown as BasicResp<any>
+  },
+  saveNode(data:any){
+    return HttpReq({
+      url:"/devops/saveNode",
       method:'post',
       data
     }) as unknown as BasicResp<any>

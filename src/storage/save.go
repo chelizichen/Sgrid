@@ -2,7 +2,10 @@ package storage
 
 import (
 	c "Sgrid/src/configuration"
+	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
+	"fmt"
+	"time"
 )
 
 func SaveHashPackage(pkg pojo.ServantPackage) int {
@@ -49,4 +52,19 @@ func DeletePackage(id int) {
 		Updates(&pojo.Grid{
 			Status: -1,
 		})
+}
+
+func UpdateNode(d *dto.NodeDTO) int {
+	fmt.Println("d", d)
+	t := time.Now()
+	obj := &pojo.Node{
+		PlatForm:   d.PlatForm,
+		UploadPath: d.UploadPath,
+		Status:     d.Status,
+		Main:       d.Main,
+		Ip:         d.Ip,
+		CreateTime: &t,
+	}
+	c.GORM.Debug().Create(obj)
+	return obj.Id
 }
