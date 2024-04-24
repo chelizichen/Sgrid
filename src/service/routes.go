@@ -66,7 +66,4 @@ func Registry(ctx *handlers.SgridServerCtx) {
 		nodes := storage.QueryNodes()
 		c.JSON(200, handlers.Resp(0, "ok", nodes))
 	})
-
-	ctx.Engine.Use(GROUP.Handlers...)
-
 }

@@ -303,5 +303,4 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 		wg.Wait()
 		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", resp))
 	})
-	ctx.Engine.Use(router.Handlers...)
 }

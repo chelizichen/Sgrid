@@ -175,13 +175,11 @@ func NewSgridServerCtx(opt ...NewSgrid) *SgridServerCtx {
 		GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
 		staticRoot := public.Join(initConf.SgridGinStaticPath[1])
 		GROUP.Static(initConf.SgridGinStaticPath[0], staticRoot)
-		ctx.Engine.Use(GROUP.Handlers...)
 	}
 
 	if initConf.SgridGinWithCors {
 		GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
 		GROUP.Use(withCORSMiddleware())
-		ctx.Engine.Use(GROUP.Handlers...)
 	}
 
 	if err != nil {
