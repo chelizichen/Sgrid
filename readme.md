@@ -1,6 +1,6 @@
 <h2 align="center">Sgrid</h2>
 
-[中文介绍]('./readme_zn.md')
+[中文介绍](./readme_zn.md)
 
 <h3 align="center">Agile cluster management services</h3>
 
