@@ -7,9 +7,9 @@
 package SgridPackageServer
 
 import (
+	protocol "Sgrid/server/SgridPackageServer/proto"
 	"Sgrid/src/config"
 	"Sgrid/src/configuration"
-	protocol "Sgrid/src/proto"
 	"Sgrid/src/public"
 	"Sgrid/src/public/pool"
 	"Sgrid/src/storage"

@@ -1,8 +1,8 @@
 package service
 
 import (
+	protocol "Sgrid/server/SgridPackageServer/proto"
 	handlers "Sgrid/src/http"
-	protocol "Sgrid/src/proto"
 	"Sgrid/src/public"
 	clientgrpc "Sgrid/src/public/client_grpc"
 	"Sgrid/src/storage"
@@ -18,9 +18,8 @@ import (
 	"sync"
 	"time"
 
-	"google.golang.org/grpc/metadata"
-
 	"github.com/gin-gonic/gin"
+	"google.golang.org/grpc/metadata"
 )
 
 const SgridPackageServerHosts = "SgridPackageServerHosts"

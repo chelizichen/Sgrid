@@ -7,7 +7,7 @@
 package clientgrpc
 
 import (
-	protocol "Sgrid/src/proto"
+	protocol "Sgrid/server/SgridPackageServer/proto"
 	"context"
 	"fmt"
 	"net/url"

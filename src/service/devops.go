@@ -1,9 +1,9 @@
 package service
 
 import (
+	protocol "Sgrid/server/SgridPackageServer/proto"
 	"Sgrid/src/config"
 	handlers "Sgrid/src/http"
-	protocol "Sgrid/src/proto"
 	"Sgrid/src/public"
 	clientgrpc "Sgrid/src/public/client_grpc"
 	"Sgrid/src/storage"
