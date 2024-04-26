@@ -42,6 +42,7 @@ export default {
 
 <script lang="ts" setup>
 import { defineEmits, ref } from "vue";
+
 const selectValue = ref();
-const emits = defineEmits(["CLOSE_RELEASE_DIALOG", "RELEASE_SERVER_BY_ID"]);
+defineEmits(["CLOSE_RELEASE_DIALOG", "RELEASE_SERVER_BY_ID"]);
 </script>

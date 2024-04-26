@@ -8,16 +8,6 @@ import { Now } from "../lib/utils"
 import { exec } from "child_process"
 export const parser = new ConfigParser()
 
-export function NginxExpansion(upstreamConf: NginxExpansionDto) {
-  const originConf = getCurrentConf()
-  originConf.http[`upstream ${upstreamConf.upstreamName}`] = {
-    server: upstreamConf.server
-  }
-  originConf.http.server[upstreamConf.locationName].proxy_pass =
-    upstreamConf.proxyPass
-  return parser.toConf(originConf)
-}
-
 export function getCurrentConf(path?: string | string[]) {
   const config = parser.readConfigFile(getConf().nginxPath, {
     parseIncludes: false
@@ -36,9 +26,8 @@ export function getCurrentConf(path?: string | string[]) {
   }
 }
 
-export function coverConf(newConf: string): Promise<string> {
+export function nginxTest(): Promise<string> {
   return new Promise((resolve) => {
-    parser.writeConfigFile(getConf().nginxPath, newConf, true)
     const test = exec("nginx -t")
     let resu = ""
     test.stdout?.on("data", function (chunk) {
@@ -56,30 +45,20 @@ export function coverConf(newConf: string): Promise<string> {
 }
 
 export function backupConfAndWriteNew(newConf: string) {
-  return new Promise((resolve, reject) => {
-    try {
-      const rootPath = getRoot()
-      const backupConf = parser.toConf(getCurrentConf())
-      const dirFiles = fs.readdirSync(
-        path.resolve(rootPath, getConf().historyDir)
-      )
-      const tdy = Now()
-      fs.writeFileSync(
-        path.resolve(
-          rootPath,
-          getConf().historyDir,
-          `nginx_${dirFiles.length}_${tdy}.conf`
-        ),
-        backupConf,
-        "utf-8"
-      )
-      coverConf(newConf).then((res) => {
-        resolve(res)
-      })
-    } catch (e) {
-      reject(e)
-    }
-  })
+  const rootPath = getRoot()
+  const backupConf = parser.toConf(getCurrentConf())
+  const dirFiles = fs.readdirSync(path.resolve(rootPath, getConf().historyDir))
+  const tdy = Now()
+  fs.writeFileSync(
+    path.resolve(
+      rootPath,
+      getConf().historyDir,
+      `nginx_${dirFiles.length}_${tdy}.conf`
+    ),
+    backupConf,
+    "utf-8"
+  )
+  coverConf(newConf)
 }
 
 export function reloadNginx() {
@@ -98,4 +77,8 @@ export function reloadNginx() {
       resolve(resu)
     })
   })
+}
+
+export function coverConf(newConf: string) {
+  parser.writeConfigFile(getConf().nginxPath, newConf, true)
 }

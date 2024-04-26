@@ -1,7 +1,6 @@
 import express, { Express } from "express"
 import { NewError, constant } from "../constant"
 import { parseSimpConf } from "./utils"
-import _ from "lodash"
 
 export function NewSgridServerCtx(): Express {
   const app = express()
@@ -10,7 +9,7 @@ export function NewSgridServerCtx(): Express {
   try {
     console.log("conf", JSON.stringify(conf))
     app.set(constant.SGRID_TARGET_PORT, conf.server.port)
-    app.set(constant.SGRID_SERVER_CONF, conf.server)
+    app.set(constant.SGRID_SERVER_CONF, conf)
   } catch (e) {
     NewError(-1, "read storage error")
   }

@@ -4,7 +4,7 @@ const HttpReq = axios.create({
   // baseURL, // api的base_url
   timeout: 15000, // 请求超时时间,
   method: 'post',
-  baseURL: '/simpexpansionserver/'
+  baseURL: '/sgridexpansionserver/'
 })
 HttpReq.interceptors.response.use((resp) => {
   if (resp.data.Code != 0) {

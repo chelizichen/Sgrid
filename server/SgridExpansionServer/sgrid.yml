@@ -1,5 +1,5 @@
 server:
-  name: SgirdCloud
+  name: SgridExpanSionServer
   host: 127.0.0.1
   port: 15411
   protoccol: http
@@ -7,3 +7,5 @@ server:
 config:
   db_master:  root:123456@tcp(127.0.0.1:3306)/sgrid?charset=utf8&parseTime=true
   db_slave: root:123456@tcp(127.0.0.1:3306)/sgrid?charset=utf8&parseTime=true
+  ng_file: /Users/leemulus/GolandProjects/Sgrid/server/SgridExpansionServer/test/nginx.conf
+  ng_dir: history

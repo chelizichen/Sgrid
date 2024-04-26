@@ -2,10 +2,11 @@ interface SimpConf {
   server: {
     name: string
     port: number
-    type: string
-    staticPath: string
-    storage: string
+    host: string
+    protoccol: string
+    language: string
   }
+  config: Record<string, unknown>
 }
 
 // 路由配置接口

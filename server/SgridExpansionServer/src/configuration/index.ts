@@ -24,7 +24,6 @@ export function initHistroyDir() {
   const cwd = process.cwd()
   const rootPath = isProd || cwd
   const histroyDirPath = path.resolve(rootPath, getConf().historyDir)
-  console.log("histroyDirPath", histroyDirPath)
 
   if (!existsSync(histroyDirPath)) {
     mkdirSync(histroyDirPath)

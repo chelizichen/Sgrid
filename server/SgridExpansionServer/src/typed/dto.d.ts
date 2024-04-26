@@ -1,8 +1,5 @@
 interface NginxExpansionDto {
-  upstreamName: string
-  server: string[]
-  locationName: string
-  proxyPass: string
+  content: string
 }
 
 interface RunExpandServerDto {

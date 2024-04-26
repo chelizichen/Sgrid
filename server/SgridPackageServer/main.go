@@ -138,6 +138,9 @@ func (s *SgridMonitor) Report() {
 		globalPool.Add(func() {
 			id := s.getPid()
 			statInfo := getStat(id)
+			if statInfo == nil {
+				return
+			}
 			status, _ := statInfo.Status()
 			var gridStat int = 0
 			if status == "Z" { // down 了 进行物理kill

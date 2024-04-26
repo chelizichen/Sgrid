@@ -3,53 +3,44 @@ import HttpReq from '@/utils/exp_req'
 
 export function getProxyList() {
   return HttpReq({
-    url: '/getProxyList',
+    url: '/nginx/getProxyList',
     method: 'get'
   }) as unknown as BasicResp<any>
 }
 
-export function nginxExpansion(data) {
+export function merge(data: any) {
   return HttpReq({
-    url: '/nginxExpansion',
+    url: '/nginx/merge',
     method: 'post',
     data
   }) as unknown as BasicResp<any>
 }
 
-export function nginxExpansionPreview(data) {
+export function reload() {
   return HttpReq({
-    url: '/nginxExpansionPreview',
-    method: 'post',
-    data
-  }) as unknown as BasicResp<any>
-}
-
-export function nginxReload() {
-  return HttpReq({
-    url: '/nginxReload',
+    url: '/nginx/reload',
     method: 'post'
   }) as unknown as BasicResp<any>
 }
 
 export function getBackupList() {
   return HttpReq({
-    url: '/getBackupList',
+    url: '/nginx/getBackupList',
     method: 'get'
   }) as unknown as BasicResp<any>
 }
 
 export function getBackupFile(params: any) {
   return HttpReq({
-    url: '/getBackupFile',
+    url: '/nginx/getBackupFile',
     method: 'get',
     params
   }) as unknown as BasicResp<any>
 }
 
-export function backupNginx(params: any) {
+export function test() {
   return HttpReq({
-    url: '/backup',
-    method: 'get',
-    params
+    url: '/nginx/test',
+    method: 'get'
   }) as unknown as BasicResp<any>
 }

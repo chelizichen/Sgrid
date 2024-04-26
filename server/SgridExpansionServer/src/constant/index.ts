@@ -29,17 +29,8 @@ export const NewError = function (code: number, msg: string) {
 }
 
 export function getConf() {
-  const isProd = process.env.SGRID_PRODUCTION
-  if (isProd) {
-    return {
-      nginxPath: "/etc/nginx/nginx.conf",
-      historyDir: "history"
-    }
-  } else {
-    return {
-      nginxPath:
-        "/Users/leemulus/GolandProjects/SimpExpansionServer/nginx.conf",
-      historyDir: "history"
-    }
+  return {
+    nginxPath: process.env.nginxPath!,
+    historyDir: process.env.historyDir!
   }
 }

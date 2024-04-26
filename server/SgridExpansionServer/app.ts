@@ -6,9 +6,11 @@ import SgridController from "./src/routes/nginx"
 
 function boost() {
   const ctx = NewSgridServerCtx()
+  const conf = ctx.get(constant.SGRID_SERVER_CONF) as SimpConf
+  // @ts-ignore
+  setEnv({ nginxPath: conf.config.ng_file, historyDir: conf.config.ng_dir })
   initHistroyDir()
-  const conf = ctx.get(constant.SGRID_SERVER_CONF) as SimpConf["server"]
-  const servant = path.join("/", conf.name.toLowerCase())
+  const servant = path.join("/", conf.server.name.toLowerCase())
   const sgridController = new SgridController(ctx)
   ctx.use(servant, sgridController.router!)
   ctx.use(errorHandler())
@@ -24,3 +26,10 @@ process.on("uncaughtException", (err) => {
 process.on("unhandledRejection", (reason, p) => {
   console.error(reason, p)
 })
+
+function setEnv(obj: Record<string, string>) {
+  const keys = Object.keys(obj)
+  for (const key of keys) {
+    process.env[key] = obj[key]
+  }
+}

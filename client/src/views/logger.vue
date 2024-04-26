@@ -1,6 +1,6 @@
 <template>
   <div style="display: flex; height: 95vh">
-    <div style="width: 30%">
+    <div style="width: 30%; padding: 0 20px 0 0">
       <el-form label-width="88px">
         <el-form-item label="logFile">
           <el-input v-model="state.logFile" :disabled="true"></el-input>
