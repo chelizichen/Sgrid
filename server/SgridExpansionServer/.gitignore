@@ -1,0 +1,11 @@
+# nginx.conf
+
+*.conf
+
+# node_modules
+node_modules
+
+# tgz
+*.tar.gz
+
+build
