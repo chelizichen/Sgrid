@@ -7,7 +7,7 @@ const HttpReq = axios.create({
   baseURL: '/sgirdcloud/'
 })
 HttpReq.interceptors.response.use((resp) => {
-  if (resp.data.Code != 0) {
+  if (resp.data.code != 0) {
     console.log('resp.data.Message |', resp.data.Message)
     // this.$message.error(resp.data.Message)
   }
