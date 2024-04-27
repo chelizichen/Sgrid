@@ -5,7 +5,8 @@ import path from "path"
 import { getConf } from "../constant"
 import { getRoot } from "../configuration"
 import { Now } from "../lib/utils"
-import { exec } from "child_process"
+import { exec, execSync, spawnSync } from "child_process"
+
 export const parser = new ConfigParser()
 
 export function getCurrentConf(path?: string | string[]) {
@@ -28,7 +29,9 @@ export function getCurrentConf(path?: string | string[]) {
 
 export function nginxTest(): Promise<string> {
   return new Promise((resolve) => {
-    const test = exec("nginx -t")
+    const test = exec("/usr/sbin/nginx -t", {
+      cwd: "/usr/sbin"
+    })
     let resu = ""
     test.stdout?.on("data", function (chunk) {
       resu += chunk.toString()
@@ -63,7 +66,9 @@ export function backupConfAndWriteNew(newConf: string) {
 
 export function reloadNginx() {
   return new Promise((resolve) => {
-    const test = exec("nginx -s reload")
+    const test = exec("/usr/sbin/nginx -s reload", {
+      cwd: "/usr/sbin"
+    })
     let resu = ""
     test.stdout?.on("data", function (chunk) {
       resu += chunk.toString()
