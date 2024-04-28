@@ -509,11 +509,14 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 				}
 				if serverLanguage == public.RELEASE_JAVA {
 					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
-					exec.Command("java", "-jar", startFile, "-Dspring.config.location="+"file:"+path.Join(startDir, public.PROD_CONF_NAME))
+					prodConf := path.Join(startDir, public.PROD_CONF_NAME)
+					cmd = exec.Command("java", "-jar", startFile, fmt.Sprintf("-Dspring.config.location=file:%v", prodConf))
+					cmd.Env = append(cmd.Env, fmt.Sprintf("SGRID_PROD_CONF_PATH=%v", prodConf))
 				}
 			}
-			fmt.Println("startFile", startFile)
 			cmd.Env = append(cmd.Env, fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, grid.Port), fmt.Sprintf("%v=%v", public.ENV_PRODUCTION, startDir))
+			cmd.Dir = startDir // 指定工作目录
+			fmt.Println("startFile", startFile)
 			fmt.Println("cmd.Env", cmd.Env)
 
 			monitor := NewSgridMonitor(
