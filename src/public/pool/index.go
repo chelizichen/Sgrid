@@ -12,6 +12,22 @@ import (
 	"time"
 )
 
+type WithSgridRoutinePoltFuncfunc func(*RoutinePool)
+
+func WithSgriddRoutineErrHand(errHand func(err interface{})) WithSgridRoutinePoltFuncfunc {
+	return func(c *RoutinePool) {
+		c.errHand = errHand
+	}
+}
+
+func WithSgriddRoutineMaxSize(maxSize int) WithSgridRoutinePoltFuncfunc {
+	return func(c *RoutinePool) {
+		c.maxSize = maxSize
+		c.Jobs = make(chan Job, maxSize)
+
+	}
+}
+
 type Job func()
 
 type RoutinePool struct {
@@ -22,16 +38,22 @@ type RoutinePool struct {
 	wg           sync.WaitGroup
 	runningCount int32 // 目前正在跑的
 	taskList     []Job
+	errHand      func(err interface{})
 }
 
-func NewRoutinePool(maxSize int) *RoutinePool {
+func NewRoutinePool(opt ...WithSgridRoutinePoltFuncfunc) *RoutinePool {
 	ctx, cancel := context.WithCancel(context.Background()) // 可取消的
-	return &RoutinePool{
-		maxSize: maxSize,
-		Jobs:    make(chan Job, maxSize),
-		ctx:     ctx,
-		cancel:  cancel,
+	p := &RoutinePool{
+		ctx:    ctx,
+		cancel: cancel,
 	}
+	for _, v := range opt {
+		v(p)
+	}
+	if p.maxSize == 0 {
+		panic("painc/error : missing params maxSize")
+	}
+	return p
 }
 
 func (p *RoutinePool) addNeedRunTask(job Job) {
@@ -66,6 +88,11 @@ func (p *RoutinePool) Run() {
 				defer p.wg.Done()
 				defer func() {
 					atomic.AddInt32(&p.runningCount, -1)
+				}()
+				defer func() {
+					if err := recover(); err != nil {
+						p.errHand(err)
+					}
 				}()
 				job()
 			}(job)

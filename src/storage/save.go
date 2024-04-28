@@ -68,3 +68,7 @@ func UpdateNode(d *dto.NodeDTO) int {
 	c.GORM.Debug().Create(obj)
 	return obj.Id
 }
+
+func PushErr(d *pojo.SystemErr) {
+	c.GORM.Debug().Create(d)
+}

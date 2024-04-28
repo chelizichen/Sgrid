@@ -92,3 +92,10 @@ type ServantConf struct {
 	CreateTime *time.Time
 	Conf       string
 }
+
+type SystemErr struct {
+	Id         int        `json:"id,omitempty"`
+	CreateTime *time.Time `gorm:"autoCreateTime" json:"createTime,omitempty"`
+	Type       string     `json:"type,omitempty"`
+	Info       string     `json:"info,omitempty"`
+}

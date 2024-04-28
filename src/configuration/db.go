@@ -61,6 +61,7 @@ func InitStorage(ctx *config.SgridConf) {
 		db.Debug().AutoMigrate(&pojo.Servant{})
 		db.Debug().AutoMigrate(&pojo.Properties{})
 		db.Debug().AutoMigrate(&pojo.StatLog{})
+		db.Debug().AutoMigrate(&pojo.SystemErr{})
 	}
 	GORM = db
 }
