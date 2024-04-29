@@ -84,6 +84,7 @@ type User struct {
 	UserName   string
 	Password   string
 	CreateTime string
+	RoleId     int
 }
 
 type ServantConf struct {
