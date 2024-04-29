@@ -44,6 +44,14 @@ func UpdateGrid(group *pojo.Grid) int {
 	}
 }
 
+func DeleteGrid(id int) {
+	c.GORM.Debug().
+		Model(&pojo.Grid{}).
+		Delete(&pojo.Grid{
+			Id: id,
+		})
+}
+
 func DeletePackage(id int) {
 	c.GORM.Debug().
 		Model(&pojo.ServantPackage{}).

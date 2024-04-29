@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -232,4 +233,13 @@ func withCORSMiddleware() gin.HandlerFunc {
 		}
 		c.Next()
 	}
+}
+
+var AbortWithError = func(c *gin.Context, err string) {
+	c.AbortWithStatusJSON(http.StatusOK, Resp(-1, "err ::"+err, nil))
+}
+
+// Done
+var AbortWithSucc = func(c *gin.Context, data interface{}) {
+	c.AbortWithStatusJSON(http.StatusOK, Resp(0, "ok", data))
 }

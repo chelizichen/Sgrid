@@ -24,7 +24,9 @@ export default {
           >
         </div>
         <div class="flex-item">
-          <div class="text">Restart</div>
+          <el-button class="text" type="text" :disabled="selectionGrid.length == 0"
+            >Restart</el-button
+          >
         </div>
         <div class="flex-item">
           <el-button
@@ -50,6 +52,8 @@ export default {
             >{{ scoped.row.gridNode.ip }}:{{ scoped.row.port }}</el-button
           >
         </template>
+      </el-table-column>
+      <el-table-column prop="gridServant.serverName" label="serverName">
       </el-table-column>
       <el-table-column label="Status">
         <template #default="scoped">
@@ -79,6 +83,13 @@ export default {
           </div>
         </template>
       </el-table-column>
+      <el-table-column label="Delete">
+        <template #default="scoped">
+          <div>
+            <div class="danger" @click="deleteGridById(scoped.row)">Delete</div>
+          </div>
+        </template>
+      </el-table-column>
     </el-table>
     <el-divider content-position="left">
       <el-button type="text" @click="getLogList($props.gridsList)"
@@ -89,15 +100,27 @@ export default {
     </el-divider>
     <el-table :data="statLogList" style="width: 100%; margin-top: 20px" border>
       <el-table-column prop="id" label="id" width="180" />
-      <el-table-column prop="name" label="name" width="180" />
+      <el-table-column prop="name" label="name" width="180">
+        <template #default="scoped">
+          <div>{{ scoped.row.name || "--" }}</div>
+        </template>
+      </el-table-column>
       <el-table-column label="Grid">
         <template #default="scoped">
           <div>{{ scoped.row.gridInfo.gridNode.ip }}:{{ scoped.row.gridInfo.port }}</div>
         </template>
       </el-table-column>
       <el-table-column prop="pid" label="pid"> </el-table-column>
-      <el-table-column prop="threads" label="threads" width="180" />
-      <el-table-column prop="isRunning" label="isRunning" width="180" />
+      <el-table-column prop="threads" label="threads" width="180">
+        <template #default="scoped">
+          <div>{{ scoped.row.threads || "--" }}</div>
+        </template>
+      </el-table-column>
+      <el-table-column prop="isRunning" label="isRunning" width="180">
+        <template #default="scoped">
+          <div>{{ scoped.row.isRunning || "--" }}</div>
+        </template>
+      </el-table-column>
       <el-table-column prop="createTime" label="createTime" />
       <el-table-column prop="stat" label="behavior" />
     </el-table>
@@ -274,6 +297,20 @@ function checkStat(list) {
     hostPids: body,
   });
 }
+
+async function deleteGridById(row) {
+  if (row.status) {
+    return ElMessage.error("error/client :: this grid still alive");
+  }
+  const data = await api.deleteGrid({
+    id: row.id,
+  });
+  if (data.code) {
+    return ElMessage.error(data.message);
+  }
+  ElMessage.success("delete success");
+  emits("checkStatus");
+}
 </script>
 <style scoped>
 .card {
@@ -284,6 +321,10 @@ function checkStat(list) {
 }
 .text {
   color: rgb(207, 15, 124);
+  cursor: pointer;
+}
+.danger {
+  color: red;
   cursor: pointer;
 }
 .flex-item {

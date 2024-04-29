@@ -200,3 +200,12 @@ func QueryGroups() (resp *[]vo.VoGroupObj) {
 	fmt.Println("resp", resp)
 	return
 }
+
+func GetGridByNodePort(nodeId int, port int) int64 {
+	var total int64
+	c.GORM.Model(&pojo.Grid{}).Where(&pojo.Grid{
+		NodeId: nodeId,
+		Port:   port,
+	}).Count(&total)
+	return total
+}

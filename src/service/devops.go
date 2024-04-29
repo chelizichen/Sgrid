@@ -6,6 +6,7 @@ import (
 	handlers "Sgrid/src/http"
 	"Sgrid/src/public"
 	clientgrpc "Sgrid/src/public/client_grpc"
+	sgridError "Sgrid/src/public/error"
 	"Sgrid/src/storage"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
@@ -38,6 +39,7 @@ func DevopsService(ctx *handlers.SgridServerCtx) {
 	GROUP.POST("/devops/saveNode", saveNode)
 	// 4.添加至服务网格
 	GROUP.POST("/devops/saveGrid", saveGrid)
+	GROUP.POST("/devops/deleteGrid", deleteGrid)
 	// 5.选择端口
 
 	// 中心数据库
@@ -50,19 +52,19 @@ func DevopsService(ctx *handlers.SgridServerCtx) {
 
 func getGroups(c *gin.Context) {
 	vsg := storage.QueryGroups()
-	c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", vsg))
+	handlers.AbortWithSucc(c, vsg)
 }
 
 func getServants(c *gin.Context) {
 	vsg := storage.QueryServants()
-	c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", vsg))
+	handlers.AbortWithSucc(c, vsg)
 }
 
 func saveGroup(c *gin.Context) {
 	var req *dto.SaveServantGroupDto
 	err := c.BindJSON(&req)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "err"+err.Error(), nil))
+		handlers.AbortWithError(c, err.Error())
 		return
 	}
 	now := time.Now()
@@ -72,14 +74,14 @@ func saveGroup(c *gin.Context) {
 		CreateTime:     &now,
 	}
 	vsg := storage.SaveServantGroup(&record)
-	c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", vsg))
+	handlers.AbortWithSucc(c, vsg)
 }
 
 func saveServant(c *gin.Context) {
 	var req *dto.SaveServantDto
 	err := c.BindJSON(&req)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "err"+err.Error(), nil))
+		handlers.AbortWithError(c, err.Error())
 		return
 	}
 	now := time.Now()
@@ -92,7 +94,7 @@ func saveServant(c *gin.Context) {
 		CreateTime:     &now,
 	}
 	vsg := storage.SaveServant(record)
-	c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", vsg))
+	handlers.AbortWithSucc(c, vsg)
 }
 
 func queryNodes(c *gin.Context) {
@@ -100,14 +102,38 @@ func queryNodes(c *gin.Context) {
 	c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", gn))
 }
 
+func deleteGrid(c *gin.Context) {
+	var req *dto.PageBasicReq
+	err := c.BindJSON(&req)
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	if req.Id == 0 {
+		handlers.AbortWithError(c, sgridError.Request_Error(" missing Id ").Error())
+		return
+	}
+	storage.DeleteGrid(req.Id)
+	handlers.AbortWithSucc(c, nil)
+}
+
 func saveGrid(c *gin.Context) {
 	var req *dto.GridDTO
 	err := c.BindJSON(&req)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "err"+err.Error(), nil))
-		return
+		handlers.AbortWithError(c, err.Error())
+
 	}
 	now := time.Now()
+	count := storage.GetGridByNodePort(req.NodeId, req.Port)
+	if count > 0 {
+		handlers.AbortWithError(c, sgridError.Request_Error(" port already exist").Error())
+		return
+	}
+	if req.Port == 0 {
+		handlers.AbortWithError(c, sgridError.Request_Error(" missing arg port").Error())
+		return
+	}
 	record := &pojo.Grid{
 		CreateTime: &now,
 		NodeId:     req.NodeId,    // 节点ID
@@ -124,11 +150,11 @@ func saveNode(c *gin.Context) {
 	var req *dto.NodeDTO
 	err := c.BindJSON(&req)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "err"+err.Error(), nil))
+		handlers.AbortWithError(c, err.Error())
 		return
 	}
 	i := storage.UpdateNode(req)
-	c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", i))
+	handlers.AbortWithSucc(c, i)
 }
 
 // **************** Conf ***************
@@ -140,7 +166,7 @@ func getConfig(c *gin.Context) {
 	if err != nil {
 		fmt.Println("Error To Get NewConfig", err.Error())
 	}
-	c.JSON(200, handlers.Resp(0, "ok", prod))
+	handlers.AbortWithSucc(c, prod)
 }
 
 func updateConfig(c *gin.Context) {

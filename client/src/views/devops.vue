@@ -21,68 +21,71 @@ export default {
           :default-openeds="['2']"
         >
           <el-menu-item index="1" key="1" @click="switchShow">
-            <template #title>添加服务组</template>
+            <template #title>AddGroup</template>
           </el-menu-item>
           <el-menu-item index="2" key="2" @click="switchShow">
-            <template #title>添加服务</template>
+            <template #title>AddServant</template>
           </el-menu-item>
           <el-menu-item index="3" key="3" @click="switchShow">
-            <template #title>选择节点</template>
+            <template #title>AddNode</template>
           </el-menu-item>
           <el-menu-item index="4" key="4" @click="switchShow">
-            <template #title>网关配置</template>
+            <template #title>GatewayConf</template>
+          </el-menu-item>
+          <el-menu-item index="5" key="5" @click="switchShow">
+            <template #title>ServantAdmin</template>
           </el-menu-item>
         </el-menu>
       </el-aside>
       <el-main>
         <div v-if="modelIndex === '1'">
           <el-form :model="formData" :rules="rules" label-width="100px">
-            <el-form-item label="服务标签" prop="tagName">
+            <el-form-item label="TagName" prop="tagName">
               <el-input v-model="formData.tagName"></el-input>
             </el-form-item>
-            <el-form-item label="英文标签" prop="tagEnglishName">
+            <el-form-item label="TagEnglishName" prop="tagEnglishName">
               <el-input v-model="formData.tagEnglishName"></el-input>
             </el-form-item>
-            <el-form-item label="操作">
-              <el-button @click="resetForm">重置</el-button>
+            <el-form-item label="Operate">
+              <el-button @click="resetForm">Reset</el-button>
               <el-button type="primary" @click="devopsAddGroup"
-                >确定</el-button
+                >Submit</el-button
               ></el-form-item
             >
           </el-form>
         </div>
         <div v-if="modelIndex === '2'">
           <el-form :model="formData" :rules="rules" label-width="100px">
-            <el-form-item label="选择项">
+            <el-form-item label="Options">
               <div>{{ selectOpt() }}</div>
               <!-- <el-input :disabled="true" v-model="selectOpt"></el-input> -->
             </el-form-item>
-            <el-form-item label="选择服务组">
+            <el-form-item label="SelectGroup">
               <el-select v-model="groupId">
                 <el-option
                   v-for="item in groups"
-                  :label="item.tagName"
+                  :label="item.tagEnglishName"
                   :key="item.id"
                   :value="Number(item.id)"
                 ></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item label="服务名称">
+            <el-form-item label="ServerName">
               <el-input v-model="servantItem.serverName"></el-input>
             </el-form-item>
-            <el-form-item label="语言">
+            <el-form-item label="Language">
               <el-input v-model="servantItem.language"></el-input>
             </el-form-item>
-            <el-form-item label="协议">
+            <el-form-item label="Protocol">
               <el-input v-model="servantItem.protocol"></el-input>
             </el-form-item>
             <el-form-item label="可执行路径">
               <el-input v-model="servantItem.execPath"></el-input>
             </el-form-item>
-            <el-form-item label="操作">
-              <el-button @click="resetServant">重置</el-button>
+            <el-form-item label="Operate">
+              <el-button @click="resetServant">Reset</el-button>
               <el-button type="primary" @click="devopsAddServant"
-                >确定</el-button
+                >Submit</el-button
               ></el-form-item
             >
             <!-- <el-form-item label="端口">
@@ -94,10 +97,10 @@ export default {
           <el-card style="margin-bottom: 10px">
             <div style="display: flex; justify-content: space-around">
               <div style="color: rgb(207, 15, 124); cursor: pointer" @click="addGrid">
-                服务部署
+                Server Release
               </div>
               <div style="color: rgb(207, 15, 124); cursor: pointer" @click="addNode">
-                添加节点
+                Add Node
               </div>
             </div>
           </el-card>
@@ -111,16 +114,16 @@ export default {
             <el-table-column prop="platform" label="platform"></el-table-column>
           </el-table>
 
-          <el-dialog v-model="addGridVisible" title="服务部署">
+          <el-dialog v-model="addGridVisible" title="Server Release">
             <el-form label-width="100px">
               <template v-for="(item, index) in selectionNodes" :key="index">
-                <el-form-item label="分配节点">
+                <el-form-item label="ChooseNode">
                   <el-input v-model.number="addGridForm.port[index]">
                     <template #prepend>{{ item.ip }}</template>
                   </el-input>
                 </el-form-item>
               </template>
-              <el-form-item label="选择服务">
+              <el-form-item label="ChooseServant">
                 <el-select v-model="addGridForm.servantId">
                   <el-option
                     v-for="item in servants"
@@ -130,39 +133,39 @@ export default {
                   ></el-option>
                 </el-select>
               </el-form-item>
-              <el-form-item label="操作">
-                <el-button @click="resetServant">重置</el-button>
+              <el-form-item label="Operate">
+                <el-button @click="resetServant">Reset</el-button>
                 <el-button type="primary" @click="devopsAddGrid"
-                  >确定</el-button
+                  >Confirm</el-button
                 ></el-form-item
               >
             </el-form>
           </el-dialog>
 
-          <el-dialog v-model="addNodeVisible" title="节点部署">
+          <el-dialog v-model="addNodeVisible" title="AddNode">
             <el-form label-width="100px">
-              <el-form-item label="主机地址">
+              <el-form-item label="Host">
                 <el-input v-model="addNodeForm.ip"></el-input>
               </el-form-item>
-              <el-form-item label="操作系统">
+              <el-form-item label="Os">
                 <el-input v-model="addNodeForm.platForm"></el-input>
               </el-form-item>
-              <el-form-item label="主备">
+              <el-form-item label="IsMaster">
                 <el-select v-model="addNodeForm.main">
-                  <el-option label="主" value="1"></el-option>
-                  <el-option label="备" value="0"></el-option>
+                  <el-option label="Master" value="1"></el-option>
+                  <el-option label="Slave" value="0"></el-option>
                 </el-select>
               </el-form-item>
-              <el-form-item label="节点状态">
+              <el-form-item label="NodeStat">
                 <el-select v-model="addNodeForm.nodeStatus">
-                  <el-option label="启用" :value="1"></el-option>
-                  <el-option label="停止" :value="2"></el-option>
+                  <el-option label="Use" :value="1"></el-option>
+                  <el-option label="Stop" :value="2"></el-option>
                 </el-select>
               </el-form-item>
-              <el-form-item label="操作">
-                <el-button @click="resetNode">重置</el-button>
+              <el-form-item label="Operate">
+                <el-button @click="resetNode">Reset</el-button>
                 <el-button type="primary" @click="devopsAddNode"
-                  >确定</el-button
+                  >Confirm</el-button
                 ></el-form-item
               >
             </el-form>
@@ -172,7 +175,7 @@ export default {
           <div style="display: flex">
             <el-card style="width: 20%">
               <el-form label-position="left" label-width="100px">
-                <el-form-item label="文件管理">
+                <el-form-item label="File Manager">
                   <el-select v-model="expansionForm.chooseFile" @change="selectFile">
                     <el-option
                       v-for="item in expansionForm.list"
@@ -182,14 +185,14 @@ export default {
                     ></el-option>
                   </el-select>
                 </el-form-item>
-                <el-form-item label="操作">
-                  <el-button type="primary" @click="mergeContent">覆盖</el-button>
+                <el-form-item label="Operate">
+                  <el-button type="primary" @click="mergeContent">Merge</el-button>
                 </el-form-item>
-                <el-form-item label="操作">
-                  <el-button type="primary" @click="nginxTest">检测语法</el-button>
+                <el-form-item label="Operate">
+                  <el-button type="primary" @click="nginxTest">Test</el-button>
                 </el-form-item>
-                <el-form-item label="操作">
-                  <el-button type="primary" @click="nginxReload">重启</el-button>
+                <el-form-item label="Operate">
+                  <el-button type="primary" @click="nginxReload">Reload</el-button>
                 </el-form-item>
               </el-form>
             </el-card>
@@ -224,11 +227,11 @@ import { ElMessage } from "element-plus";
 import { ref, watch } from "vue";
 
 const selectOpt = () => {
-  return `服务组ID :  ${groupId.value}
-  | 服务名称： ${servantItem.value.serverName}
-  | 语言：${servantItem.value.language}
-  | 协议：${servantItem.value.protocol}
-  | 可执行路径(golang 默认 sgrid_app) : ${servantItem.value.execPath}`;
+  return `Group:ID :  ${groupId.value}
+  | ServantName： ${servantItem.value.serverName}
+  | Language：${servantItem.value.language}
+  | Protocol：${servantItem.value.protocol}
+  | Exec Path (golang :: default ::sgrid_app) : ${servantItem.value.execPath}`;
 };
 const modelIndex = ref("");
 
@@ -238,8 +241,10 @@ const formData = ref({
   tagEnglishName: "",
 });
 const rules = ref({
-  tagName: [{ required: true, message: "请输入服务标签", trigger: "blur" }],
-  tagEnglishName: [{ required: true, message: "请输入英文标签", trigger: "blur" }],
+  tagName: [{ required: true, message: "Please Input TagName", trigger: "blur" }],
+  tagEnglishName: [
+    { required: true, message: "Please Input TagEnglishName", trigger: "blur" },
+  ],
 });
 
 async function devopsAddGroup() {
@@ -248,7 +253,7 @@ async function devopsAddGroup() {
     return ElMessage.error(data.message);
   }
   resetForm();
-  return ElMessage.success("创建成功");
+  return ElMessage.success("Create Success");
 }
 
 const resetForm = () => {
@@ -298,7 +303,7 @@ async function devopsAddServant() {
     return ElMessage.error(data.message);
   }
   resetServant();
-  return ElMessage.success("创建成功");
+  return ElMessage.success("Create Success");
 }
 
 const nodes = ref([]);
@@ -329,8 +334,11 @@ async function devopsAddGrid() {
   });
   const ret = await Promise.all(body.map((v) => API.saveGrid(v)));
   if (ret.every((item) => item.code == 0)) {
-    ElMessage.success("部署成功");
+    ElMessage.success("Release Success");
     addGridVisible.value = false;
+  } else {
+    const item = ret.find((item) => item.code != 0);
+    ElMessage.error(item!.message);
   }
 }
 
@@ -346,7 +354,7 @@ async function devopsAddNode() {
     return ElMessage.error(data.message);
   }
   resetNode();
-  ElMessage.success("部署成功");
+  ElMessage.success("Release Success");
   return (addNodeVisible.value = false);
 }
 
@@ -367,9 +375,9 @@ async function selectFile(f: string) {
 async function mergeContent() {
   const data = await merge({ content: expansionForm.value.chooseFileContent });
   if (data.code) {
-    return ElMessage.error("覆盖失败|" + data.message);
+    return ElMessage.error("Merge Error|" + data.message);
   }
-  ElMessage.success("覆盖成功");
+  ElMessage.success("Merge Success");
   expansionForm.value.couldEdit = false;
   console.log("data", data);
   if (!data.code) {
@@ -382,18 +390,18 @@ async function mergeContent() {
 async function nginxTest() {
   const data = await test();
   if (data.code) {
-    return ElMessage.error("检测失败|" + data.message);
+    return ElMessage.error("Test Error|" + data.message);
   }
-  ElMessage.success("检测成功");
+  ElMessage.success("Test Success");
   expansionForm.value.chooseFileContent = data.data;
 }
 
 async function nginxReload() {
   const data = await reload();
   if (data.code) {
-    return ElMessage.error("重启失败|" + data.message);
+    return ElMessage.error("Reload Error|" + data.message);
   }
-  ElMessage.success("重启成功");
+  ElMessage.success("Reload Success");
   expansionForm.value.chooseFileContent = data.data;
 }
 
