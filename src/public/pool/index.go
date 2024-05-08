@@ -2,6 +2,7 @@
 author @chelizichen
 description 2024.4.10 设计一个协程池
 思路：协程轮询监听是否有新任务进来，协程池用满了则进入事件队列里面等待
+datetime 2024.5.8 采用协程复用的方法，避免大量协程的创建与销毁
 */
 package pool
 
@@ -11,6 +12,9 @@ import (
 	"sync/atomic"
 	"time"
 )
+
+// 携程锁
+var lock = sync.Mutex{}
 
 type WithSgridRoutinePoltFuncfunc func(*RoutinePool)
 
@@ -24,7 +28,6 @@ func WithSgriddRoutineMaxSize(maxSize int) WithSgridRoutinePoltFuncfunc {
 	return func(c *RoutinePool) {
 		c.maxSize = maxSize
 		c.Jobs = make(chan Job, maxSize)
-
 	}
 }
 
@@ -61,8 +64,19 @@ func (p *RoutinePool) addNeedRunTask(job Job) {
 }
 
 func (p *RoutinePool) Add(job Job) {
+	var newJob = func() {
+		job()
+		if len(p.taskList) > 0 {
+			lock.Lock()
+			size := len(p.taskList)
+			needRun := p.taskList[0]
+			p.taskList = p.taskList[1:size]
+			lock.Unlock()
+			needRun()
+		}
+	}
 	select {
-	case p.Jobs <- job:
+	case p.Jobs <- newJob:
 		atomic.AddInt32(&p.runningCount, 1)
 	default:
 		p.addNeedRunTask(job)
@@ -100,6 +114,7 @@ func (p *RoutinePool) Run() {
 			// 如果没有任务，等待一小段时间再检查
 			time.Sleep(100 * time.Millisecond)
 			var size int = 0
+			lock.Lock()
 			if len(p.taskList) != p.maxSize {
 				size = len(p.taskList)
 			} else {
@@ -111,6 +126,7 @@ func (p *RoutinePool) Run() {
 				p.Add(f)
 			}
 			p.taskList = p.taskList[size:]
+			lock.Unlock()
 		}
 	}
 }
