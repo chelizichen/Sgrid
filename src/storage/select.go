@@ -209,3 +209,10 @@ func GetGridByNodePort(nodeId int, port int) int64 {
 	}).Count(&total)
 	return total
 }
+
+func GetServantConfById(ServantId int) (resp *pojo.ServantConf) {
+	c.GORM.Model(&pojo.ServantConf{}).Where(&pojo.ServantConf{
+		ServantId: &ServantId,
+	}).Find(&resp)
+	return resp
+}

@@ -24,6 +24,11 @@ export default {
           >
         </div>
         <div class="flex-item">
+          <el-button class="text" type="text" @click="showConfiguration"
+            >Configuration</el-button
+          >
+        </div>
+        <div class="flex-item">
           <el-button class="text" type="text" :disabled="selectionGrid.length == 0"
             >Restart</el-button
           >
@@ -139,12 +144,18 @@ export default {
       @RELEASE_SERVER_BY_ID="(val) => handleRelease(val)"
     >
     </releaseComponent>
+    <servantConf
+      :servantId="showConfigurationId"
+      :dialogVisible="showConfigurationVisible"
+      @CLOSE_RELEASE_DIALOG="() => (showConfigurationVisible = false)"
+    ></servantConf>
   </div>
 </template>
 <script lang="ts" setup>
 import { reactive, ref, watch } from "vue";
 import uploadComponent from "./upload.vue";
 import releaseComponent from "./release.vue";
+import servantConf from "./servantConf.vue";
 import moment from "moment";
 import api from "@/api/server";
 import { ElMessage } from "element-plus";
@@ -310,6 +321,13 @@ async function deleteGridById(row) {
   }
   ElMessage.success("delete success");
   emits("checkStatus");
+}
+
+const showConfigurationVisible = ref(false);
+const showConfigurationId = ref(0);
+async function showConfiguration() {
+  showConfigurationVisible.value = true;
+  showConfigurationId.value = props.servantId;
 }
 </script>
 <style scoped>

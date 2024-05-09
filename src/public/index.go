@@ -16,6 +16,7 @@ import (
 const (
 	ENV_PRODUCTION  = "SGRID_PRODUCTION"
 	ENV_TARGET_PORT = "SGRID_TARGET_PORT"
+	SGRID_CONFIG    = "SGRID_CONFIG"
 	DEV_CONF_NAME   = "sgrid.yml"
 	PROD_CONF_NAME  = "sgridProd.yml"
 )

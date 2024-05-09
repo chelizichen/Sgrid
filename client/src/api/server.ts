@@ -1,7 +1,7 @@
 import type { BasicResp } from '@/dto/dto'
 import HttpReq from '@/utils/request'
 
-const API = {
+const api = {
   uploadSgridServer: function (data: any) {
     return HttpReq({
       url: '/upload/uploadServer',
@@ -130,4 +130,4 @@ const API = {
   }
 }
 
-export default API
+export default api

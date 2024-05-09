@@ -28,6 +28,7 @@ message releaseServerReq{
     string serverProtocol = 4;
     string execPath = 5;
     repeated releaseTarget servantGrids = 6;
+    int32 servantId = 7;
 }
 
 

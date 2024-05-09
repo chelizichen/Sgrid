@@ -1,25 +1,18 @@
 package service
 
 import (
-	protocol "Sgrid/server/SgridPackageServer/proto"
-	"Sgrid/src/config"
 	handlers "Sgrid/src/http"
-	"Sgrid/src/public"
-	clientgrpc "Sgrid/src/public/client_grpc"
 	sgridError "Sgrid/src/public/error"
 	"Sgrid/src/storage"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
-	"Sgrid/src/storage/vo"
-	utils "Sgrid/src/utils"
 	"fmt"
 	"net/http"
-	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"gopkg.in/yaml.v2"
 )
 
 func DevopsService(ctx *handlers.SgridServerCtx) {
@@ -42,11 +35,9 @@ func DevopsService(ctx *handlers.SgridServerCtx) {
 	GROUP.POST("/devops/deleteGrid", deleteGrid)
 	// 5.选择端口
 
-	// 中心数据库
+	// 配置中心
 	GROUP.GET("/devops/getConfig", getConfig)
 	GROUP.POST("/devops/updateConfig", updateConfig)
-	// 集群通知变更
-	GROUP.POST("/devops/notifyConfig", notifyConfig(ctx.Context.Value(public.GRPC_CLIENT_PROXYS{}).([]*clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient])))
 
 }
 
@@ -160,83 +151,23 @@ func saveNode(c *gin.Context) {
 // **************** Conf ***************
 
 func getConfig(c *gin.Context) {
-	serverName := c.PostForm("serverName")
-	configProdPath := filepath.Join(utils.PublishPath, serverName, "simpProd.yaml")
-	prod, err := public.NewConfig(public.WithTargetPath(configProdPath))
+	servant_id := c.Query("id")
+	servantId, err := strconv.Atoi(servant_id)
 	if err != nil {
-		fmt.Println("Error To Get NewConfig", err.Error())
+		fmt.Println("err", err.Error())
+		handlers.AbortWithError(c, err.Error())
+		return
 	}
-	handlers.AbortWithSucc(c, prod)
+	sc := storage.GetServantConfById(servantId)
+	handlers.AbortWithSucc(c, sc)
 }
 
 func updateConfig(c *gin.Context) {
-	var reqVo vo.CoverConfigVo
-	if err := c.BindJSON(&reqVo); err != nil {
-		c.JSON(http.StatusOK, handlers.Resp(0, "-1", err.Error()))
-		return
+	var req *pojo.ServantConf
+	if err := c.BindJSON(&req); err != nil {
+		fmt.Println("err", err.Error())
+		handlers.AbortWithError(c, err.Error())
 	}
-	serverName := reqVo.ServerName
-	uploadConfig := reqVo.Conf
-	if serverName == "" {
-		fmt.Println("Server Name is Empty")
-		c.JSON(http.StatusOK, handlers.Resp(0, "Server Name is Empty", nil))
-		return
-	}
-	marshal, err := yaml.Marshal(uploadConfig)
-	if err != nil {
-		fmt.Println("Error To Stringify config", err.Error())
-		c.JSON(http.StatusOK, handlers.Resp(0, "Error To Stringify config", nil))
-		return
-	}
-	fmt.Println("serverName", serverName)
-	fmt.Println("uploadConfig", string(marshal))
-	if len(marshal) == 0 {
-		fmt.Println("Error To Stringify config", err.Error())
-		c.JSON(http.StatusOK, handlers.Resp(0, "Error To Stringify config", nil))
-		return
-	}
-	configPath := filepath.Join(utils.PublishPath, serverName, "simpProd.yaml")
-	err = config.CoverConfig(string(marshal), configPath)
-	if err != nil {
-		fmt.Println("CoverConfig Error", err.Error())
-		c.JSON(200, handlers.Resp(-1, "CoverConfig Error", nil))
-	}
-	c.JSON(200, handlers.Resp(0, "ok", nil))
-}
-
-func notifyConfig(clients []*clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]) func(c *gin.Context) {
-	return func(c *gin.Context) {
-		var reqVo vo.CoverConfigVo
-		if err := c.BindJSON(&reqVo); err != nil {
-			c.JSON(http.StatusOK, handlers.Resp(0, "-1", err.Error()))
-			return
-		}
-		serverName := reqVo.ServerName
-		uploadConfig := reqVo.Conf
-		if serverName == "" {
-			fmt.Println("Server Name is Empty")
-			c.JSON(http.StatusOK, handlers.Resp(0, "Server Name is Empty", nil))
-			return
-		}
-		marshal, err := yaml.Marshal(uploadConfig)
-		if err != nil {
-			fmt.Println("Error To Stringify config", err.Error())
-			c.JSON(http.StatusOK, handlers.Resp(0, "Error To Stringify config", nil))
-			return
-		}
-		fmt.Println("serverName", serverName)
-		fmt.Println("uploadConfig", string(marshal))
-		if len(marshal) == 0 {
-			fmt.Println("Error To Stringify config", err.Error())
-			c.JSON(http.StatusOK, handlers.Resp(0, "Error To Stringify config", nil))
-			return
-		}
-		configPath := filepath.Join(utils.PublishPath, serverName, "simpProd.yaml")
-		err = config.CoverConfig(string(marshal), configPath)
-		if err != nil {
-			fmt.Println("CoverConfig Error", err.Error())
-			c.JSON(200, handlers.Resp(-1, "CoverConfig Error", nil))
-		}
-		c.JSON(200, handlers.Resp(0, "ok", nil))
-	}
+	storage.UpdateConf(req)
+	handlers.AbortWithSucc(c, nil)
 }

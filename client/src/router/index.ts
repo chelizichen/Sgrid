@@ -3,7 +3,7 @@ import ServerView from '@/views/server.vue'
 import Login from '@/views/login.vue'
 import LogPage from '@/views/logger.vue'
 import Devops from '@/views/devops.vue'
-import { localGet,constants } from '@/constant'
+import { localGet, constants } from '@/constant'
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
   routes: [
@@ -46,7 +46,5 @@ router.beforeEach(async (to, from, next) => {
     next({ path: '/login' })
   }
 })
-
-
 
 export default router

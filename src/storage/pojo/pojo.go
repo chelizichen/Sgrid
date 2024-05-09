@@ -1,6 +1,8 @@
 package pojo
 
-import "time"
+import (
+	"time"
+)
 
 // 节点
 type Node struct {
@@ -88,10 +90,10 @@ type User struct {
 }
 
 type ServantConf struct {
-	Id         int
-	ServantId  string
-	CreateTime *time.Time
-	Conf       string
+	Id         int        `json:"id,omitempty"`
+	ServantId  *int       `json:"servantId,omitempty"`
+	CreateTime *time.Time `gorm:"autoCreateTime" json:"createTime,omitempty"`
+	Conf       string     `json:"conf,omitempty"`
 }
 
 type SystemErr struct {

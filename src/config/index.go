@@ -12,17 +12,17 @@ import (
 var GlobalConf *SgridConf = &SgridConf{}
 
 type server struct {
-	Name     string `yaml:"name" `     // ServerName
-	Host     string `yaml:"host"`      // Host
-	Port     int    `yaml:"port" `     // Port
-	Protocol string `yaml:"protoccol"` // Protocol Http Grpc
-	Language string `yaml:"language"`  // Language Java Node Go
+	Name     string `yaml:"name" json:"name,omitempty"`          // ServerName
+	Host     string `yaml:"host" json:"host,omitempty"`          // Host
+	Port     int    `yaml:"port" json:"port,omitempty"`          // Port
+	Protocol string `yaml:"protoccol" json:"protocol,omitempty"` // Protocol Http Grpc
+	Language string `yaml:"language" json:"language,omitempty"`  // Language Java Node Go
 }
 
 type SgridConf struct {
-	Server  server                 `yaml:"server"`
-	Conf    map[string]interface{} `yaml:"config"`  // define Conf
-	Servant map[string]*SgridConf  `yaml:"servant"` // define Conf
+	Server  server                 `yaml:"server" json:"server,omitempty"`
+	Conf    map[string]interface{} `yaml:"config" json:"conf,omitempty"`     // define Conf
+	Servant map[string]*SgridConf  `yaml:"servant" json:"servant,omitempty"` // define Conf
 }
 
 func (s *SgridConf) Get(key string) interface{} {

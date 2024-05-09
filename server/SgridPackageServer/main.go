@@ -457,10 +457,11 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 	execFilePath := req.ExecPath                                            // 执行路径
 	startDir := SgridPackageInstance.JoinPath(Servants, serverName)         // 解压目录
 	packageFile := SgridPackageInstance.JoinPath(App, serverName, filePath) // 路径
+	servantId := req.ServantId                                              // 服务ID
 	public.Tar2Dest(packageFile, startDir)                                  // 解压
 	servantGrid := req.ServantGrids                                         // 服务列表  通过Host过滤拿到IP，然后进行服务启动
 	var startFile string                                                    // 启动文件
-	CheckProdConf(path.Join(startDir, public.DEV_CONF_NAME), path.Join(startDir, public.PROD_CONF_NAME))
+	servantConf := storage.GetServantConfById(int(servantId)).Conf
 	for _, grid := range servantGrid { // 通过Host过滤拿到IP，然后进行服务启动
 		GRID := grid
 		id := GRID.GridId
@@ -514,7 +515,11 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 					cmd.Env = append(cmd.Env, fmt.Sprintf("SGRID_PROD_CONF_PATH=%v", prodConf))
 				}
 			}
-			cmd.Env = append(cmd.Env, fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, grid.Port), fmt.Sprintf("%v=%v", public.ENV_PRODUCTION, startDir))
+			cmd.Env = append(cmd.Env,
+				fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, grid.Port),
+				fmt.Sprintf("%v=%v", public.ENV_PRODUCTION, startDir),
+				fmt.Sprintf("%v=%v", public.SGRID_CONFIG, servantConf),
+			)
 			cmd.Dir = startDir // 指定工作目录
 			fmt.Println("startFile", startFile)
 			fmt.Println("cmd.Env", cmd.Env)

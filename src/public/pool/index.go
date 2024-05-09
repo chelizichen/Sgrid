@@ -9,7 +9,6 @@ package pool
 import (
 	"context"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
@@ -34,14 +33,13 @@ func WithSgriddRoutineMaxSize(maxSize int) WithSgridRoutinePoltFuncfunc {
 type Job func()
 
 type RoutinePool struct {
-	maxSize      int                // 最大容量
-	Jobs         chan Job           // job
-	ctx          context.Context    // 取消协程用
-	cancel       context.CancelFunc // 取消函数
-	wg           sync.WaitGroup
-	runningCount int32 // 目前正在跑的
-	taskList     []Job
-	errHand      func(err interface{})
+	maxSize  int                // 最大容量
+	Jobs     chan Job           // job
+	ctx      context.Context    // 取消协程用
+	cancel   context.CancelFunc // 取消函数
+	wg       sync.WaitGroup
+	taskList []Job
+	errHand  func(err interface{})
 }
 
 func NewRoutinePool(opt ...WithSgridRoutinePoltFuncfunc) *RoutinePool {
@@ -77,7 +75,6 @@ func (p *RoutinePool) Add(job Job) {
 	}
 	select {
 	case p.Jobs <- newJob:
-		atomic.AddInt32(&p.runningCount, 1)
 	default:
 		p.addNeedRunTask(job)
 	}
@@ -100,9 +97,6 @@ func (p *RoutinePool) Run() {
 			p.wg.Add(1)
 			go func(job Job) {
 				defer p.wg.Done()
-				defer func() {
-					atomic.AddInt32(&p.runningCount, -1)
-				}()
 				defer func() {
 					if err := recover(); err != nil {
 						p.errHand(err)
@@ -129,10 +123,6 @@ func (p *RoutinePool) Run() {
 			lock.Unlock()
 		}
 	}
-}
-
-func (p *RoutinePool) RunningCount() int {
-	return int(atomic.LoadInt32(&p.runningCount))
 }
 
 // func main() {
