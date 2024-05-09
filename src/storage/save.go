@@ -1,11 +1,9 @@
 package storage
 
 import (
-	"Sgrid/src/config"
 	c "Sgrid/src/configuration"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
-	"encoding/json"
 	"fmt"
 	"time"
 )
@@ -17,16 +15,6 @@ func SaveHashPackage(pkg pojo.ServantPackage) int {
 
 func SaveServant(svr *pojo.Servant) int {
 	c.GORM.Create(&svr)
-	cf := &config.SgridConf{}
-	cf.Server.Name = svr.ServerName
-	cf.Server.Protocol = svr.Protocol
-	cf.Server.Language = svr.Language
-	b, _ := json.Marshal(*cf)
-
-	CreateConf(&pojo.ServantConf{
-		ServantId: &svr.Id,
-		Conf:      string(b),
-	})
 	return svr.Id
 }
 
@@ -94,6 +82,10 @@ func PushErr(d *pojo.SystemErr) {
 }
 
 func UpdateConf(d *pojo.ServantConf) {
+	if d.Id == 0 {
+		CreateConf(d)
+		return
+	}
 	c.GORM.
 		Model(&pojo.ServantConf{}).
 		Where(&pojo.ServantConf{

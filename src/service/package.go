@@ -174,6 +174,7 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 			c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "err", err.Error()))
 		}
 		var wg sync.WaitGroup
+		fmt.Println("req", req)
 		for _, client := range clients {
 			wg.Add(1)
 			go func(client clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]) {

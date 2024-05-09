@@ -90,37 +90,45 @@ type withConf struct {
 }
 
 func NewConfig(opts ...ConfOpt) (conf *config.SgridConf, err error) {
+	prod := os.Getenv(SGRID_CONFIG)
 	wc := &withConf{}
-	for _, opt := range opts {
-		opt(wc)
-	}
-	var path string
-	if len(wc.targetPath) != 0 {
-		path = wc.targetPath
-	} else if len(wc.nameSpace) != 0 {
-		path = Join(DEV_CONF_NAME)
-	} else if SgridProduction() {
-		path = Join(PROD_CONF_NAME)
+	if len(prod) > 0 {
+		err = yaml.Unmarshal([]byte(prod), &conf)
+		if err != nil {
+			fmt.Println("err", err.Error())
+		}
+		fmt.Printf("SGRID_PROD_CONFIG %+v\n", conf)
 	} else {
-		path = Join(DEV_CONF_NAME)
-	}
-	// 读取 YAML 文件
-	yamlFile, err := os.ReadFile(path)
-	fmt.Println("Get FilePath from ", path)
-	if err != nil {
-		fmt.Println("Error reading YAML file:", err)
-		return conf, err
-	}
+		for _, opt := range opts {
+			opt(wc)
+		}
+		var path string
+		if len(wc.targetPath) != 0 {
+			path = wc.targetPath
+		} else if len(wc.nameSpace) != 0 {
+			path = Join(DEV_CONF_NAME)
+		} else if SgridProduction() {
+			path = Join(PROD_CONF_NAME)
+		} else {
+			path = Join(DEV_CONF_NAME)
+		}
+		// 读取 YAML 文件
+		yamlFile, err := os.ReadFile(path)
+		fmt.Println("Get FilePath from ", path)
+		if err != nil {
+			fmt.Println("Error reading YAML file:", err)
+			return conf, err
+		}
+		// 解析 YAML 数据
+		err = yaml.Unmarshal(yamlFile, &conf)
+		if err != nil {
+			fmt.Println("Error unmarshalling YAML:", err)
+			return conf, err
+		}
+		fmt.Printf("SGRID_DEV_CONFIG %+v\n", conf)
 
-	// 解析 YAML 数据
-	err = yaml.Unmarshal(yamlFile, &conf)
-	if err != nil {
-		fmt.Println("Error unmarshalling YAML:", err)
-		return conf, err
 	}
-
 	// 打印解析后的配置
-	fmt.Printf("%+v\n", conf)
 	return conf, nil
 }
 

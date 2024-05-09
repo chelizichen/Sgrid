@@ -230,6 +230,7 @@ async function handleRelease(id) {
       port: v.port,
       gridId: v.id,
     })),
+    servantId: Number(props.servantId),
   };
 
   console.log("body", body);

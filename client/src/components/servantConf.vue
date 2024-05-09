@@ -31,6 +31,7 @@ import { ref, watch } from "vue";
 const configForm = ref({
   id: 0, // 假设我们有一个初始ID，或者你可以设置为null或undefined
   conf: "",
+  servantId: 0,
 });
 
 const props = defineProps<{
@@ -64,6 +65,7 @@ const fetchConfig = async () => {
 
 const submitConfig = async () => {
   try {
+    configForm.value.servantId = Number(props.servantId);
     await updateConfig(configForm.value);
     // 处理成功后的逻辑，比如提示用户或重新获取配置
     ElNotification.success("保存成功");
