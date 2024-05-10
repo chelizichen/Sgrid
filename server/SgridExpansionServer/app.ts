@@ -1,13 +1,11 @@
 import path from "path"
-import { constant } from "./src/constant"
-import { NewSgridServerCtx, NewSgridServer } from "./src/lib"
 import { errorHandler, initHistroyDir } from "./src/configuration"
 import SgridController from "./src/routes/nginx"
-
+import { NewSgridServer, NewSgridServerCtx } from "sgridnode/build/main"
+import { f_env } from "sgridnode/build/lib/constant/index"
 function boost() {
   const ctx = NewSgridServerCtx()
-  const conf = ctx.get(constant.SGRID_SERVER_CONF) as SimpConf
-  // @ts-ignore
+  const conf = ctx.get(f_env.ENV_SGRID_CONFIG) as SimpConf
   setEnv({ nginxPath: conf.config.ng_file, historyDir: conf.config.ng_dir })
   initHistroyDir()
   const servant = path.join("/", conf.server.name.toLowerCase())

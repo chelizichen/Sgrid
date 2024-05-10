@@ -1,5 +1,5 @@
+import { Controller, Post, PreHandle, Resp, Get } from "sgridnode/build/main"
 import { Express, NextFunction, Request, Response, Router } from "express"
-import { Resp } from "../lib/utils"
 import { NginxExpansionValidate } from "../validate"
 import { getDir, getFile, validateMiddleWare } from "../configuration"
 import {
@@ -9,7 +9,6 @@ import {
   parser,
   reloadNginx
 } from "../service"
-import { Controller, Get, Post, PreHandle } from "../lib/utils/h"
 
 @Controller("/nginx")
 class SgridController {

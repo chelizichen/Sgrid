@@ -4,8 +4,8 @@ import fs from "fs"
 import path from "path"
 import { getConf } from "../constant"
 import { getRoot } from "../configuration"
-import { Now } from "../lib/utils"
-import { exec, execSync, spawnSync } from "child_process"
+import { exec } from "child_process"
+import { Now } from "sgridnode/build/main"
 
 export const parser = new ConfigParser()
 
