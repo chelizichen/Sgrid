@@ -62,6 +62,15 @@ func DeletePackage(id int) {
 		})
 }
 
+func UpdatePackageVersion(dto *pojo.ServantPackage) {
+	c.GORM.Debug().
+		Model(dto).
+		Where("id = ?", dto.Id).
+		Updates(&pojo.ServantPackage{
+			Version: dto.Version,
+		})
+}
+
 func UpdateNode(d *dto.NodeDTO) int {
 	fmt.Println("d", d)
 	t := time.Now()

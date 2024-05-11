@@ -51,7 +51,7 @@
 
 <script setup lang="ts">
 import API from "@/api/server";
-import { ElMessage } from "element-plus";
+import { ElNotification } from "element-plus";
 import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute } from "vue-router";
 const route = useRoute();
@@ -80,7 +80,7 @@ async function init() {
 async function getLog() {
   const res = await API.getLog(body.value);
   if (res.code) {
-    return ElMessage.error(`error:${res.message}`);
+    return ElNotification.error(`error:${res.message}`);
   }
   logger.value = res.data.split("\n");
 }

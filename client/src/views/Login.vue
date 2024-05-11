@@ -5,7 +5,7 @@ export default {
 </script>
 <script lang="ts" setup>
 import API from "@/api/server";
-import { ElMessage } from "element-plus";
+import { ElNotification } from "element-plus";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { md5 } from "js-md5";
@@ -21,7 +21,7 @@ async function login() {
   data.append("username", username.value);
   const ret = await API.Login(data);
   if (ret.code) {
-    ElMessage.error("Please enter a valid token.");
+    ElNotification.error("Please enter a valid token.");
   } else {
     router.push("/server");
     localSet(constants.TOKEN, ret.data.token);

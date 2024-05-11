@@ -127,6 +127,13 @@ const api = {
       method: 'post',
       data
     }) as unknown as BasicResp<any>
+  },
+  updatePackageVersion(params:any){
+    return HttpReq({
+      url: '/release/updatePackageVersion',
+      method: 'get',
+      params
+    }) as unknown as BasicResp<any>
   }
 }
 

@@ -223,7 +223,7 @@ export default {
 <script setup lang="ts">
 import API from "@/api/server";
 import { getBackupList, getBackupFile, merge, test, reload } from "@/api/nginx";
-import { ElMessage } from "element-plus";
+import { ElNotification } from "element-plus";
 import { ref, watch } from "vue";
 
 const selectOpt = () => {
@@ -250,10 +250,10 @@ const rules = ref({
 async function devopsAddGroup() {
   const data = await API.saveGroup(formData.value);
   if (data.code) {
-    return ElMessage.error(data.message);
+    return ElNotification.error(data.message);
   }
   resetForm();
-  return ElMessage.success("Create Success");
+  return ElNotification.success("Create Success");
 }
 
 const resetForm = () => {
@@ -300,10 +300,10 @@ async function devopsAddServant() {
 
   const data = await API.saveServant(body);
   if (data.code) {
-    return ElMessage.error(data.message);
+    return ElNotification.error(data.message);
   }
   resetServant();
-  return ElMessage.success("Create Success");
+  return ElNotification.success("Create Success");
 }
 
 const nodes = ref([]);
@@ -334,11 +334,11 @@ async function devopsAddGrid() {
   });
   const ret = await Promise.all(body.map((v) => API.saveGrid(v)));
   if (ret.every((item) => item.code == 0)) {
-    ElMessage.success("Release Success");
+    ElNotification.success("Release Success");
     addGridVisible.value = false;
   } else {
     const item = ret.find((item) => item.code != 0);
-    ElMessage.error(item!.message);
+    ElNotification.error(item!.message);
   }
 }
 
@@ -351,10 +351,10 @@ function addNode() {
 async function devopsAddNode() {
   const data = await API.saveNode(addNodeForm.value);
   if (data.code) {
-    return ElMessage.error(data.message);
+    return ElNotification.error(data.message);
   }
   resetNode();
-  ElMessage.success("Release Success");
+  ElNotification.success("Release Success");
   return (addNodeVisible.value = false);
 }
 
@@ -375,9 +375,9 @@ async function selectFile(f: string) {
 async function mergeContent() {
   const data = await merge({ content: expansionForm.value.chooseFileContent });
   if (data.code) {
-    return ElMessage.error("Merge Error|" + data.message);
+    return ElNotification.error("Merge Error|" + data.message);
   }
-  ElMessage.success("Merge Success");
+  ElNotification.success("Merge Success");
   expansionForm.value.couldEdit = false;
   console.log("data", data);
   if (!data.code) {
@@ -390,18 +390,18 @@ async function mergeContent() {
 async function nginxTest() {
   const data = await test();
   if (data.code) {
-    return ElMessage.error("Test Error|" + data.message);
+    return ElNotification.error("Test Error|" + data.message);
   }
-  ElMessage.success("Test Success");
+  ElNotification.success("Test Success");
   expansionForm.value.chooseFileContent = data.data;
 }
 
 async function nginxReload() {
   const data = await reload();
   if (data.code) {
-    return ElMessage.error("Reload Error|" + data.message);
+    return ElNotification.error("Reload Error|" + data.message);
   }
-  ElMessage.success("Reload Success");
+  ElNotification.success("Reload Success");
   expansionForm.value.chooseFileContent = data.data;
 }
 

@@ -46,7 +46,7 @@ export default {
 </template>
 
 <script setup lang="ts">
-import { ElLoading, ElMessage, type UploadUserFile } from "element-plus";
+import { ElLoading, ElNotification, type UploadUserFile } from "element-plus";
 import { ref,reactive } from "vue";
 import api from '@/api/server'
 import SparkMD5 from "spark-md5";
@@ -71,7 +71,7 @@ const state = reactive({
 function handleFileChange(file:UploadUserFile) {
   console.log('file',file);
     if (!file.name.includes(props.serverName)) {
-    ElMessage.error(`请上传正确的服务包 [ ${props.serverName} ] `)
+    ElNotification.error(`请上传正确的服务包 [ ${props.serverName} ] `)
     uploadForm.value.file = null
     state.fileList = []
   } else {
@@ -103,12 +103,12 @@ async function uploadFile(){
     formData.append('fileHash', String(state.hash))
     const data = await api.uploadSgridServer(formData)
     if (data.code) {
-      ElMessage({
+      ElNotification({
         type: 'error',
         message: '上传失败' + data.message
       })
     } else {
-      ElMessage({
+      ElNotification({
         type: 'success',
         message: '上传成功'
       })

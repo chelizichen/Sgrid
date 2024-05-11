@@ -186,6 +186,17 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", nil))
 	})
 
+	router.GET("/release/updatePackageVersion", func(c *gin.Context) {
+		id, _ := strconv.Atoi(c.Query("id"))
+		version := c.Query("version")
+		s := &pojo.ServantPackage{
+			Id:      id,
+			Version: version,
+		}
+		storage.UpdatePackageVersion(s)
+		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", nil))
+	})
+
 	router.POST("/release/shutdown", func(c *gin.Context) {
 		var req *protocol.ShutdownGridReq
 		err := c.BindJSON(&req)

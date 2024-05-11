@@ -158,7 +158,7 @@ import releaseComponent from "./release.vue";
 import servantConf from "./servantConf.vue";
 import moment from "moment";
 import api from "@/api/server";
-import { ElMessage } from "element-plus";
+import {  ElNotification } from "element-plus";
 import { useRouter } from "vue-router";
 
 const props = defineProps<{
@@ -236,7 +236,7 @@ async function handleRelease(id) {
   console.log("body", body);
 
   const data = await api.releaseServer(body);
-  ElMessage.success("success!");
+  ElNotification.success("success!");
   state.releaseVisible = false;
 }
 const selectionGrid = ref([]);
@@ -262,9 +262,9 @@ async function batchShutdown() {
 
   const data = await api.shutdownServer(body);
   if (data.code) {
-    ElMessage.error(data.message);
+    ElNotification.error(data.message);
   }
-  ElMessage.success("关闭成功");
+  ElNotification.success("关闭成功");
 }
 
 async function shutDown(v) {
@@ -280,9 +280,9 @@ async function shutDown(v) {
   };
   const data = await api.shutdownServer(body);
   if (data.code) {
-    ElMessage.error(data.message);
+    ElNotification.error(data.message);
   }
-  ElMessage.success("关闭成功");
+  ElNotification.success("关闭成功");
 }
 
 const router = useRouter();
@@ -312,15 +312,15 @@ function checkStat(list) {
 
 async function deleteGridById(row) {
   if (row.status) {
-    return ElMessage.error("error/client :: this grid still alive");
+    return ElNotification.error("error/client :: this grid still alive");
   }
   const data = await api.deleteGrid({
     id: row.id,
   });
   if (data.code) {
-    return ElMessage.error(data.message);
+    return ElNotification.error(data.message);
   }
-  ElMessage.success("delete success");
+  ElNotification.success("delete success");
   emits("checkStatus");
 }
 

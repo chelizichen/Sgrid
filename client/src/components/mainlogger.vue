@@ -5,7 +5,7 @@ export default {
 </script>
 <script lang="ts" setup>
 import { backupNginx, getBackupFile, getBackupList, nginxReload } from "@/api/nginx";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { ElNotification, ElMessageBox } from "element-plus";
 import { reactive, watch, ref } from "vue";
 
 const props = defineProps<{
@@ -52,13 +52,13 @@ async function reload() {
     inputPlaceholder: "input password",
   }).then(async ({ value }) => {
     if (value != "0504") {
-      return ElMessage.error(`reload error:password`);
+      return ElNotification.error(`reload error:password`);
     }
     const stream = await nginxReload();
     if (stream.Code) {
-      return ElMessage.error(`reload error:${stream.Message}`);
+      return ElNotification.error(`reload error:${stream.Message}`);
     }
-    ElMessage.success("reload success");
+    ElNotification.success("reload success");
     histroyState.logger = stream.Data;
   });
 }
