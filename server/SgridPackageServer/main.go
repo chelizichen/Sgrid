@@ -683,7 +683,7 @@ type SgridPackage struct{}
 func (s *SgridPackage) Registry(sc *config.SgridConf) {
 	initDir()
 	globalPool = pool.NewRoutinePool(
-		pool.WithSgriddRoutineMaxSize(1000),
+		pool.WithSgriddRoutineMaxSize(100),
 		pool.WithSgriddRoutineErrHand(func(err interface{}) {
 			i := fmt.Sprintf("system/error/pool %v", err)
 			storage.PushErr(&pojo.SystemErr{
