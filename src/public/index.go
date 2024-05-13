@@ -255,3 +255,10 @@ func TailAndGrep(filename string, n int, pattern string) (string, error) {
 
 	return output.String(), nil
 }
+
+func ThreadLock() bool {
+	if len(os.Getenv(ENV_PRODUCTION)) > 0 {
+		return os.Getenv(ENV_PROCESS_INDEX) == "1"
+	}
+	return false
+}
