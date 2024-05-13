@@ -462,7 +462,8 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 	servantGrid := req.ServantGrids                                         // 服务列表  通过Host过滤拿到IP，然后进行服务启动
 	var startFile string                                                    // 启动文件
 	servantConf := storage.GetServantConfById(int(servantId)).Conf
-	for _, grid := range servantGrid { // 通过Host过滤拿到IP，然后进行服务启动
+	for processIndex, grid := range servantGrid { // 通过Host过滤拿到IP，然后进行服务启动
+		ProcessIndex := processIndex
 		GRID := grid
 		id := GRID.GridId
 		fmt.Println("GRID.IP", GRID.Ip)
@@ -516,9 +517,10 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 				}
 			}
 			cmd.Env = append(cmd.Env,
-				fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, grid.Port),
-				fmt.Sprintf("%v=%v", public.ENV_PRODUCTION, startDir),
-				fmt.Sprintf("%v=%v", public.SGRID_CONFIG, servantConf),
+				fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, grid.Port),      // 指定端口
+				fmt.Sprintf("%v=%v", public.ENV_PRODUCTION, startDir),        // 开启目录
+				fmt.Sprintf("%v=%v", public.SGRID_CONFIG, servantConf),       // 配置
+				fmt.Sprintf("%v=%v", public.ENV_PROCESS_INDEX, ProcessIndex), // 服务运行索引
 			)
 			cmd.Dir = startDir // 指定工作目录
 			fmt.Println("startFile", startFile)
