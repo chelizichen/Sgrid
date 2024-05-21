@@ -243,3 +243,11 @@ var AbortWithError = func(c *gin.Context, err string) {
 var AbortWithSucc = func(c *gin.Context, data interface{}) {
 	c.AbortWithStatusJSON(http.StatusOK, Resp(0, "ok", data))
 }
+
+// List
+var AbortWithSuccList = func(c *gin.Context, data interface{}, total int64) {
+	var listVo = make(map[string]interface{}, 0)
+	listVo["total"] = total
+	listVo["data"] = data
+	c.AbortWithStatusJSON(http.StatusOK, Resp(0, "ok", data))
+}
