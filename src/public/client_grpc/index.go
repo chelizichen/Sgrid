@@ -8,8 +8,10 @@ package clientgrpc
 
 import (
 	protocol "Sgrid/server/SgridPackageServer/proto"
+	"Sgrid/src/storage"
 	"context"
 	"fmt"
+	"log"
 	"net/url"
 	"reflect"
 	"sync"
@@ -185,4 +187,27 @@ func ProxyInvoke(g *SgridGrpcClientGroup[any], methodName string, args interface
 		resu[index] = resp
 	}
 	return resu
+}
+
+func NewSgridGrpcProxyConn[T any](Key string, ClientConn func(cc grpc.ClientConnInterface) T) []*SgridGrpcClient[T] {
+	gn := storage.QueryPropertiesByKey(Key)
+	addresses := []string{}
+	for _, v := range gn {
+		addresses = append(addresses, v.Value)
+	}
+	clients := []*SgridGrpcClient[T]{}
+	for _, v := range addresses {
+		add := v
+		conn, err := grpc.Dial(add, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			log.Fatalf("无法连接: %v", err)
+		}
+		// defer conn.Close() // 移动到循环内部
+		client := NewSgridClient[T](
+			ClientConn(conn),
+			WithSgridGrpcClientAddress[T](add),
+		)
+		clients = append(clients, client)
+	}
+	return clients
 }

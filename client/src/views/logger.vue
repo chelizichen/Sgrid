@@ -9,7 +9,7 @@
           <el-input v-model="state.pattern"></el-input
         ></el-form-item>
         <el-form-item label="rows">
-          <el-select v-model="state.rows">
+          <el-select v-model="state.size">
             <el-option
               v-for="item in rowSelect"
               :label="item"
@@ -22,8 +22,8 @@
           <el-select v-model="state.logFile">
             <el-option
               v-for="(item, index) in logFileList"
-              :label="item"
-              :value="item"
+              :label="item.logType + '_' + item.dateTime"
+              :value="index"
               :key="item"
             ></el-option>
           </el-select>
@@ -59,21 +59,33 @@ const query = computed(() => route.query);
 const logFileList = ref([]);
 const rowSelect = [10, 50, 100, 500, 1000];
 const state = reactive({
-  logFile: "",
+  logFile: 0,
   pattern: "",
-  rows: 10,
+  size: 10,
+  offset: 0,
 });
+
+const selectFile = computed(() => {
+  return logFileList.value[state.logFile];
+});
+
 const body = computed(() => {
-  return {
-    ...query.value,
-    ...state,
-  };
+  return Object.assign(
+    {},
+    {
+      ...query.value,
+      ...selectFile.value,
+      ...state,
+    },
+    { gridId: Number(query.value.gridId) }
+  );
 });
 const logger = ref([]);
 async function init() {
   const data = await API.getLogFileList({
     host: query.value.host,
     serverName: query.value.serverName,
+    gridId: query.value.gridId,
   });
   logFileList.value = data.data;
 }
@@ -82,7 +94,7 @@ async function getLog() {
   if (res.code) {
     return ElNotification.error(`error:${res.message}`);
   }
-  logger.value = res.data.split("\n");
+  logger.value = res.data;
 }
 onMounted(() => {
   init();

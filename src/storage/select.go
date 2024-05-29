@@ -216,3 +216,54 @@ func GetServantConfById(ServantId int) (resp *pojo.ServantConf) {
 	}).Find(&resp)
 	return resp
 }
+
+func GetTraceLog(req *dto.TraceLogDto) ([]string, int64, error) {
+	var resp []*pojo.TraceLog
+	var total int64
+	err := c.GORM.Model(&pojo.TraceLog{}).
+		Where("log_content like ?", "%"+req.Keyword+"%").
+		Where("log_grid_id = ?", req.LogGridId).
+		Where("date(create_time) = ?", req.SearchTime).
+		Where("log_type = ?", req.LogType).
+		Count(&total).
+		Offset(req.Offset).
+		Limit(req.Size).
+		Find(&resp).Error
+	var log2String []string
+	for _, v := range resp {
+		log2String = append(log2String, v.FmtGetLog())
+	}
+	return log2String, total, err
+}
+
+type TraceLogFileVo struct {
+	LogType string `gorm:"column:log_type`
+	LogTime string `gorm:"column:log_time`
+}
+
+func GetTraceLogFiles(gridId int, log_server_name string) []TraceLogFileVo {
+	var selectResp []TraceLogFileVo
+	where := `1 = 1`
+	params := make([]any, 0)
+	if len(log_server_name) > 0 {
+		where += " AND gtl.log_server_name = ?"
+		params = append(params, log_server_name)
+	}
+	if gridId == 0 {
+		where += " AND gtl.log_grid_id = ?"
+		params = append(params, gridId)
+	}
+	c.GORM.Debug().
+		Table("grid_trace_log gtl").
+		Select(`
+	gtl.log_type as log_type,
+	date(gtl.create_time) as log_time
+	`).
+		Where(where, utils.Removenullvalue(params)...).
+		Group("log_type").
+		Group("log_time").
+		Order("log_time").
+		Find(&selectResp)
+	fmt.Println("selectResp", selectResp)
+	return selectResp
+}

@@ -2,12 +2,11 @@ package public
 
 import (
 	"Sgrid/src/config"
-	"bytes"
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
+	"time"
 
 	"github.com/c4milo/unpackit"
 	"gopkg.in/yaml.v2"
@@ -37,6 +36,13 @@ const (
 	CRON_EVERY_DAY = "0 0 0 * * *"
 )
 
+const (
+	LOG_TYPE_STAT         = "service-stat"
+	LOG_TYPE_DATA         = "service-data"
+	LOG_TYPE_ERROR        = "service-error"
+	LOG_TYPE_SYSTEM_INNER = "system-inner"
+)
+
 type GRPC_CLIENT_PROXYS struct{}
 
 const (
@@ -51,6 +57,10 @@ func SgridProduction() bool {
 	} else {
 		return true
 	}
+}
+
+func GetCurrTime() string {
+	return time.Now().Format(time.DateTime)
 }
 
 func GetWd() string {
@@ -201,59 +211,6 @@ func IsExist(filePath string) bool {
 	} else {
 		return true
 	}
-}
-
-func GetLogger(filePath string, pattern string, rows int) (string, error) {
-	output, err := TailAndGrep(filePath, rows, pattern)
-	if err != nil {
-		fmt.Println("执行命令失败:", err)
-		return output, err
-	}
-	return output, err
-}
-
-func TailAndGrep(filename string, n int, pattern string) (string, error) {
-	// 构造命令
-	cmdTail := exec.Command("tail", fmt.Sprintf("-n%d", n), filename)
-	cmdGrep := exec.Command("grep", pattern)
-
-	// 创建管道
-	r, w := io.Pipe()
-	defer r.Close()
-
-	// 将 tail 的输出连接到 grep 的输入
-	cmdTail.Stdout = w
-	cmdGrep.Stdin = r
-
-	// 创建缓冲区用于存储 grep 的输出
-	var output bytes.Buffer
-	cmdGrep.Stdout = &output
-
-	// 启动命令
-	errTail := cmdTail.Start()
-	if errTail != nil {
-		return "", errTail
-	}
-
-	errGrep := cmdGrep.Start()
-	if errGrep != nil {
-		return "", errGrep
-	}
-
-	// 等待命令执行完成
-	errTailWait := cmdTail.Wait()
-	if errTailWait != nil {
-		return "", errTailWait
-	}
-
-	w.Close()
-
-	errGrepWait := cmdGrep.Wait()
-	if errGrepWait != nil {
-		return "", errGrepWait
-	}
-
-	return output.String(), nil
 }
 
 func ThreadLock() bool {

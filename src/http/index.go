@@ -10,13 +10,11 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/robfig/cron"
 )
 
 type SgridServerCtx struct {
@@ -48,53 +46,6 @@ func (c *SgridServerCtx) RegistrySubServer(registry servant.SgridRegistryService
 		panic("sgrid/error package path is not equal with server path")
 	}
 	go registry.Registry(config.GlobalConf.Servant[registry.NameSpace()])
-}
-
-// 主控服务需要做日志系统与监控
-func (c *SgridServerCtx) InitController() {
-
-	cwd, err := os.Getwd()
-	if err != nil {
-		Err_Message := "Error To Get Wd" + err.Error()
-		fmt.Println(Err_Message)
-		panic(Err_Message)
-	}
-	staticPath := filepath.Join(cwd, "static")
-	s := utils.IsExist(filepath.Join(cwd, "static/main"))
-	if !s {
-		err = os.Mkdir(staticPath, os.ModePerm)
-		if err != nil {
-			Err_Message := "Error To Mkdir" + err.Error()
-			fmt.Println(Err_Message)
-			panic(Err_Message)
-		}
-	}
-	mainPath := filepath.Join(cwd, "static/main")
-	b := utils.IsExist(filepath.Join(cwd, "static/main"))
-	if !b {
-		err = os.Mkdir(mainPath, os.ModePerm)
-		if err != nil {
-			Err_Message := "Error To Mkdir" + err.Error()
-			fmt.Println(Err_Message)
-			panic(Err_Message)
-		}
-	}
-	go func() {
-		c := cron.New()
-
-		// 4小时执行一次，更换日志文件指定目录
-		spec := "0 0 0 * * *"
-		utils.AutoSetLogWriter()
-		// 添加定时任务
-		err := c.AddFunc(spec, func() {
-			utils.AutoSetLogWriter()
-		})
-		if err != nil {
-			fmt.Println("AddFuncErr", err)
-		}
-		// 启动Cron调度器
-		go c.Start()
-	}()
 }
 
 func (c *SgridServerCtx) Static(realPath string, filePath string) {
@@ -161,26 +112,25 @@ func NewSgridServerCtx(opt ...NewSgrid) *SgridServerCtx {
 		fmt.Println("NewConfig Error:", err.Error())
 		panic(err.Error())
 	}
+	ctx.ServerConf = conf.Conf
+	ctx.Host = conf.Server.Host
+	ctx.Name = conf.Server.Name
+	ctx.Port = ":" + strconv.Itoa(conf.Server.Port)
+
 	if initConf.ServerType == public.PROTOCOL_HTTP {
 		ctx.Engine = gin.Default()
-		ctx.Port = ":" + strconv.Itoa(conf.Server.Port)
-		ctx.ServerConf = conf.Conf
-		ctx.Host = conf.Server.Host
-		ctx.Name = conf.Server.Name
+		if len(initConf.SgridGinStaticPath) != 0 {
+			GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
+			staticRoot := public.Join(initConf.SgridGinStaticPath[1])
+			GROUP.Static(initConf.SgridGinStaticPath[0], staticRoot)
+		}
+		if initConf.SgridGinWithCors {
+			GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
+			GROUP.Use(withCORSMiddleware())
+		}
 	}
-	// 初始化控制器
-	if initConf.SgridController {
-		ctx.InitController()
-	}
-	if len(initConf.SgridGinStaticPath) != 0 {
-		GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
-		staticRoot := public.Join(initConf.SgridGinStaticPath[1])
-		GROUP.Static(initConf.SgridGinStaticPath[0], staticRoot)
-	}
-
-	if initConf.SgridGinWithCors {
-		GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
-		GROUP.Use(withCORSMiddleware())
+	if initConf.ServerType == public.PROTOCOL_GRPC {
+		ctx.Engine = nil
 	}
 
 	if err != nil {

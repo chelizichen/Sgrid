@@ -227,6 +227,7 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 	router.GET("/statlog/getLogFileList", func(c *gin.Context) {
 		host := c.Query("host")
 		serverName := c.Query("serverName")
+		grid, _ := strconv.Atoi(c.Query("gridId"))
 		var wg sync.WaitGroup
 		var resp *protocol.GetLogFileByHostResp
 		for _, client := range clients {
@@ -243,6 +244,7 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 					r, err := client.GetClient().GetLogFileByHost(&gin.Context{}, &protocol.GetLogFileByHostReq{
 						Host:       u.Host,
 						ServerName: serverName,
+						GridId:     int64(grid),
 					})
 					if err != nil {
 						fmt.Println("error", err.Error())
@@ -252,11 +254,10 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 					return
 				}
 				wg.Done()
-
 			}(*client)
 		}
 		wg.Wait()
-		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", resp.FileName))
+		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(int(resp.Code), resp.Message, resp.Data))
 	})
 
 	router.POST("/statlog/getLog", func(c *gin.Context) {
@@ -274,8 +275,11 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 						Host:       u.Host,
 						ServerName: req.ServerName,
 						Pattern:    req.Pattern,
-						Rows:       req.Rows,
-						LogFile:    req.LogFile,
+						Offset:     req.Offset,
+						Size:       req.Size,
+						GridId:     req.GridId,
+						LogType:    req.LogType,
+						DateTime:   req.DateTime,
 					})
 					if err != nil {
 						fmt.Println("error", err.Error())

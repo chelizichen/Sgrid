@@ -1,6 +1,7 @@
 package storage
 
 import (
+	protocol "Sgrid/server/SgridLogTraceServer/proto"
 	c "Sgrid/src/configuration"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
@@ -105,4 +106,22 @@ func UpdateConf(d *pojo.ServantConf) {
 
 func CreateConf(d *pojo.ServantConf) {
 	c.GORM.Debug().Create(d)
+}
+
+func SaveLog(d *protocol.LogTraceReq) error {
+	t, err := time.Parse(time.DateTime, d.CreateTime)
+	if err != nil {
+		return err
+	}
+	pj := &pojo.TraceLog{
+		CreateTime:    &t,
+		LogServerName: d.LogServerName,
+		LogHost:       d.LogHost,
+		LogType:       d.LogType,
+		LogContent:    d.LogContent,
+		LogGridId:     d.LogGridId,
+		LogBytesLen:   d.LogBytesLen,
+	}
+	err = c.GORM.Debug().Create(pj).Error
+	return err
 }

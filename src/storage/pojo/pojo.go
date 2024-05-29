@@ -1,6 +1,7 @@
 package pojo
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -101,4 +102,21 @@ type SystemErr struct {
 	CreateTime *time.Time `gorm:"autoCreateTime" json:"createTime,omitempty"`
 	Type       string     `json:"type,omitempty"`
 	Info       string     `json:"info,omitempty"`
+}
+
+type TraceLog struct {
+	Id            int        `json:"id,omitempty"`
+	LogServerName string     `json:"logServerName,omitempty"`
+	LogHost       string     `json:"logHost,omitempty"`
+	LogGridId     int64      `json:"logGridId,omitempty"`
+	LogType       string     `json:"logType,omitempty"`
+	LogContent    string     `json:"logContent,omitempty"`
+	LogBytesLen   int64      `json:"logBytesLen,omitempty"`
+	CreateTime    *time.Time `json:"createTime,omitempty"`
+	SaveTime      *time.Time `gorm:"autoCreateTime" json:"saveTime,omitempty"` // 记录入库时间
+}
+
+func (t *TraceLog) FmtGetLog() string {
+	s := fmt.Sprintf("%s | %s | %s", t.LogServerName, t.CreateTime.Format(time.DateTime), t.LogContent)
+	return s
 }

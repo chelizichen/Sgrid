@@ -7,19 +7,20 @@
 package SgridPackageServer
 
 import (
+	logProto "Sgrid/server/SgridLogTraceServer/proto"
 	protocol "Sgrid/server/SgridPackageServer/proto"
 	"Sgrid/src/config"
 	"Sgrid/src/configuration"
 	"Sgrid/src/public"
 	"Sgrid/src/public/pool"
 	"Sgrid/src/storage"
+	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"os"
 	"os/exec"
@@ -28,7 +29,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/robfig/cron"
+	clientgrpc "Sgrid/src/public/client_grpc"
+
 	p "github.com/shirou/gopsutil/process"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -49,6 +51,7 @@ const (
 )
 
 const CONSTANT_MONITOR_INTERVAL = 30
+const SgridLogTraceServerHosts = "SgridLogTraceServerHosts"
 
 var globalConf *config.SgridConf
 var globalPool *pool.RoutinePool
@@ -82,10 +85,6 @@ type SgridMonitor struct {
 	cmd        *exec.Cmd
 	next       atomic.Bool
 	serverName string
-	cron       *cron.Cron
-	dataLog    *os.File
-	errLog     *os.File
-	statLog    *os.File
 	gridId     int
 }
 
@@ -124,7 +123,6 @@ func NewSgridMonitor(opt ...WithSgridMonitorConfFunc) *SgridMonitor {
 		fn := v
 		fn(monitor)
 	}
-	monitor.getFile()
 	return monitor
 }
 
@@ -162,7 +160,7 @@ func (s *SgridMonitor) Report() {
 			MemoryData := mis.Data
 
 			now := time.Now()
-			content := fmt.Sprintf("time:%v |serverName:%v | pid:%v | cpu:%v | thread:%v | status:%v \n", now.Format(time.DateTime), s.serverName, s.getPid(), cpu, threads, status)
+			content := fmt.Sprintf("pid:%v | cpu:%v | thread:%v | status:%v \n", s.getPid(), cpu, threads, status)
 			storage.UpdateGrid(&pojo.Grid{
 				Id:         s.gridId,
 				Status:     gridStat,
@@ -180,7 +178,17 @@ func (s *SgridMonitor) Report() {
 				MemoryStack: stack,
 				MemoryData:  MemoryData,
 			})
-			s.statLog.Write([]byte(content))
+			var logReq = &logProto.LogTraceReq{
+				LogServerName: s.serverName,
+				LogHost:       globalConf.Server.Host,
+				LogGridId:     int64(s.gridId),
+				LogType:       public.LOG_TYPE_STAT,
+				LogContent:    content,
+				LogBytesLen:   int64(len(content)),
+				CreateTime:    public.GetCurrTime(),
+			}
+
+			NewSgridLogTraceServant.BalanceSendLog(logReq)
 		})
 	}
 }
@@ -198,66 +206,58 @@ func (s *SgridMonitor) PrintLogger() {
 		for {
 			// 读取输出
 			buf := make([]byte, 1024)
-			now := time.Now().Format(time.DateTime)
 			n, err := op.Read(buf)
 			if err != nil {
 				time.Sleep(time.Millisecond * 500)
 			} else {
 				// 打印输出
-				content := now + "|ServerName|" + s.serverName + "|" + string(buf[:n]) + "\n"
-				nn, err := s.dataLog.Write([]byte(content))
-				if err != nil {
-					fmt.Println("s.datalog.write error", err.Error())
+				content := string(buf[:n])
+				var logReq = &logProto.LogTraceReq{
+					LogServerName: s.serverName,
+					LogHost:       globalConf.Server.Host,
+					LogGridId:     int64(s.gridId),
+					LogType:       public.LOG_TYPE_DATA,
+					LogContent:    content,
+					LogBytesLen:   int64(n),
+					CreateTime:    public.GetCurrTime(),
 				}
-				fmt.Println("nn", nn)
+				NewSgridLogTraceServant.BalanceSendLog(logReq)
 			}
-
 		}
 	}()
 	go func() {
 		for {
 			// 读取输出
 			buf := make([]byte, 1024)
-			now := time.Now().Format(time.DateTime)
+			now := public.GetCurrTime()
 			n, err := ep.Read(buf)
 			if err != nil {
 				time.Sleep(time.Millisecond * 500)
 			} else {
 				// 打印输出
-				content := now + "|ServerName|" + s.serverName + "|" + string(buf[:n]) + "\n"
-				nn, err := s.errLog.Write([]byte(content))
-				if err != nil {
-					fmt.Println("s.datalog.write error", err.Error())
+				content := string(buf[:n])
+				var logReq = &logProto.LogTraceReq{
+					LogServerName: s.serverName,
+					LogHost:       globalConf.Server.Host,
+					LogGridId:     int64(s.gridId),
+					LogType:       public.LOG_TYPE_ERROR,
+					LogContent:    content,
+					LogBytesLen:   int64(n),
+					CreateTime:    now,
 				}
-				fmt.Println("nn", nn)
+				NewSgridLogTraceServant.BalanceSendLog(logReq)
 			}
 
 		}
 	}()
-
-	go func() {
-		spec := public.CRON_EVERY_DAY
-		s.cron = cron.New()
-		err := s.cron.AddFunc(spec, func() {
-			s.getFile()
-		})
-		if err != nil {
-			fmt.Println("Error", err.Error())
-		}
-		go s.cron.Start()
-	}()
 }
 
 func (s *SgridMonitor) kill() {
-	s.cron.Stop()
 	storage.SaveStatLog(&pojo.StatLog{
 		GridId: s.gridId,
 		Stat:   BEHAVIOR_KILL,
 		Pid:    s.getPid(),
 	})
-	s.dataLog.Close()
-	s.errLog.Close()
-	s.statLog.Close()
 	err := s.cmd.Process.Kill()
 	if err != nil {
 		fmt.Println("kill error", err.Error())
@@ -272,39 +272,6 @@ func (s *SgridMonitor) getPid() int {
 		}
 	}
 	return 0
-}
-
-func (s *SgridMonitor) getFile() {
-
-	today := time.Now().Format(time.DateOnly)
-	directoryPath := SgridPackageInstance.JoinPath(Logger, s.serverName)
-	err := public.CheckDirectoryOrCreate(directoryPath)
-	if err != nil {
-		fmt.Println("CheckDirectoryOrCreate Error", err.Error())
-	}
-	logDataPath := SgridPackageInstance.JoinPath(Logger, s.serverName, fmt.Sprintf("log-data-%v.log", today))
-	logErrorPath := SgridPackageInstance.JoinPath(Logger, s.serverName, fmt.Sprintf("log-error-%v.log", today))
-	logStatPath := SgridPackageInstance.JoinPath(Logger, s.serverName, fmt.Sprintf("log-stat-%v.log", today))
-
-	opf, err := os.OpenFile(logDataPath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0777)
-	if err != nil {
-		fmt.Println("OpenFile Error", logDataPath)
-	}
-	s.dataLog = opf
-
-	epf, err := os.OpenFile(logErrorPath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0777)
-	if err != nil {
-		fmt.Println("OpenFile Error", logErrorPath)
-	}
-	s.errLog = epf
-
-	spf, err := os.OpenFile(logStatPath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0777)
-	if err != nil {
-		fmt.Println("OpenFile Error", logStatPath)
-	}
-	s.statLog = spf
-
-	fmt.Println("Then PrintLogger")
 }
 
 type fileTransferServer struct {
@@ -561,36 +528,46 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 		Code:    0,
 		Message: "ok",
 	}, nil
-
 }
 
+const layout = "2006-01-02T15:04:05Z"
+
 func (s *fileTransferServer) GetLogFileByHost(ctx context.Context, in *protocol.GetLogFileByHostReq) (*protocol.GetLogFileByHostResp, error) {
-	dir := SgridPackageInstance.JoinPath(Logger, in.ServerName)
-	fmt.Println("dir", dir)
-	files, err := os.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-	var fs []string
+	files := storage.GetTraceLogFiles(int(in.GridId), in.ServerName)
+	var respList []*protocol.GetLogFileByHostVo
 	for _, v := range files {
-		fs = append(fs, v.Name())
+		t, _ := time.Parse(layout, v.LogTime)
+		respList = append(respList, &protocol.GetLogFileByHostVo{
+			LogType:  v.LogType,
+			DateTime: t.Format(time.DateOnly),
+		})
 	}
-	fmt.Println("fs", fs)
 	return &protocol.GetLogFileByHostResp{
-		FileName: fs,
+		Data:    respList,
+		Code:    0,
+		Message: "ok",
 	}, nil
 }
 
 func (s *fileTransferServer) GetLogByFile(ctx context.Context, in *protocol.GetLogByFileReq) (*protocol.GetLogByFileResp, error) {
-	filePath := SgridPackageInstance.JoinPath(Logger, in.ServerName, in.LogFile)
-	s2, err := public.GetLogger(filePath, in.Pattern, int(in.Rows))
+	var req = &dto.TraceLogDto{
+		Keyword:    in.Pattern,
+		Size:       int(in.Size),
+		SearchTime: in.DateTime,
+		TraceLog: pojo.TraceLog{
+			LogHost:       in.Host,
+			LogServerName: in.ServerName,
+			LogGridId:     int64(in.GridId),
+			LogType:       in.LogType,
+		},
+	}
+	Data, total, err := storage.GetTraceLog(req)
 	if err != nil {
-		return &protocol.GetLogByFileResp{
-			Data: s2,
-		}, err
+		return nil, err
 	}
 	return &protocol.GetLogByFileResp{
-		Data: s2,
+		Data:  Data,
+		Total: total,
 	}, nil
 }
 
@@ -680,10 +657,41 @@ func initDir() {
 	public.CheckDirectoryOrCreate(SgridPackageInstance.JoinPath(Servants))
 }
 
+type SgridLogTraceServant struct {
+	Conns   []*clientgrpc.SgridGrpcClient[logProto.SgridLogTraceServiceClient]
+	Current int
+	Size    int
+	ctx     context.Context
+}
+
+// 负载均衡写入节点
+func (s *SgridLogTraceServant) BalanceSendLog(req *logProto.LogTraceReq) {
+	s.Conns[s.Current].GetClient().LogTrace(s.ctx, req)
+	s.Current++
+	if s.Current >= s.Size {
+		s.Current = 0
+	}
+}
+
+var NewSgridLogTraceServant = new(SgridLogTraceServant)
+
+func initClient() {
+	var resp = clientgrpc.NewSgridGrpcProxyConn[logProto.SgridLogTraceServiceClient](
+		SgridLogTraceServerHosts,
+		logProto.NewSgridLogTraceServiceClient,
+	)
+	NewSgridLogTraceServant.Conns = resp
+	NewSgridLogTraceServant.Current = 0
+	NewSgridLogTraceServant.Size = len(resp)
+	NewSgridLogTraceServant.ctx = context.Background()
+}
+
 type SgridPackage struct{}
 
 func (s *SgridPackage) Registry(sc *config.SgridConf) {
+	globalConf = sc
 	initDir()
+	initClient()
 	globalPool = pool.NewRoutinePool(
 		pool.WithSgriddRoutineMaxSize(100),
 		pool.WithSgriddRoutineErrHand(func(err interface{}) {
@@ -693,20 +701,19 @@ func (s *SgridPackage) Registry(sc *config.SgridConf) {
 				Info: i,
 			})
 		}))
-	globalConf = sc
 	go globalPool.Run()
 	configuration.InitStorage(sc)
 	port := fmt.Sprintf(":%v", sc.Server.Port)
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		fmt.Println("failed to listen: ", err)
 	}
 
 	grpcServer := grpc.NewServer()
 	protocol.RegisterFileTransferServiceServer(grpcServer, &fileTransferServer{})
 	fmt.Println("Sgrid svr started on", port)
 	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+		fmt.Println("failed to serve: ", err)
 	}
 }
 

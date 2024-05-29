@@ -53,7 +53,7 @@ export default {
       <el-table-column type="selection" width="55" />
       <el-table-column label="Grid">
         <template #default="scoped">
-          <el-button type="text" @click="toLog(scoped.row.gridNode.ip)"
+          <el-button type="text" @click="toLog(scoped.row)"
             >{{ scoped.row.gridNode.ip }}:{{ scoped.row.port }}</el-button
           >
         </template>
@@ -158,7 +158,7 @@ import releaseComponent from "./release.vue";
 import servantConf from "./servantConf.vue";
 import moment from "moment";
 import api from "@/api/server";
-import {  ElNotification } from "element-plus";
+import { ElNotification } from "element-plus";
 import { useRouter } from "vue-router";
 
 const props = defineProps<{
@@ -286,12 +286,13 @@ async function shutDown(v) {
 }
 
 const router = useRouter();
-function toLog(host: string) {
+function toLog(row) {
   const text = router.resolve({
     path: "/logpage",
     query: {
-      host: host,
+      host: row.gridNode.ip,
       serverName: props.serverName,
+      gridId: row.id,
     },
   });
   window.open(text.href, "_blank");

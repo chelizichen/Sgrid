@@ -66,22 +66,34 @@ message ShutdownGridInfo{
 message GetLogFileByHostReq{
     string host = 1;
     string serverName = 2;
+    int64 gridId = 3;
+}
+
+message GetLogFileByHostVo{
+    string dateTime = 1;
+    string logType = 2;
 }
 
 message GetLogFileByHostResp{
-    repeated string fileName = 1;
+    repeated GetLogFileByHostVo data = 1;
+    int64 code = 2;
+    string message = 3;
 }
 
 message GetLogByFileReq{
-    string logFile = 1;
+    string logType = 1;
     string pattern = 2;
-    int32 rows = 3;
-    string host = 4;
-    string serverName = 5;
+    string host = 3;
+    string serverName = 4;
+    int32 offset = 5;
+    int32 size = 6;
+    int32 gridId = 7;
+    string dateTime = 8;
 }
 
 message GetLogByFileResp{
-    string data = 1;
+    repeated string data = 1;
+    int64 total = 2;
 }
 
 message GetPidInfoReq{

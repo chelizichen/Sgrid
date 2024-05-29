@@ -1,6 +1,9 @@
 package dto
 
-import "time"
+import (
+	"Sgrid/src/storage/pojo"
+	"time"
+)
 
 type PageBasicReq struct {
 	Size    int    `json:"size,omitempty"`
@@ -54,4 +57,12 @@ type NodeDTO struct {
 	PlatForm   string     `json:"platForm,omitempty"`   // 平台
 	Main       string     `json:"main,omitempty"`       // 是否为主机
 	UploadPath string     `json:"uploadPath,omitempty"` // 上传路径
+}
+
+type TraceLogDto struct {
+	Keyword    string `json:"keyword,omitempty"`
+	Offset     int    `json:"offset,omitempty"`
+	Size       int    `json:"size,omitempty"`
+	SearchTime string `json:"searchTime,omitempty"`
+	pojo.TraceLog
 }
