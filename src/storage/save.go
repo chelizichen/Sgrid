@@ -111,6 +111,10 @@ func CreateConf(d *pojo.ServantConf) {
 func SaveLog(d *protocol.LogTraceReq) error {
 	t, err := time.Parse(time.DateTime, d.CreateTime)
 	if err != nil {
+		PushErr(&pojo.SystemErr{
+			Type: "system/error/saveLog/time.Parse",
+			Info: err.Error(),
+		})
 		return err
 	}
 	pj := &pojo.TraceLog{
