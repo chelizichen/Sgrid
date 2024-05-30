@@ -5,7 +5,7 @@
 readonly ServerName="Sgrid"
 readonly SgridFile="sgrid_app"
 # rm
-rm ./$ServerName.tar.gz ./SgridFile
+rm ./$ServerName.tar.gz ./$SgridFile
 
 # compile
 GOOS=linux GOARCH=amd64  go build -o $SgridFile
