@@ -706,14 +706,22 @@ func (s *SgridPackage) Registry(sc *config.SgridConf) {
 	port := fmt.Sprintf(":%v", sc.Server.Port)
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
-		fmt.Println("failed to listen: ", err)
+		info := fmt.Sprintf("failed to listen:%v ", err)
+		storage.PushErr(&pojo.SystemErr{
+			Type: "system/error/SgridPackageServer/grpc",
+			Info: info,
+		})
 	}
 
 	grpcServer := grpc.NewServer()
 	protocol.RegisterFileTransferServiceServer(grpcServer, &fileTransferServer{})
 	fmt.Println("Sgrid svr started on", port)
 	if err := grpcServer.Serve(lis); err != nil {
-		fmt.Println("failed to serve: ", err)
+		info := fmt.Sprintf("failed to serve: %v", err)
+		storage.PushErr(&pojo.SystemErr{
+			Type: "system/error/SgridPackageServer/grpc",
+			Info: info,
+		})
 	}
 }
 

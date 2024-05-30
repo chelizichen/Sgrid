@@ -9,15 +9,17 @@ package clientgrpc
 import (
 	protocol "Sgrid/server/SgridPackageServer/proto"
 	"Sgrid/src/storage"
+	"Sgrid/src/storage/pojo"
 	"context"
 	"fmt"
-	"log"
 	"net/url"
 	"reflect"
 	"sync"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/keepalive"
 )
 
 type WithSgridGrpcOptFunc[T any] func(*SgridGrpcClient[T])
@@ -195,12 +197,28 @@ func NewSgridGrpcProxyConn[T any](Key string, ClientConn func(cc grpc.ClientConn
 	for _, v := range gn {
 		addresses = append(addresses, v.Value)
 	}
+	fmt.Println("NewSgridGrpcProxyConn address", addresses)
 	clients := []*SgridGrpcClient[T]{}
 	for _, v := range addresses {
 		add := v
-		conn, err := grpc.Dial(add, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		conn, err := grpc.Dial(add,
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			grpc.WithKeepaliveParams(keepalive.ClientParameters{
+				Time:                60 * time.Second, // 发送ping消息的时间间隔
+				Timeout:             20 * time.Second, // 等待ping响应的超时时间
+				PermitWithoutStream: true,             // 即使没有活动的流，也允许发送ping消息
+			}),
+			grpc.WithConnectParams(grpc.ConnectParams{
+				MinConnectTimeout: 5 * time.Second,
+			}),
+		)
 		if err != nil {
-			log.Fatalf("无法连接: %v", err)
+			info := fmt.Sprintf("NewSgridGrpcProxyConn address %v %v", addresses, err)
+
+			storage.PushErr(&pojo.SystemErr{
+				Type: "system/error/grpc/dial",
+				Info: info,
+			})
 		}
 		// defer conn.Close() // 移动到循环内部
 		client := NewSgridClient[T](
