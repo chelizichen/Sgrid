@@ -7,6 +7,7 @@ import (
 	h "Sgrid/src/http"
 	"Sgrid/src/public"
 	"Sgrid/src/storage"
+	"Sgrid/src/storage/pojo"
 	"context"
 	"fmt"
 	"net"
@@ -49,14 +50,22 @@ func (s *SgridLog) RegistryServer(conf *config.SgridConf) {
 	port := fmt.Sprintf(":%v", conf.Server.Port)
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
-		fmt.Println("failed to listen: ", err)
+		info := fmt.Sprintf("failed to listen: %v", err)
+		storage.PushErr(&pojo.SystemErr{
+			Type: "system/error/SgridLogTraceServer/net.Listen",
+			Info: info,
+		})
 	}
 
 	grpcServer := grpc.NewServer()
 	protocol.RegisterSgridLogTraceServiceServer(grpcServer, &logTraceServer{})
 	fmt.Println("Sgrid svr started on", port)
 	if err := grpcServer.Serve(lis); err != nil {
-		fmt.Println("failed to serve: ", err)
+		info := fmt.Sprintf("failed to serve: %v", err)
+		storage.PushErr(&pojo.SystemErr{
+			Type: "system/error/SgridLogTraceServer/grpcServer.Serve",
+			Info: info,
+		})
 	}
 }
 
