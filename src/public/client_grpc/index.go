@@ -30,6 +30,12 @@ func WithSgridGrpcClientAddress[T any](address string) WithSgridGrpcOptFunc[T] {
 	}
 }
 
+func WithSgridGrpcConn[T any](conn *grpc.ClientConn) WithSgridGrpcOptFunc[T] {
+	return func(c *SgridGrpcClient[T]) {
+		c.conn = conn
+	}
+}
+
 func WithSgridGrpcNameSpace[T any](nameSpace string) WithSgridGrpcOptFunc[T] {
 	return func(c *SgridGrpcClient[T]) {
 		c.nameSpace = nameSpace
@@ -50,10 +56,15 @@ type SgridGrpcClient[T any] struct {
 	serverAddress string
 	nameSpace     string
 	client        *T
+	conn          *grpc.ClientConn
 }
 
 func (c *SgridGrpcClient[T]) GetClient() T {
 	return *c.client
+}
+
+func (c *SgridGrpcClient[T]) GetConn() *grpc.ClientConn {
+	return c.conn
 }
 
 func (c *SgridGrpcClient[T]) GetAddress() string {
@@ -212,19 +223,24 @@ func NewSgridGrpcProxyConn[T any](Key string, ClientConn func(cc grpc.ClientConn
 				MinConnectTimeout: 5 * time.Second,
 			}),
 		)
+		fmt.Println("client_grpc.getstate", conn.GetState().String())
 		if err != nil {
 			info := fmt.Sprintf("NewSgridGrpcProxyConn address %v %v", addresses, err)
-
 			storage.PushErr(&pojo.SystemErr{
 				Type: "system/error/grpc/dial",
 				Info: info,
 			})
 		}
-		// defer conn.Close() // 移动到循环内部
 		client := NewSgridClient[T](
 			ClientConn(conn),
 			WithSgridGrpcClientAddress[T](add),
+			WithSgridGrpcConn[T](conn),
 		)
+		defer func() {
+			if err := recover(); err != nil {
+				fmt.Println("err", err)
+			}
+		}()
 		clients = append(clients, client)
 	}
 	return clients

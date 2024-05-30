@@ -132,13 +132,6 @@ func NewSgridServerCtx(opt ...NewSgrid) *SgridServerCtx {
 	if initConf.ServerType == public.PROTOCOL_GRPC {
 		ctx.Engine = nil
 	}
-
-	if err != nil {
-		fmt.Println("init db error", err.Error())
-	}
-	if err != nil {
-		fmt.Println("Error! database ping ", err.Error())
-	}
 	return ctx
 }
 

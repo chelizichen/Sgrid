@@ -12,7 +12,6 @@ import (
 	"Sgrid/src/config"
 	"Sgrid/src/configuration"
 	"Sgrid/src/public"
-	"Sgrid/src/public/pool"
 	"Sgrid/src/storage"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
@@ -31,6 +30,7 @@ import (
 
 	clientgrpc "Sgrid/src/public/client_grpc"
 
+	"github.com/panjf2000/ants"
 	p "github.com/shirou/gopsutil/process"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -54,7 +54,7 @@ const CONSTANT_MONITOR_INTERVAL = 30
 const SgridLogTraceServerHosts = "SgridLogTraceServerHosts"
 
 var globalConf *config.SgridConf
-var globalPool *pool.RoutinePool
+var AntsPool *ants.Pool
 var globalGrids map[int]*SgridMonitor = make(map[int]*SgridMonitor)
 
 var SgridPackageInstance = &SgridPackage{}
@@ -66,16 +66,6 @@ func getStat(pid int) *p.Process {
 		return nil
 	}
 	return process
-}
-
-func CheckProdConf(devConf, prodConf string) {
-	fmt.Println("CheckProdConf", devConf, prodConf)
-	if !public.IsExist(prodConf) {
-		err := public.CopyFile(devConf, prodConf)
-		if err != nil {
-			fmt.Println("CheckProdConf", err.Error())
-		}
-	}
 }
 
 type WithSgridMonitorConfFunc func(*SgridMonitor)
@@ -133,7 +123,7 @@ func (s *SgridMonitor) Report() {
 		if s.next.Load() {
 			break
 		}
-		globalPool.Add(func() {
+		AntsPool.Submit(func() {
 			id := s.getPid()
 			statInfo := getStat(id)
 			if statInfo == nil {
@@ -196,11 +186,17 @@ func (s *SgridMonitor) Report() {
 func (s *SgridMonitor) PrintLogger() {
 	op, err := s.cmd.StdoutPipe()
 	if err != nil {
-		fmt.Println("GetPipeError", err.Error())
+		storage.PushErr(&pojo.SystemErr{
+			Type: "system/error/SgridPackageServer/s.cmd.StdoutPipe()",
+			Info: err.Error(),
+		})
 	}
 	ep, err := s.cmd.StderrPipe()
 	if err != nil {
-		fmt.Println("GetPipeError", err.Error())
+		storage.PushErr(&pojo.SystemErr{
+			Type: "system/error/SgridPackageServer/s.cmd.StderrPipe()",
+			Info: err.Error(),
+		})
 	}
 	go func() {
 		for {
@@ -208,7 +204,15 @@ func (s *SgridMonitor) PrintLogger() {
 			buf := make([]byte, 1024)
 			n, err := op.Read(buf)
 			if err != nil {
-				time.Sleep(time.Millisecond * 500)
+				if ok := errors.Is(err, io.EOF); ok {
+					continue
+				} else {
+					storage.PushErr(&pojo.SystemErr{
+						Type: "system/error/SgridPackageServer/op.Read(buf)",
+						Info: err.Error(),
+					})
+					break
+				}
 			} else {
 				// 打印输出
 				content := string(buf[:n])
@@ -221,8 +225,10 @@ func (s *SgridMonitor) PrintLogger() {
 					LogBytesLen:   int64(n),
 					CreateTime:    public.GetCurrTime(),
 				}
+				fmt.Println("SgridPackageServer.read.data.content,", content)
 				NewSgridLogTraceServant.BalanceSendLog(logReq)
 			}
+
 		}
 	}()
 	go func() {
@@ -232,7 +238,15 @@ func (s *SgridMonitor) PrintLogger() {
 			now := public.GetCurrTime()
 			n, err := ep.Read(buf)
 			if err != nil {
-				time.Sleep(time.Millisecond * 500)
+				if ok := errors.Is(err, io.EOF); ok {
+					continue
+				} else {
+					storage.PushErr(&pojo.SystemErr{
+						Type: "system/error/SgridPackageServer/ep.Read(buf)",
+						Info: err.Error(),
+					})
+					break
+				}
 			} else {
 				// 打印输出
 				content := string(buf[:n])
@@ -245,14 +259,15 @@ func (s *SgridMonitor) PrintLogger() {
 					LogBytesLen:   int64(n),
 					CreateTime:    now,
 				}
+				fmt.Println("SgridPackageServer.read.error.content,", content)
 				NewSgridLogTraceServant.BalanceSendLog(logReq)
 			}
-
 		}
 	}()
 }
 
 func (s *SgridMonitor) kill() {
+	fmt.Println("system/log/server.kill |", s.serverName)
 	storage.SaveStatLog(&pojo.StatLog{
 		GridId: s.gridId,
 		Stat:   BEHAVIOR_KILL,
@@ -260,7 +275,7 @@ func (s *SgridMonitor) kill() {
 	})
 	err := s.cmd.Process.Kill()
 	if err != nil {
-		fmt.Println("kill error", err.Error())
+		fmt.Println("system/err/process.kill | ", err.Error())
 	}
 	s.next.Store(true)
 }
@@ -506,7 +521,10 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 			err = cmd.Start()
 			fmt.Println("*************服务启动**************")
 			if err != nil {
-				fmt.Println("服务启动失败 ｜", err.Error())
+				storage.PushErr(&pojo.SystemErr{
+					Type: "system/error/SgridPackageServer/cmd.Start()",
+					Info: err.Error(),
+				})
 			}
 			storage.SaveStatLog(&pojo.StatLog{
 				GridId: int(id),
@@ -659,18 +677,25 @@ func initDir() {
 
 type SgridLogTraceServant struct {
 	Conns   []*clientgrpc.SgridGrpcClient[logProto.SgridLogTraceServiceClient]
-	Current int
+	Current *atomic.Int64
 	Size    int
 	ctx     context.Context
 }
 
 // 负载均衡写入节点
 func (s *SgridLogTraceServant) BalanceSendLog(req *logProto.LogTraceReq) {
-	s.Conns[s.Current].GetClient().LogTrace(s.ctx, req)
-	s.Current++
-	if s.Current >= s.Size {
-		s.Current = 0
-	}
+	AntsPool.Submit(func() {
+		current := s.Current.Load()
+		ret, err := s.Conns[current].GetClient().LogTrace(s.ctx, req)
+		if err != nil {
+			fmt.Println("BalanceSendLog Error", err.Error())
+		}
+		fmt.Println("ret", ret.String())
+		new := s.Current.Add(1)
+		if int(new) >= s.Size-1 {
+			s.Current.Store(0)
+		}
+	})
 }
 
 var NewSgridLogTraceServant = new(SgridLogTraceServant)
@@ -681,7 +706,7 @@ func initClient() {
 		logProto.NewSgridLogTraceServiceClient,
 	)
 	NewSgridLogTraceServant.Conns = resp
-	NewSgridLogTraceServant.Current = 0
+	NewSgridLogTraceServant.Current = &atomic.Int64{}
 	NewSgridLogTraceServant.Size = len(resp)
 	NewSgridLogTraceServant.ctx = context.Background()
 }
@@ -692,16 +717,13 @@ func (s *SgridPackage) Registry(sc *config.SgridConf) {
 	globalConf = sc
 	initDir()
 	initClient()
-	globalPool = pool.NewRoutinePool(
-		pool.WithSgriddRoutineMaxSize(100),
-		pool.WithSgriddRoutineErrHand(func(err interface{}) {
-			i := fmt.Sprintf("system/error/pool %v", err)
-			storage.PushErr(&pojo.SystemErr{
-				Type: "system/error/pool",
-				Info: i,
-			})
-		}))
-	go globalPool.Run()
+	AntsPool, _ = ants.NewPool(100, ants.WithPanicHandler(func(i interface{}) {
+		info := fmt.Sprintf("failed to listen: %v", i)
+		storage.PushErr(&pojo.SystemErr{
+			Type: "system/error/SgridPackageServer/WithPanicHandler",
+			Info: info,
+		})
+	}))
 	configuration.InitStorage(sc)
 	port := fmt.Sprintf(":%v", sc.Server.Port)
 	lis, err := net.Listen("tcp", port)
@@ -715,7 +737,7 @@ func (s *SgridPackage) Registry(sc *config.SgridConf) {
 
 	grpcServer := grpc.NewServer()
 	protocol.RegisterFileTransferServiceServer(grpcServer, &fileTransferServer{})
-	fmt.Println("Sgrid svr started on", port)
+	fmt.Println("SgridPackage svr started on", port)
 	if err := grpcServer.Serve(lis); err != nil {
 		info := fmt.Sprintf("failed to serve: %v", err)
 		storage.PushErr(&pojo.SystemErr{
