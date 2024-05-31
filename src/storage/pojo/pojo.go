@@ -35,6 +35,7 @@ type Servant struct {
 	Protocol       string     // 协议
 	ExecPath       string     // 可执行路径
 	ServantGroupId int        `gorm:"foreignKey:ServantGroupId"` // 服务组ID
+	Stat           int        // 状态
 }
 
 // 服务网格 用于查看所有节点信息

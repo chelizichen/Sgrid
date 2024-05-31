@@ -3,6 +3,7 @@ package storage
 import (
 	protocol "Sgrid/server/SgridLogTraceServer/proto"
 	c "Sgrid/src/configuration"
+	"Sgrid/src/public"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
 	"fmt"
@@ -16,6 +17,28 @@ func SaveHashPackage(pkg pojo.ServantPackage) int {
 
 func SaveServant(svr *pojo.Servant) int {
 	c.GORM.Create(&svr)
+	return svr.Id
+}
+
+func UpdateServant(svr *pojo.Servant) int {
+	c.GORM.
+		Model(&svr).
+		Where("id = ?", svr.Id).
+		Updates(&pojo.Servant{
+			ServantGroupId: svr.ServantGroupId,
+			ExecPath:       svr.ExecPath,
+			Protocol:       svr.Protocol,
+		})
+	return svr.Id
+}
+
+func DelServant(svr *pojo.Servant) int {
+	c.GORM.
+		Model(&svr).
+		Where("id = ?", svr.Id).
+		Updates(&pojo.Servant{
+			Stat: public.STAT_SERVANT_DELETE,
+		})
 	return svr.Id
 }
 

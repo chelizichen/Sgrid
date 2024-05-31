@@ -23,6 +23,8 @@ func DevopsService(ctx *handlers.SgridServerCtx) {
 	GROUP.POST("/devops/saveGroup", saveGroup)
 	// 2.创建服务
 	GROUP.POST("/devops/saveServant", saveServant)
+	GROUP.POST("/devops/updateServant", updateServant)
+	GROUP.POST("/devops/delServant", delServant)
 
 	// 2.1 选择服务
 	GROUP.GET("/devops/getServants", getServants)
@@ -85,6 +87,37 @@ func saveServant(c *gin.Context) {
 		CreateTime:     &now,
 	}
 	vsg := storage.SaveServant(record)
+	handlers.AbortWithSucc(c, vsg)
+}
+
+func updateServant(c *gin.Context) {
+	var req *dto.SaveServantDto
+	err := c.BindJSON(&req)
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	record := &pojo.Servant{
+		Language:       req.Language,
+		Protocol:       req.Protocol,
+		ServantGroupId: req.ServantGroupId,
+		ExecPath:       req.ExecPath,
+	}
+	vsg := storage.UpdateServant(record)
+	handlers.AbortWithSucc(c, vsg)
+}
+
+func delServant(c *gin.Context) {
+	var req *dto.SaveServantDto
+	err := c.BindJSON(&req)
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	record := &pojo.Servant{
+		Id: req.Id,
+	}
+	vsg := storage.DelServant(record)
 	handlers.AbortWithSucc(c, vsg)
 }
 

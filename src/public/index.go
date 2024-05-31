@@ -43,6 +43,11 @@ const (
 	LOG_TYPE_SYSTEM_INNER = "system-inner"
 )
 
+const (
+	STAT_SERVANT_COMMON = 0
+	STAT_SERVANT_DELETE = -1
+)
+
 type GRPC_CLIENT_PROXYS struct{}
 
 const (

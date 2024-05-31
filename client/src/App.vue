@@ -5,19 +5,13 @@ import { RouterView } from "vue-router";
   <el-container>
     <el-header>
       <div style="position: relative; height: 100%">
-        <div style="left: 3%" class="title title-pos" @click="$router.push('/server')">
-          <img src="/icon.png" style="width: 50px;height:50px"/>
+        <div style="left: 1%" class="title title-pos" @click="$router.push('/server')">
+          <img src="/icon.png" style="width: 50px; height: 50px" />
           Sgrid
         </div>
-
-        <div
-          style="left: 50%; bottom: 25%; font-size: 24px; color: rgb(207, 15, 124)"
-          class="title title-pos"
-          @click="$router.push('/devops')"
-        >
-          devops
+        <div class="title title-pos devops" @click="$router.push('/devops')">
+          <el-icon><Setting /></el-icon>
         </div>
-        <div style="right: 0%" class="title title-pos"></div>
       </div>
     </el-header>
     <RouterView />
@@ -44,5 +38,10 @@ import { RouterView } from "vue-router";
 .title-pos {
   position: absolute;
   top: 10px;
+}
+.devops {
+  right: 0;
+  bottom: 0;
+  font-size: 24px;
 }
 </style>
