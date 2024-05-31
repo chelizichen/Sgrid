@@ -5,7 +5,7 @@ import (
 	"Sgrid/src/public/jwt"
 	"Sgrid/src/storage"
 	"Sgrid/src/storage/dto"
-	"Sgrid/src/storage/pojo"
+	"Sgrid/src/storage/rbac"
 	"Sgrid/src/storage/vo"
 	utils "Sgrid/src/utils"
 	"fmt"
@@ -26,7 +26,7 @@ func Registry(ctx *handlers.SgridServerCtx) {
 	GROUP.POST("/login", func(c *gin.Context) {
 		username := c.PostForm("username")
 		password := c.PostForm("password")
-		v := storage.QueryUser(&pojo.User{
+		v := storage.QueryUser(&rbac.User{
 			UserName: username,
 			Password: password,
 		})

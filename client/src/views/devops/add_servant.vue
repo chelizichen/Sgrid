@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import api from "@/api/server";
 import { ElNotification } from "element-plus";
 
@@ -74,7 +74,10 @@ async function devopsAddServant() {
   resetServant();
   return ElNotification.success("Create Success");
 }
-
+onMounted(async () => {
+  const data = await api.getGroup();
+  groups.value = data.data;
+});
 const resetServant = () => {
   servantItem.value.serverName = "";
   servantItem.value.language = "";

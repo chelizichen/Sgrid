@@ -4,6 +4,7 @@ import (
 	c "Sgrid/src/configuration"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
+	"Sgrid/src/storage/rbac"
 	"Sgrid/src/storage/vo"
 	"Sgrid/src/utils"
 	"fmt"
@@ -185,14 +186,14 @@ func QueryPropertiesByKey(key string) (resp []*pojo.Properties) {
 	return resp
 }
 
-func QueryUser(user *pojo.User) (resp *pojo.User) {
-	c.GORM.Model(&pojo.User{}).Where(&pojo.User{
+func QueryUser(user *rbac.User) (resp *rbac.User) {
+	c.GORM.Model(&rbac.User{}).Where(&rbac.User{
 		UserName: user.UserName,
 	}).Find(&resp)
 	if user.Password == resp.Password {
 		return resp
 	}
-	return &pojo.User{}
+	return &rbac.User{}
 }
 
 func QueryGroups() (resp *[]vo.VoGroupObj) {

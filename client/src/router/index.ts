@@ -17,13 +17,22 @@ export const adminMenu: RouteRecordRaw[] = [
         title: '用户管理',
         icon: 'Grid',
         path: 'user',
-        name: 'user'
+        name: 'user',
+        component: ()=>import('@/views/devops/system/user_admin.vue')
       },
       {
-        title: '权限管理',
+        title: '角色管理',
         icon: 'Grid',
-        path: 'auth',
-        name: 'auth'
+        path: 'role',
+        name: 'role',
+        component: ()=>import('@/views/devops/system/role_admin.vue')
+      },
+      {
+        title: '菜单管理',
+        icon: 'Grid',
+        path: 'menu',
+        name: 'menu',
+        component: ()=>import('@/views/devops/system/menu_admin.vue')
       }
     ]
   },

@@ -36,7 +36,6 @@ async function devopsAddGroup() {
   if (data.code) {
     return ElNotification.error(data.message);
   }
-  resetForm();
   return ElNotification.success("Create Success");
 }
 </script>

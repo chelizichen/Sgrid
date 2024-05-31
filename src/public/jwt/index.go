@@ -1,7 +1,7 @@
 package jwt
 
 import (
-	"Sgrid/src/storage/pojo"
+	"Sgrid/src/storage/rbac"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -14,7 +14,7 @@ type Claims struct {
 
 var jwtKey = []byte("____Sgrid@Jwt______")
 
-var GenToken = func(user pojo.User) (string, error) {
+var GenToken = func(user rbac.User) (string, error) {
 	expirationTime := time.Now().Add(7 * 24 * time.Hour)
 	claims := &Claims{
 		UserId: uint(user.Id),

@@ -47,4 +47,5 @@ func InitService(ctx *handlers.SgridServerCtx) {
 	ctx.RegistryHttpRouter(PackageService)
 	ctx.RegistryHttpRouter(Registry)
 	ctx.RegistryHttpRouter(DevopsService)
+	ctx.RegistryHttpRouter(SystemService)
 }

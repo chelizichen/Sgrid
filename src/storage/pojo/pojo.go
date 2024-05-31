@@ -83,14 +83,6 @@ type StatLog struct {
 	MemoryData  uint64     `json:"memoryData,omitempty"`
 }
 
-type User struct {
-	Id         int
-	UserName   string
-	Password   string
-	CreateTime string
-	RoleId     int
-}
-
 type ServantConf struct {
 	Id         int        `json:"id,omitempty"`
 	ServantId  *int       `json:"servantId,omitempty"`

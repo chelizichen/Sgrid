@@ -115,9 +115,9 @@ type VoServantPackage struct {
 }
 
 type VoUser struct {
-	Id         int    `json:"id,omitempty"`
-	UserName   string `json:"userName,omitempty"`
-	Password   string `json:"password,omitempty"`
-	CreateTime string `json:"createTime,omitempty"`
-	Token      string `json:"token,omitempty"`
+	Id         int        `json:"id,omitempty"`
+	UserName   string     `json:"userName,omitempty"`
+	Password   string     `json:"password,omitempty"`
+	CreateTime *time.Time `json:"createTime,omitempty"`
+	Token      string     `json:"token,omitempty"`
 }

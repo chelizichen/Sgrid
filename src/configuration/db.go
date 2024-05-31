@@ -3,6 +3,7 @@ package configuration
 import (
 	"Sgrid/src/config"
 	"Sgrid/src/storage/pojo"
+	"Sgrid/src/storage/rbac"
 	"context"
 	"fmt"
 	"time"
@@ -47,14 +48,13 @@ func InitStorage(ctx *config.SgridConf) {
 	}
 	sqlDB, err := db.DB()
 	if err != nil {
-		fmt.Println("Error To init db.DB", err)
+		fmt.Println("Error To init sdb.DB", err)
 	}
 	sqlDB.SetMaxIdleConns(10)
 	sqlDB.SetMaxOpenConns(100)
 	sqlDB.SetConnMaxLifetime(time.Hour)
 	if ctx.GetBool(AUTO_MIGRATE) {
 		db.Debug().AutoMigrate(&pojo.Node{})
-		db.Debug().AutoMigrate(&pojo.User{})
 		db.Debug().AutoMigrate(&pojo.Grid{})
 		db.Debug().AutoMigrate(&pojo.ServantPackage{})
 		db.Debug().AutoMigrate(&pojo.ServantGroup{})
@@ -64,6 +64,14 @@ func InitStorage(ctx *config.SgridConf) {
 		db.Debug().AutoMigrate(&pojo.SystemErr{})
 		db.Debug().AutoMigrate(&pojo.ServantConf{})
 		db.Debug().AutoMigrate(&pojo.TraceLog{})
+
+		// rbac
+		db.Debug().AutoMigrate(&rbac.User{})
+		db.Debug().AutoMigrate(&rbac.UserRole{})
+		db.Debug().AutoMigrate(&rbac.UserToRole{})
+		db.Debug().AutoMigrate(&rbac.RoleMenu{})
+		db.Debug().AutoMigrate(&rbac.RoleToMenu{})
+
 	}
 	GORM = db
 }
