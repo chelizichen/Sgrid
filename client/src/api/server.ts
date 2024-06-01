@@ -134,7 +134,28 @@ const api = {
       method: 'get',
       params
     }) as unknown as BasicResp<any>
-  }
+  },
+  getPropertys(data:any){
+    return HttpReq({
+      url: '/devops/getPropertys',
+      method: 'post',
+      data
+    }) as unknown as BasicResp<any>
+  },
+  setProperty(data:any){
+    return HttpReq({
+      url: '/devops/setProperty',
+      method: 'post',
+      data
+    }) as unknown as BasicResp<any>
+  },
+  delProperty(id:number){
+    return HttpReq({
+      url: '/devops/delProperty',
+      method: 'get',
+      params:{id}
+    }) as unknown as BasicResp<any>
+  },
 }
 
 export default api

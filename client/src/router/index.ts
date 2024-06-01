@@ -94,6 +94,21 @@ export const adminMenu: RouteRecordRaw[] = [
         component: ()=>import('@/views/devops/gateway_conf.vue')
       }
     ]
+  },
+  {
+    title: '属性管理',
+    icon: 'Grid',
+    path: 'property',
+    name: 'property',
+    children: [
+      {
+        title: '属性设置',
+        icon: 'Grid',
+        path: 'set',
+        name: 'set',
+        component: ()=>import('@/views/devops/property_admin.vue')
+      }
+    ]
   }
 ]
 

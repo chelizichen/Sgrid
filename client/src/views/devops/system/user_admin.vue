@@ -27,7 +27,7 @@
       </el-table-column>
     </el-table>
 
-    <el-dialog v-model="editUservisible" title="AddNode">
+    <el-dialog v-model="editUservisible" title="编辑用户">
       <el-form label-width="100px">
         <el-form-item label="userName">
           <el-input v-model="editUserObj.userName"></el-input>

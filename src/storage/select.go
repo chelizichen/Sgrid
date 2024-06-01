@@ -186,6 +186,11 @@ func QueryPropertiesByKey(key string) (resp []*pojo.Properties) {
 	return resp
 }
 
+func QueryProperties() (resp []*pojo.Properties) {
+	c.GORM.Model(&pojo.Properties{}).Find(&resp)
+	return
+}
+
 func QueryUser(user *rbac.User) (resp *rbac.User) {
 	c.GORM.Model(&rbac.User{}).Where(&rbac.User{
 		UserName: user.UserName,

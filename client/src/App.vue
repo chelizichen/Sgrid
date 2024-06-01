@@ -4,13 +4,13 @@ import { RouterView } from "vue-router";
 <template>
   <el-container>
     <el-header>
-      <div style="position: relative; height: 100%">
+      <div class="head">
         <div style="left: 1%" class="title title-pos" @click="$router.push('/server')">
           <img src="/icon.png" style="width: 50px; height: 50px" />
           Sgrid
         </div>
         <div class="title title-pos devops" @click="$router.push('/devops')">
-          <el-icon><Setting /></el-icon>
+          <img src="@/assets/admin.png" style="width: 100px; height: 100px" />
         </div>
       </div>
     </el-header>
@@ -19,6 +19,12 @@ import { RouterView } from "vue-router";
 </template>
 
 <style scoped>
+.head {
+  position: relative;
+  height: 100%;
+  border-bottom: 1px gainsboro;
+  border-bottom-style: dotted;
+}
 .el-container {
   min-height: 100vh;
 }

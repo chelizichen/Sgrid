@@ -63,10 +63,10 @@ type ServantPackage struct {
 }
 
 type Properties struct {
-	Id         int
-	Key        string
-	Value      string
-	CreateTime *time.Time `gorm:"autoCreateTime"` // 创建时间
+	Id         int        `json:"id,omitempty"`
+	Key        string     `json:"key,omitempty"`
+	Value      string     `json:"value,omitempty"`
+	CreateTime *time.Time `gorm:"autoCreateTime" json:"createTime,omitempty"` // 创建时间
 }
 
 type StatLog struct {

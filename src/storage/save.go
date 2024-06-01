@@ -152,3 +152,22 @@ func SaveLog(d *protocol.LogTraceReq) error {
 	err = c.GORM.Debug().Create(pj).Error
 	return err
 }
+
+func UpsertProperty(p *pojo.Properties) {
+	if p.Id == 0 {
+		c.GORM.Model(&pojo.Properties{}).Create(p)
+		return
+	}
+	c.GORM.Model(&pojo.Properties{}).
+		Where("id = ?", p.Id).
+		Updates(&pojo.Properties{
+			Key:   p.Key,
+			Value: p.Value,
+		})
+}
+
+func DelProperty(id int) {
+	c.GORM.Model(&pojo.Properties{}).Delete(&pojo.Properties{
+		Id: id,
+	})
+}

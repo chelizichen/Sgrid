@@ -41,6 +41,10 @@ func DevopsService(ctx *handlers.SgridServerCtx) {
 	GROUP.GET("/devops/getConfig", getConfig)
 	GROUP.POST("/devops/updateConfig", updateConfig)
 
+	// 属性配置中心
+	GROUP.POST("/devops/getPropertys", getPropertys)
+	GROUP.POST("/devops/setProperty", setProperty)
+	GROUP.GET("/devops/delProperty", delProperty)
 }
 
 func getGroups(c *gin.Context) {
@@ -202,5 +206,33 @@ func updateConfig(c *gin.Context) {
 		handlers.AbortWithError(c, err.Error())
 	}
 	storage.UpdateConf(req)
+	handlers.AbortWithSucc(c, nil)
+}
+
+// ** property **
+
+func getPropertys(c *gin.Context) {
+	// var req *pojo.Properties
+	// if err := c.BindJSON(&req); err != nil {
+	// 	fmt.Println("err", err.Error())
+	// 	handlers.AbortWithError(c, err.Error())
+	// }
+	p := storage.QueryProperties()
+	handlers.AbortWithSucc(c, p)
+}
+
+func setProperty(c *gin.Context) {
+	var req *pojo.Properties
+	if err := c.BindJSON(&req); err != nil {
+		fmt.Println("err", err.Error())
+		handlers.AbortWithError(c, err.Error())
+	}
+	storage.UpsertProperty(req)
+	handlers.AbortWithSucc(c, nil)
+}
+
+func delProperty(c *gin.Context) {
+	servant_id, _ := strconv.Atoi(c.Query("id"))
+	storage.DelProperty(servant_id)
 	handlers.AbortWithSucc(c, nil)
 }
