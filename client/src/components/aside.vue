@@ -5,9 +5,16 @@ export default {
 </script>
 <script lang="ts" setup>
 import type { Item } from "@/dto/dto";
+import { useRouter } from "vue-router";
 const props = defineProps<{
   serverList: any[];
 }>();
+const router = useRouter();
+function toDashboard() {
+  router.push({
+    path: "/server/dashboard",
+  });
+}
 const emits = defineEmits(["handleOpen"]);
 function handleOpen(item: Partial<Item>) {
   emits("handleOpen", item);
@@ -20,30 +27,7 @@ function handleOpen(item: Partial<Item>) {
       class="el-menu-vertical-demo"
       active-text-color="rgb(207, 15, 124)"
       style="border: none"
-      :default-openeds="['-1']"
     >
-      <el-sub-menu index="-1">
-        <template #title>
-          <el-icon><Setting /></el-icon>
-          <span>Sgrids</span>
-        </template>
-        <el-menu-item
-          class="app-text-center"
-          index="-1"
-          key="-1"
-          @click="
-            handleOpen({
-              id: 0,
-              serverName: 'dashboard',
-            })
-          "
-        >
-          <el-icon>
-            <TrendCharts />
-          </el-icon>
-          <template #title>{{ "DashBoard" }}</template>
-        </el-menu-item>
-      </el-sub-menu>
       <template v-for="(parent, index) in props.serverList" :key="parent.id">
         <el-sub-menu :index="parent.id + '-' + index">
           <template #title>

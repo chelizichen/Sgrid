@@ -98,3 +98,17 @@ export function getMenuListByRoleId(id:number){
     params:{id},
   }) as unknown as BasicResp<any>;
 }
+
+export function getCpuInfo(){
+  return request({
+    url: "/system/statistics/getCpuInfo",
+    method: "get",
+  }) as unknown as BasicResp<any>;
+}
+
+export function getMemoryInfo(){
+  return request({
+    url:'/system/statistics/getMemoryInfo',
+    method:'get'
+  }) as unknown as BasicResp<any>;
+}

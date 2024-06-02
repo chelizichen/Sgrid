@@ -23,6 +23,7 @@ export default {
           ></gridsComponent>
         </el-card>
       </el-main>
+      <router-view></router-view>
     </el-container>
   </div>
 </template>
@@ -35,7 +36,7 @@ import API from "../api/server";
 import type { Item } from "@/dto/dto";
 
 const state = reactive({
-  serverName: <string>"",
+  serverName: "",
   serverList: [],
   gridsList: [],
   servantId: 0,
@@ -54,10 +55,6 @@ async function handleOpen(item: Item) {
 async function fetchServerList() {
   const resp = await API.getServerList(0);
   state.serverList = (resp.data || []).sort((a, b) => a.id - b.id);
-}
-
-function toGit() {
-  window.open("https://github.com/chelizichen/Sgrid");
 }
 
 onMounted(() => {

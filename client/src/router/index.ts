@@ -3,6 +3,7 @@ import type { RouteRecordRaw } from 'vue-router'
 import ServerView from '@/views/server.vue'
 import Login from '@/views/login.vue'
 import LogPage from '@/views/logger.vue'
+import Dashboard from '@/views/dashboard.vue'
 import Devops from '@/views/devops/aside.vue'
 import { localGet, constants } from '@/constant'
 import { useUserStore } from '@/stores/counter'
@@ -127,6 +128,11 @@ const router = createRouter({
       path: '/server',
       name: 'server',
       component: ServerView
+    },
+    {
+      path:"/dashboard",
+      name:"dashboard",
+      component:Dashboard
     },
     {
       path: '/login',

@@ -9,6 +9,13 @@ import { RouterView } from "vue-router";
           <img src="@/assets/icon.png" style="width: 50px; height: 50px" />
           Sgrid
         </div>
+        <div
+          style="left: 50%; bottom: 1px"
+          class="title title-pos"
+          @click="$router.push('/dashboard')"
+        >
+          <img src="@/assets/dashboard.png" style="width: 40px; height: 40px" />
+        </div>
         <div class="title title-pos devops" @click="$router.push('/devops')">
           <img src="@/assets/admin.png" style="width: 100px; height: 100px" />
         </div>
