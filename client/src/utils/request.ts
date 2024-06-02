@@ -1,3 +1,4 @@
+import { constants } from '@/constant'
 import axios from 'axios'
 
 const HttpReq = axios.create({
@@ -15,7 +16,7 @@ HttpReq.interceptors.response.use((resp) => {
 })
 
 HttpReq.interceptors.request.use((config) => {
-  const tkn = localStorage.getItem('token')
+  const tkn = localStorage.getItem(constants.TOKEN)
   config.headers['token'] = tkn
   return config
 })

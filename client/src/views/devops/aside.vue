@@ -14,11 +14,7 @@ export default {
     <el-container>
       <el-aside style="width: 200px; height: 100vh">
         <el-menu class="el-menu-vertical-demo" active-text-color="rgb(207, 15, 124)">
-          <el-sub-menu
-            v-for="(item, index) in adminMenu"
-            :index="String(index)"
-            :key="index"
-          >
+          <el-sub-menu v-for="(item, index) in menus" :index="String(index)" :key="index">
             <template #title>
               <el-icon><grid /></el-icon>
               <span>{{ item.title }}</span>
@@ -41,11 +37,17 @@ export default {
 </template>
 
 <script setup lang="ts">
-import { adminMenu } from "@/router";
+import { useUserStore } from "@/stores/counter";
+import { computed } from "vue";
 import { useRouter } from "vue-router";
 const router = useRouter();
+const userStore = useUserStore();
+const menus = computed(() => {
+  console.log("userStore.menus", userStore.menus);
+  return userStore.menus;
+});
 const base_path = "/devops/";
-function push(item, s_item) {
+function push(item: any, s_item: any) {
   const path = base_path + item.path + "/" + s_item.path;
   router.push(path);
   console.log(item, s_item);

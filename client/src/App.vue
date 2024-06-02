@@ -6,7 +6,7 @@ import { RouterView } from "vue-router";
     <el-header>
       <div class="head">
         <div style="left: 1%" class="title title-pos" @click="$router.push('/server')">
-          <img src="/icon.png" style="width: 50px; height: 50px" />
+          <img src="@/assets/icon.png" style="width: 50px; height: 50px" />
           Sgrid
         </div>
         <div class="title title-pos devops" @click="$router.push('/devops')">

@@ -49,6 +49,23 @@ export function saveMenu(data: any) {
   }) as unknown as BasicResp<any>;
 }
 
+export function delMenu(id:number) {
+  return request({
+    url: "/system/menu/del",
+    method: "get",
+    params:{id},
+  }) as unknown as BasicResp<any>;
+}
+
+export function delRole(id:number) {
+  return request({
+    url: "/system/role/del",
+    method: "get",
+    params:{id},
+  }) as unknown as BasicResp<any>;
+}
+
+
 export function setUserToRole(data: any) {
   return request({
     url: "/system/setUserToRole",

@@ -15,10 +15,13 @@ const api = {
       data
     }) as unknown as BasicResp<any>
   },
-  getServerList: function () {
+  getServerList: function (id:number) {
     return HttpReq({
       url: '/main/queryServantGroup',
-      method: 'get'
+      method: 'post',
+      data: {
+        id
+      }
     }) as unknown as BasicResp<any>
   },
   getUploadList: function (params: any) {
@@ -74,6 +77,20 @@ const api = {
       url: '/login',
       data
     }) as unknown as BasicResp<any>
+  },
+  LoginByCache:function(data:any){
+    return HttpReq({
+      url:'/loginByCache',
+      method:'post',
+      data
+    }) as unknown as Promise<BasicResp<any>>
+  },
+  getUserMenusByUserId:function(id:number){
+    return HttpReq({
+      url:'/getUserMenusByUserId',
+      method:'get',
+      params:{id}
+    }) as unknown as Promise<BasicResp<any>>
   },
   getGroup() {
     return HttpReq({

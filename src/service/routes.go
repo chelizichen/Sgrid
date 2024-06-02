@@ -4,66 +4,80 @@ import (
 	handlers "Sgrid/src/http"
 	"Sgrid/src/public/jwt"
 	"Sgrid/src/storage"
-	"Sgrid/src/storage/dto"
-	"Sgrid/src/storage/rbac"
 	"Sgrid/src/storage/vo"
-	utils "Sgrid/src/utils"
+	"encoding/json"
 	"fmt"
-	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
-)
-
-const (
-	TOKEN           = "e609d00404645feed1c1733835b8c127"
-	CLUSTER_REQUEST = "CLUSTER_REQUEST"
-	SINGLE_REQUEST  = "SINGLE_REQUEST"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func Registry(ctx *handlers.SgridServerCtx) {
 	GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
-	GROUP.POST("/login", func(c *gin.Context) {
-		username := c.PostForm("username")
-		password := c.PostForm("password")
-		v := storage.QueryUser(&rbac.User{
-			UserName: username,
-			Password: password,
-		})
-		if len(v.Password) != 0 && len(v.UserName) != 0 {
+	GROUP.POST("/login", login)
+	GROUP.POST("/loginByCache", jwt.Validate, loginByCache)
+	GROUP.GET("/getUserMenusByUserId", getUserMenusByUserId)
+}
 
-			s, err := jwt.GenToken(*v)
-			if err != nil {
-				fmt.Println("gen token error")
-				c.JSON(http.StatusOK, handlers.Resp(-1, "Error", v))
-			}
-			rsp := vo.VoUser{
-				UserName:   v.UserName,
-				Password:   v.Password,
-				CreateTime: v.CreateTime,
-				Id:         v.Id,
-				Token:      s,
-			}
-			c.JSON(http.StatusOK, handlers.Resp(0, "ok", rsp))
-		} else {
-			c.JSON(http.StatusOK, handlers.Resp(-1, "Error", v))
-		}
-	})
+func login(c *gin.Context) {
+	username := c.PostForm("username")
+	password := c.PostForm("password")
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost) //加密处理
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	v, err := storage.QueryUser(username)
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	compareError := bcrypt.CompareHashAndPassword(hash, []byte(v.Password))
+	if compareError != nil {
+		handlers.AbortWithError(c, compareError.Error())
+		return
+	}
 
-	GROUP.GET("/main/queryGrid", func(c *gin.Context) {
-		pbr := utils.NewPageBaiscReq(c)
-		gv := storage.QueryGrid(pbr)
-		c.JSON(200, handlers.Resp(0, "ok", gv))
-	})
+	expireTime := time.Hour * 12
+	token, err := jwt.GenToken(username, time.Now().Add(expireTime))
+	if err != nil {
+		fmt.Println("gen token error")
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	rsp := vo.VoUser{
+		UserName:   v.UserName,
+		Password:   v.Password,
+		CreateTime: v.CreateTime,
+		Id:         v.Id,
+		Token:      token,
+	}
+	setTokenError := jwt.SetToken(token, expireTime, rsp)
+	if err != nil {
+		fmt.Println("set token error", err.Error())
+		handlers.AbortWithError(c, setTokenError.Error())
+		return
+	}
 
-	GROUP.GET("/main/queryServantGroup", func(c *gin.Context) {
-		gv := storage.QueryServantGroup(&dto.PageBasicReq{})
-		vgbs := storage.ConvertToVoGroupByServant(gv)
-		c.JSON(200, handlers.Resp(0, "ok", vgbs))
-	})
+	handlers.AbortWithSucc(c, rsp)
+}
 
-	GROUP.GET("/main/queryNodes", func(c *gin.Context) {
-		nodes := storage.QueryNodes()
-		c.JSON(200, handlers.Resp(0, "ok", nodes))
-	})
+func loginByCache(c *gin.Context) {
+	value, exists := c.Get(jwt.UserInfo)
+	if !exists {
+		handlers.AbortWithError(c, "login User Error")
+	} else {
+		var vo *vo.VoUser
+		json.Unmarshal([]byte(value.(string)), &vo)
+		handlers.AbortWithSucc(c, vo)
+	}
+}
+
+func getUserMenusByUserId(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Query("id"))
+	rm := storage.GetUserMenusByUserId(id)
+	handlers.AbortWithSucc(c, rm)
 }

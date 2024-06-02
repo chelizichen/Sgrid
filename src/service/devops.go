@@ -6,6 +6,7 @@ import (
 	"Sgrid/src/storage"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
+	utils "Sgrid/src/utils"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -35,7 +36,6 @@ func DevopsService(ctx *handlers.SgridServerCtx) {
 	// 4.添加至服务网格
 	GROUP.POST("/devops/saveGrid", saveGrid)
 	GROUP.POST("/devops/deleteGrid", deleteGrid)
-	// 5.选择端口
 
 	// 配置中心
 	GROUP.GET("/devops/getConfig", getConfig)
@@ -45,6 +45,12 @@ func DevopsService(ctx *handlers.SgridServerCtx) {
 	GROUP.POST("/devops/getPropertys", getPropertys)
 	GROUP.POST("/devops/setProperty", setProperty)
 	GROUP.GET("/devops/delProperty", delProperty)
+
+	// 服务组
+	GROUP.GET("/main/queryGrid", queryGrid)
+	GROUP.POST("/main/queryServantGroup", queryServantGroup)
+	GROUP.GET("/main/queryNodes", mainQueryNodes)
+
 }
 
 func getGroups(c *gin.Context) {
@@ -235,4 +241,26 @@ func delProperty(c *gin.Context) {
 	servant_id, _ := strconv.Atoi(c.Query("id"))
 	storage.DelProperty(servant_id)
 	handlers.AbortWithSucc(c, nil)
+}
+
+func queryGrid(c *gin.Context) {
+	pbr := utils.NewPageBaiscReq(c)
+	gv := storage.QueryGrid(pbr)
+	c.JSON(200, handlers.Resp(0, "ok", gv))
+}
+
+func queryServantGroup(c *gin.Context) {
+	var req *dto.PageBasicReq
+	if err := c.BindJSON(&req); err != nil {
+		fmt.Println("err", err.Error())
+		handlers.AbortWithError(c, err.Error())
+	}
+	gv := storage.QueryServantGroup(req)
+	vgbs := storage.ConvertToVoGroupByServant(gv)
+	c.JSON(200, handlers.Resp(0, "ok", vgbs))
+}
+
+func mainQueryNodes(c *gin.Context) {
+	nodes := storage.QueryNodes()
+	c.JSON(200, handlers.Resp(0, "ok", nodes))
 }

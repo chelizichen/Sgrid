@@ -73,9 +73,11 @@ func QueryGrid(req *dto.PageBasicReq) (resp []vo.Grid) {
 	return
 }
 
+// 2024.6.1 pageBasicReq.id as user_id
 func QueryServantGroup(req *dto.PageBasicReq) (resp []vo.VoServantGroup) {
-	c.GORM.Table("grid_servant_group gsg").
-		Select(`
+	if req.Id != 0 {
+		c.GORM.Table("grid_servant_group gsg").
+			Select(`
 		gsg.*,
 		gs.create_time AS gs_create_time,
 		gs.id AS gs_id,
@@ -85,8 +87,24 @@ func QueryServantGroup(req *dto.PageBasicReq) (resp []vo.VoServantGroup) {
 		gs.location AS gs_location,
 		gs.up_stream_name AS gs_up_stream_name
 	`).
-		Joins("LEFT JOIN grid_servant gs ON gs.servant_group_id = gsg.id").
-		Find(&resp)
+			Joins("LEFT JOIN grid_servant gs ON gs.servant_group_id = gsg.id").
+			Where("gs.user_id = ?", req.Id).
+			Find(&resp)
+	} else {
+		c.GORM.Table("grid_servant_group gsg").
+			Select(`
+		gsg.*,
+		gs.create_time AS gs_create_time,
+		gs.id AS gs_id,
+		gs.language gs_language,
+		gs.servant_group_id AS gs_servant_group_id,
+		gs.server_name AS gs_server_name,
+		gs.location AS gs_location,
+		gs.up_stream_name AS gs_up_stream_name
+	`).
+			Joins("LEFT JOIN grid_servant gs ON gs.servant_group_id = gsg.id").
+			Find(&resp)
+	}
 
 	return
 }
@@ -191,14 +209,14 @@ func QueryProperties() (resp []*pojo.Properties) {
 	return
 }
 
-func QueryUser(user *rbac.User) (resp *rbac.User) {
-	c.GORM.Model(&rbac.User{}).Where(&rbac.User{
-		UserName: user.UserName,
-	}).Find(&resp)
-	if user.Password == resp.Password {
-		return resp
+func QueryUser(userName string) (resp *rbac.User, err error) {
+	err = c.GORM.Model(&rbac.User{}).Where(&rbac.User{
+		UserName: userName,
+	}).Find(&resp).Error
+	if err != nil {
+		return nil, err
 	}
-	return &rbac.User{}
+	return resp, nil
 }
 
 func QueryGroups() (resp *[]vo.VoGroupObj) {

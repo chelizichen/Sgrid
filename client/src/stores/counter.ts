@@ -1,20 +1,38 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
+import { reduceMenu, reduceMenuToRouter } from '@/utils/obj'
+import type { RouteRecordRaw } from 'vue-router'
+import router from '@/router'
+type userVo = {
+  id: number
+  password: string
+  token: string
+  userName: string
+}
 
-export const useCounterStore = defineStore('counter', () => {
-  const count = ref(0)
-  const doubleCount = computed(() => count.value * 2)
-  function increment() {
-    count.value++
+export const useUserStore = defineStore('user', () => {
+  const userInfo = ref<userVo>({
+    id: 0,
+    password: '',
+    userName: '',
+    token: ''
+  })
+  const menus = ref<RouteRecordRaw[]>([])
+  function setUserInfo(userInfoDto: userVo) {
+    userInfo.value = userInfoDto
   }
-
-  return { count, doubleCount, increment }
-})
-
-export const useShellStore = defineStore('shell', () => {
-  const outputStack = ref<string[]>([])
-  function pushStack(message:string){
-    outputStack.value.push(message)
+  async function setMenu(obj: any) {
+    const toRouters = reduceMenuToRouter(obj)
+    menus.value = await toRouters
+    menus.value.forEach((fatherRoute) => {
+      router.addRoute('devops', fatherRoute)
+      if (fatherRoute.children) {
+        fatherRoute.children.forEach((childRoute) => {
+          router.addRoute(fatherRoute.name!, childRoute)
+        })
+      }
+    })
+    console.log('getRoutes', router.getRoutes())
   }
-  return { outputStack,pushStack }
+  return { userInfo, setUserInfo, menus, setMenu }
 })

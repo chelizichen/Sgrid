@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -20,6 +21,7 @@ const (
 
 var GORM *gorm.DB
 var RDBContext = context.Background()
+var GRDB *redis.Client
 
 func InitStorage(ctx *config.SgridConf) {
 	db_master := ctx.GetString("db_master")
@@ -42,7 +44,7 @@ func InitStorage(ctx *config.SgridConf) {
 			fmt.Println("e", e.Error())
 		}
 	}
-
+	// db
 	if err != nil {
 		fmt.Println("Error To init gorm", err)
 	}
@@ -50,6 +52,22 @@ func InitStorage(ctx *config.SgridConf) {
 	if err != nil {
 		fmt.Println("Error To init sdb.DB", err)
 	}
+	// rds
+	redis_addr := ctx.GetString("redis-addr")
+	redis_pass := ctx.GetString("redis-pass")
+	GRDB = redis.NewClient(&redis.Options{
+		Addr:     redis_addr,
+		Password: redis_pass,
+		DB:       0,
+	})
+	pong, err := GRDB.Ping(RDBContext).Result()
+
+	if err != nil {
+		fmt.Printf("连接redis出错，错误信息：%v", err.Error())
+	} else {
+		fmt.Println("成功连接redis", pong)
+	}
+
 	sqlDB.SetMaxIdleConns(10)
 	sqlDB.SetMaxOpenConns(100)
 	sqlDB.SetConnMaxLifetime(time.Hour)

@@ -22,6 +22,11 @@ func SystemService(ctx *handlers.SgridServerCtx) {
 	GROUP.POST("/system/user/save", saveUser)
 	GROUP.POST("/system/role/save", saveRole)
 	GROUP.POST("/system/menu/save", saveMenu)
+
+	// del
+	GROUP.GET("/system/menu/del", delMenu)
+	GROUP.GET("/system/role/del", delRole)
+
 	// relation
 	GROUP.POST("/system/setUserToRole", setUserToRole)
 	GROUP.POST("/system/setRoleToMenu", setRoleToMenu)
@@ -127,4 +132,16 @@ func getMenuListByRoleId(c *gin.Context) {
 	s, _ := strconv.Atoi(c.Query("id"))
 	rutr := storage.GetMenuListByRoleId(s)
 	handlers.AbortWithSucc(c, rutr)
+}
+
+func delMenu(c *gin.Context) {
+	s, _ := strconv.Atoi(c.Query("id"))
+	storage.DeleteMenu(s)
+	handlers.AbortWithSucc(c, nil)
+}
+
+func delRole(c *gin.Context) {
+	s, _ := strconv.Atoi(c.Query("id"))
+	storage.DeleteRole(s)
+	handlers.AbortWithSucc(c, nil)
 }

@@ -20,7 +20,7 @@
         <template #default="scoped">
           <div style="display: flex; flex-wrap: wrap">
             <el-button @click="handleEdit(scoped.row)">修改</el-button>
-            <el-button type="danger">删除</el-button>
+            <el-button @click="handleDel(scoped.row)" type="danger">删除</el-button>
           </div>
         </template>
       </el-table-column>
@@ -44,8 +44,8 @@
 </template>
 
 <script setup lang="ts">
-import { getRole, saveRole } from "@/api/system";
-import { ElNotification } from "element-plus";
+import { delRole, getRole, saveRole } from "@/api/system";
+import { ElMessage, ElMessageBox, ElNotification } from "element-plus";
 import _ from "lodash";
 import { onMounted, ref } from "vue";
 
@@ -98,7 +98,31 @@ onMounted(async () => {
 });
 const emits = defineEmits(["recvRole"]);
 function handleCurrentChange(row: RoleVo) {
-  emits("recvRole", row.id);
+  if (row) {
+    emits("recvRole", row.id);
+  }
+}
+
+async function handleDel(row: RoleVo) {
+  ElMessageBox.confirm("确认删除?", {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
+    .then(async () => {
+      await delRole(row.id);
+      await getRoleList();
+      ElMessage({
+        type: "success",
+        message: "删除成功",
+      });
+    })
+    .catch(() => {
+      ElMessage({
+        type: "info",
+        message: "取消删除",
+      });
+    });
 }
 </script>
 

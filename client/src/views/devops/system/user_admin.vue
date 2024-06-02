@@ -21,7 +21,7 @@
       <el-table-column label="操作">
         <template #default="scoped">
           <el-button @click="handleEdit(scoped.row)">修改</el-button>
-          <el-button type="danger">删除</el-button>
+          <el-button @click="handleDel(scoped.row)" type="danger">删除</el-button>
           <el-button @click="handleSetRole(scoped.row)" type="info">设置权限</el-button>
         </template>
       </el-table-column>
@@ -50,7 +50,7 @@
         >
       </el-form>
     </el-dialog>
-    <el-dialog v-model="editSetRoleVisible" title="AddNode">
+    <el-dialog v-model="editSetRoleVisible" title="用户管理">
       <el-form label-width="100px">
         <el-form-item label="角色选择">
           <el-checkbox-group v-model="relList" :min="1">
@@ -176,6 +176,10 @@ function reset() {
 onMounted(async () => {
   await getServantList(true);
 });
+
+function handleDel(row: UserVo) {
+  console.log("row", row);
+}
 </script>
 
 <style scoped></style>

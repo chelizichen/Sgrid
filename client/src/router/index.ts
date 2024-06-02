@@ -5,6 +5,10 @@ import Login from '@/views/login.vue'
 import LogPage from '@/views/logger.vue'
 import Devops from '@/views/devops/aside.vue'
 import { localGet, constants } from '@/constant'
+import { useUserStore } from '@/stores/counter'
+import api from '@/api/server'
+import { ElNotification } from 'element-plus'
+import { nextTick } from 'vue'
 
 export const adminMenu: RouteRecordRaw[] = [
   {
@@ -138,8 +142,8 @@ const router = createRouter({
       path: '/devops',
       name: 'devops',
       component: Devops,
-      children: adminMenu
-    }
+      // children: adminMenu
+    },
   ]
 })
 
@@ -147,11 +151,28 @@ const whileList = ['/login']
 
 router.beforeEach(async (to, from, next) => {
   const tkn = localGet(constants.TOKEN)
+  const userStore = useUserStore()
   if (whileList.includes(to.path)) {
     next()
-  } else if (tkn) {
+  } else if (tkn &&  (!userStore.userInfo.userName && !userStore.userInfo.password && !userStore.userInfo.token)) {
+    const data = await api.LoginByCache({
+      name:'',
+      password:''
+    })
+    if(!data.data){
+      ElNotification.error("登陆过期，请重新登陆")
+      return next({path:"/login"})
+    }
+    userStore.setUserInfo(data.data)
+    const menus = await api.getUserMenusByUserId(data.data.id)
+    await userStore.setMenu(menus.data)
+    next({
+      replace:true,
+      ...to
+    })
+  } else if(tkn){
     next()
-  } else {
+  }else{
     next({ path: '/login' })
   }
 })

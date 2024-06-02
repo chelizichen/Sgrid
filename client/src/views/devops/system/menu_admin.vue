@@ -29,7 +29,7 @@
                 <el-button
                   style="margin-left: 8px"
                   type="text"
-                  @click="removeMenu(node, data)"
+                  @click="removeMenu(data)"
                   v-if="node.level == 2 || !data.children || data.children.length == 0"
                 >
                   删除
@@ -73,26 +73,22 @@
 </template>
 
 <script setup lang="ts">
-import { getMenu, getMenuListByRoleId, saveMenu, setRoleToMenu } from "@/api/system";
-import { ElNotification } from "element-plus";
+import {
+  delMenu,
+  getMenu,
+  getMenuListByRoleId,
+  saveMenu,
+  setRoleToMenu,
+} from "@/api/system";
+import { ElMessage, ElMessageBox, ElNotification } from "element-plus";
 import _ from "lodash";
 import { computed, onMounted, ref } from "vue";
 import RoleAdmin from "./role_admin.vue";
-const treeMenuRef = ref();
-interface Tree {
-  id: number;
-  label: string;
-  children?: Tree[];
-}
-type MenuVo = {
-  id: number;
-  name: string;
-  title: string;
-  path: string;
-  component: string;
-  parentId: number;
-};
+import { reduceMenu } from "@/utils/obj";
+import type { MenuVo, Tree } from "@/dto/dto";
+import api from "@/api/server";
 
+const treeMenuRef = ref();
 const menuList = ref<Array<MenuVo>>([]);
 async function getMenuList() {
   const servantsResp = await getMenu(undefined);
@@ -101,7 +97,6 @@ async function getMenuList() {
 }
 
 const editMenuVisible = ref(false);
-
 const editMenuObj = ref<Partial<MenuVo>>({
   title: "",
   path: "",
@@ -128,36 +123,6 @@ function reset() {
   editMenuObj.value.parentId = 0;
 }
 
-function reduceMenu(list: Array<MenuVo>): Tree[] {
-  const menus: Tree[] = [];
-  // 拿到根节点
-  list.forEach((e) => {
-    if (e.parentId == 0 || !e.parentId) {
-      menus.push({
-        label: e.title,
-        id: e.id,
-      });
-    }
-  });
-  // 最多支持双层
-  list.forEach((e) => {
-    if (e.parentId || e.parentId != 0) {
-      const item = menus.find((v) => v.id == e.parentId);
-      if (!item) {
-        return;
-      }
-      if (!item.children) {
-        item.children = [];
-      }
-      item.children.push({
-        label: e.title,
-        id: e.id,
-      });
-    }
-  });
-  return menus;
-}
-
 const dataSource = computed(() => {
   const item = reduceMenu(menuList.value);
   console.log("item", item);
@@ -182,7 +147,28 @@ async function changeMenu(data: Tree) {
   editMenuVisible.value = true;
 }
 
-async function removeMenu(node, data) {}
+async function removeMenu(data: Tree) {
+  ElMessageBox.confirm("确认删除?", {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
+    .then(async () => {
+      const id = data.id;
+      await delMenu(id);
+      await getMenuList();
+      ElMessage({
+        type: "success",
+        message: "删除成功",
+      });
+    })
+    .catch(() => {
+      ElMessage({
+        type: "info",
+        message: "取消删除",
+      });
+    });
+}
 const recvRoleId = ref<number>(0);
 async function handleRecvRole(id: number) {
   console.log("id", id);

@@ -14,3 +14,17 @@ const serverItem = {
 }
 
 export type Item = typeof serverItem
+
+export interface Tree {
+  id: number;
+  label: string;
+  children?: Tree[];
+}
+export type MenuVo = {
+  id: number;
+  name: string;
+  title: string;
+  path: string;
+  component: string;
+  parentId: number;
+};

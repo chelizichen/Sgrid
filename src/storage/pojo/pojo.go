@@ -36,6 +36,7 @@ type Servant struct {
 	ExecPath       string     // 可执行路径
 	ServantGroupId int        `gorm:"foreignKey:ServantGroupId"` // 服务组ID
 	Stat           int        // 状态
+	UserId         int        // 所属用户ID
 }
 
 // 服务网格 用于查看所有节点信息

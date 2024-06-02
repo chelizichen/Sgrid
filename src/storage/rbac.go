@@ -57,6 +57,24 @@ func GetMenuListByRoleId(roleId int) []rbac.RoleToMenu {
 	return respList
 }
 
+func DeleteMenu(id int) {
+	c.GORM.Model(&rbac.RoleMenu{}).Delete(&rbac.RoleMenu{
+		Id: id,
+	})
+	c.GORM.Model(&rbac.RoleToMenu{}).Delete(&rbac.RoleToMenu{
+		MenuId: id,
+	})
+}
+
+func DeleteRole(id int) {
+	c.GORM.Model(&rbac.UserRole{}).Delete(&rbac.UserRole{
+		Id: id,
+	})
+	c.GORM.Model(&rbac.UserToRole{}).Delete(&rbac.UserToRole{
+		RoleId: id,
+	})
+}
+
 func SetUserToRole(userId int, roleIds []int) {
 	c.GORM.Delete(&rbac.UserToRole{}, "user_id = ?", userId)
 	var userToRoles []*rbac.UserToRole
@@ -138,6 +156,30 @@ func GetUserToRoleRelation(id int) []RelationUserToRole {
 	left join grid_user_role gsr on gstr.role_id = gsr.id
 	left join grid_user gu on gu.id = gstr.user_id
 	where gstr.user_id = ?
+	`, id).Scan(&findList)
+	return findList
+}
+
+func GetUserMenusByUserId(id int) []rbac.RoleMenu {
+	var findList []rbac.RoleMenu
+	c.GORM.Raw(` 
+	select
+	grm.*
+from
+	grid_role_to_menu grtm
+left join grid_role_menu grm on
+	grtm.menu_id = grm.id
+where
+	grtm.role_id  in (
+	select
+		gutr.role_id
+	from
+		grid_user_to_role gutr
+	left join grid_user gu on
+		gutr.user_id = gu.id
+	where
+		gu.id = ?
+	)
 	`, id).Scan(&findList)
 	return findList
 }
