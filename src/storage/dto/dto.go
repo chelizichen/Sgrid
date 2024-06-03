@@ -36,6 +36,7 @@ type SaveServantDto struct {
 	Protocol       string `json:"protocol,omitempty"`       // 协议
 	ExecPath       string `json:"execPath,omitempty"`       // 可执行路径
 	ServantGroupId int    `json:"servantGroupId,omitempty"` // 服务组ID
+	UserId         int    `json:"userId,omitempty"`         // 用户ID
 }
 
 type GridDTO struct {

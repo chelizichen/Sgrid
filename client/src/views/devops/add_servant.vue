@@ -41,6 +41,7 @@
 import { onMounted, ref, watch } from "vue";
 import api from "@/api/server";
 import { ElNotification } from "element-plus";
+import { useUserStore } from "@/stores/counter";
 
 const selectOpt = () => {
   return `Group:ID :  ${groupId.value}
@@ -50,7 +51,7 @@ const selectOpt = () => {
   | Exec Path (golang :: default ::sgrid_app) : ${servantItem.value.execPath}`;
 };
 
-const groupId = ref(1);
+const groupId = ref(0);
 const groups = ref<Array<{ tagEnglishName: string; tagName: string; id: number }>>([]);
 const servantItem = ref({
   serverName: "",
@@ -65,6 +66,7 @@ async function devopsAddServant() {
     protocol: servantItem.value.protocol,
     execPath: servantItem.value.execPath,
     servantGroupId: groupId.value,
+    userId: userStore.userInfo.id,
   };
 
   const data = await api.saveServant(body);
@@ -74,9 +76,13 @@ async function devopsAddServant() {
   resetServant();
   return ElNotification.success("Create Success");
 }
+
+const userStore = useUserStore();
+
 onMounted(async () => {
-  const data = await api.getGroup();
+  const data = await api.getGroup(userStore.userInfo.id);
   groups.value = data.data;
+  groupId.value = data.data[data.data.length - 1].id;
 });
 const resetServant = () => {
   servantItem.value.serverName = "";

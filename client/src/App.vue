@@ -6,8 +6,14 @@ import { RouterView } from "vue-router";
     <el-header>
       <div class="head">
         <div style="left: 1%" class="title title-pos" @click="$router.push('/server')">
-          <img src="@/assets/icon.png" style="width: 50px; height: 50px" />
-          Sgrid
+          <img src="@/assets/icon.png" style="width: 40px" />
+        </div>
+        <div
+          style="left: 3%; bottom: 10px"
+          class="title title-pos"
+          @click="$router.push('/server')"
+        >
+          <img src="@/assets/title.png" style="width: 120px; height: 60px" />
         </div>
         <div
           style="left: 87%; bottom: 1px"
@@ -16,7 +22,11 @@ import { RouterView } from "vue-router";
         >
           <img src="@/assets/dashboard.png" style="width: 38px; height: 38px" />
         </div>
-        <div class="title title-pos" style="right: 5%; bottom:0"  @click="$router.push('/devops')">
+        <div
+          class="title title-pos"
+          style="right: 5%; bottom: 0"
+          @click="$router.push('/devops')"
+        >
           <img src="@/assets/admin.png" style="width: 100px; height: 100px" />
         </div>
         <div
@@ -26,7 +36,6 @@ import { RouterView } from "vue-router";
         >
           <img src="@/assets/user.png" style="width: 70px; height: 70px" />
         </div>
-        
       </div>
     </el-header>
     <RouterView />

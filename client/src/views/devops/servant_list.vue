@@ -60,10 +60,12 @@
 
 <script setup lang="ts">
 import api from "@/api/server";
+import { useUserStore } from "@/stores/counter";
 import { ElMessage, ElMessageBox } from "element-plus";
 import _ from "lodash";
 import { onMounted, ref } from "vue";
 
+const userStore = useUserStore();
 const servantDemo = {
   id: 2,
   serverName: "ShellServer",
@@ -79,7 +81,7 @@ const servantList = ref<Array<T_Servant>>([]);
 const editDialogVisible = ref(false);
 const editLoading = ref(true);
 async function getServantList() {
-  const servantsResp = await api.getServants();
+  const servantsResp = await api.getServants(userStore.userInfo.id);
   servantList.value = servantsResp.data;
   console.log("servantResp", servantsResp);
 }

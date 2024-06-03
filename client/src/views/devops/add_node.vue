@@ -80,7 +80,9 @@
 import { onMounted, ref, watch } from "vue";
 import api from "@/api/server";
 import { ElNotification } from "element-plus";
+import { useUserStore } from "@/stores/counter";
 
+const userStore = useUserStore();
 const nodes = ref([]);
 const servants = ref([]);
 const selectionNodes = ref([]);
@@ -145,7 +147,7 @@ const resetServant = () => {
 onMounted(async () => {
   const data = await api.queryNodes();
   nodes.value = data.data;
-  const servantsResp = await api.getServants();
+  const servantsResp = await api.getServants(userStore.userInfo.id);
   servants.value = servantsResp.data.sort((a, b) => b.id - a.id);
   addGridForm.value.servantId = servants.value[0].id;
 });

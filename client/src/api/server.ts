@@ -92,10 +92,11 @@ const api = {
       params:{id}
     }) as unknown as Promise<BasicResp<any>>
   },
-  getGroup() {
+  getGroup(id:number) {
     return HttpReq({
       url: '/devops/getGroups',
-      method: 'get'
+      method: 'get',
+      params:{id}
     })
   },
   saveServant(data: any) {
@@ -111,10 +112,11 @@ const api = {
       method: 'get'
     })
   },
-  getServants() {
+  getServants(id:number) {
     return HttpReq({
       url: '/devops/getServants',
-      method: 'get'
+      method: 'get',
+      params:{id}
     })
   },
   saveGrid(data: any) {

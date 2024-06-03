@@ -34,7 +34,9 @@ import gridsComponent from "@/components/grids.vue";
 import { onMounted, reactive, ref } from "vue";
 import API from "../api/server";
 import type { Item } from "@/dto/dto";
+import { useUserStore } from "@/stores/counter";
 
+const userStore = useUserStore();
 const state = reactive({
   serverName: "",
   serverList: [],
@@ -53,7 +55,7 @@ async function handleOpen(item: Item) {
 }
 
 async function fetchServerList() {
-  const resp = await API.getServerList(0);
+  const resp = await API.getServerList(userStore.userInfo.id);
   state.serverList = (resp.data || []).sort((a, b) => a.id - b.id);
 }
 

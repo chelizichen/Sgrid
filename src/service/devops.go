@@ -54,12 +54,24 @@ func DevopsService(ctx *handlers.SgridServerCtx) {
 }
 
 func getGroups(c *gin.Context) {
-	vsg := storage.QueryGroups()
+	user_id := c.DefaultQuery("id", "0")
+	userId, err := strconv.Atoi(user_id)
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	vsg := storage.QueryGroups(userId)
 	handlers.AbortWithSucc(c, vsg)
 }
 
 func getServants(c *gin.Context) {
-	vsg := storage.QueryServants()
+	user_id := c.DefaultQuery("id", "0")
+	userId, err := strconv.Atoi(user_id)
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	vsg := storage.QueryServants(userId)
 	handlers.AbortWithSucc(c, vsg)
 }
 
@@ -100,6 +112,7 @@ func saveServant(c *gin.Context) {
 		ServantGroupId: req.ServantGroupId,
 		ExecPath:       req.ExecPath,
 		CreateTime:     &now,
+		UserId:         req.UserId,
 	}
 	vsg := storage.SaveServant(record)
 	handlers.AbortWithSucc(c, vsg)

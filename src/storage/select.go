@@ -36,9 +36,13 @@ func QueryNodes() []*vo.GridNode {
 	return respList
 }
 
-func QueryServants() *[]vo.VoServantObj {
+func QueryServants(userId int) *[]vo.VoServantObj {
 	var dataList []vo.VoServantObj
-	c.GORM.Model(&pojo.Servant{}).Find(&dataList)
+	if userId == 0 || userId == 1 {
+		c.GORM.Model(&pojo.Servant{}).Find(&dataList)
+	} else {
+		c.GORM.Model(&pojo.Servant{}).Where("user_id = ?", userId).Find(&dataList)
+	}
 	return &dataList
 }
 
@@ -75,7 +79,7 @@ func QueryGrid(req *dto.PageBasicReq) (resp []vo.Grid) {
 
 // 2024.6.1 pageBasicReq.id as user_id
 func QueryServantGroup(req *dto.PageBasicReq) (resp []vo.VoServantGroup) {
-	if req.Id != 0 {
+	if req.Id != 1 && req.Id != 0 {
 		c.GORM.Table("grid_servant_group gsg").
 			Select(`
 		gsg.*,
@@ -85,7 +89,8 @@ func QueryServantGroup(req *dto.PageBasicReq) (resp []vo.VoServantGroup) {
 		gs.servant_group_id AS gs_servant_group_id,
 		gs.server_name AS gs_server_name,
 		gs.location AS gs_location,
-		gs.up_stream_name AS gs_up_stream_name
+		gs.up_stream_name AS gs_up_stream_name,
+		gs.stat as gs_stat
 	`).
 			Joins("LEFT JOIN grid_servant gs ON gs.servant_group_id = gsg.id").
 			Where("gs.user_id = ?", req.Id).
@@ -100,7 +105,8 @@ func QueryServantGroup(req *dto.PageBasicReq) (resp []vo.VoServantGroup) {
 		gs.servant_group_id AS gs_servant_group_id,
 		gs.server_name AS gs_server_name,
 		gs.location AS gs_location,
-		gs.up_stream_name AS gs_up_stream_name
+		gs.up_stream_name AS gs_up_stream_name,
+		gs.stat as gs_stat
 	`).
 			Joins("LEFT JOIN grid_servant gs ON gs.servant_group_id = gsg.id").
 			Find(&resp)
@@ -119,7 +125,7 @@ func ConvertToVoGroupByServant(voServantGroups []vo.VoServantGroup) []vo.VoGroup
 			servants = existingGroup.Servants
 		}
 
-		if group.VoServant != ept {
+		if group.VoServant != ept && group.VoServant.Stat != -1 {
 			servants = append(servants, group.VoServant)
 		}
 		resultMap[group.Id] = vo.VoGroupByServant{
@@ -219,8 +225,14 @@ func QueryUser(userName string) (resp *rbac.User, err error) {
 	return resp, nil
 }
 
-func QueryGroups() (resp *[]vo.VoGroupObj) {
-	c.GORM.Model(&pojo.ServantGroup{}).Find(&resp)
+func QueryGroups(id int) (resp *[]vo.VoGroupObj) {
+	// 超管
+	if id == 0 || id == 1 {
+		c.GORM.Model(&pojo.ServantGroup{}).Find(&resp)
+	} else {
+		fmt.Println("id", id)
+		c.GORM.Model(&pojo.ServantGroup{}).Where("user_id = ?", id).Find(&resp)
+	}
 	fmt.Println("resp", resp)
 	return
 }

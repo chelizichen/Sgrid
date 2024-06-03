@@ -27,7 +27,8 @@ type VoGroupObj struct {
 	Id             int    `gorm:"column:id" json:"id,omitempty"`
 	TagName        string `gorm:"column:tag_name" json:"tagName,omitempty"`                // 服务标签
 	TagEnglishName string `gorm:"column:tag_english_name" json:"tagEnglishName,omitempty"` // 英文
-	CreateTime     string `gorm:"autoCreateTime" json:"creatTime,omitempty"`               // 创建时间
+	CreateTime     string `gorm:"column:create_time" json:"creatTime,omitempty"`           // 创建时间
+	UserId         int    `gorm:"column:user_id"`
 }
 
 // 联表查用的
@@ -39,6 +40,7 @@ type VoServant struct {
 	UpStreamName   string `gorm:"column:gs_up_stream_name" json:"upStreamName,omitempty"` // 转发名称
 	Location       string `gorm:"column:gs_location"  json:"location,omitempty"`          // 路径
 	ServantGroupId int    `gorm:"column:gs_groupId" json:"servantGroupId,omitempty"`      // 服务组ID
+	Stat           int    `gorm:"column:gs_stat" json:"stat,omitempty"`                   // 服务组ID
 }
 
 // 纯Obj

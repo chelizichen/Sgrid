@@ -18,10 +18,11 @@ type Node struct {
 
 // 服务组
 type ServantGroup struct {
-	Id             int
+	Id             int        //Id
 	TagName        string     // 服务标签
 	TagEnglishName string     // 英文
 	CreateTime     *time.Time `gorm:"autoCreateTime"` // 创建时间
+	UserId         int        // 用户id
 }
 
 // 服务
