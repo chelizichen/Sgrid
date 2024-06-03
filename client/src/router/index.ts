@@ -9,7 +9,8 @@ import { localGet, constants } from '@/constant'
 import { useUserStore } from '@/stores/counter'
 import api from '@/api/server'
 import { ElNotification } from 'element-plus'
-import { nextTick } from 'vue'
+import NProgress from 'nprogress'; // Progress 进度条
+import 'nprogress/nprogress.css';// Progress 进度条样式
 
 export const adminMenu: RouteRecordRaw[] = [
   {
@@ -156,6 +157,7 @@ const router = createRouter({
 const whileList = ['/login']
 
 router.beforeEach(async (to, from, next) => {
+  NProgress.start();
   const tkn = localGet(constants.TOKEN)
   const userStore = useUserStore()
   // 没登陆，但是在白名单内，直接跳转
@@ -189,5 +191,9 @@ router.beforeEach(async (to, from, next) => {
     next({ path: '/login' })
   }
 })
+
+router.afterEach(() => {
+  NProgress.done(); // 结束Progress
+});
 
 export default router

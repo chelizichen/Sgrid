@@ -20,3 +20,8 @@
     --el-button-active-border-color: var(--el-color-primary);
   }
 }
+
+
+#nprogress .bar {
+  background: rgb(207, 15, 124) !important;
+}
