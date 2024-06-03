@@ -2,15 +2,23 @@
   <div>
     <el-table border :data="servantList">
       <el-table-column type="index" label="序号" width="180"></el-table-column>
+      <el-table-column prop="serverName" label="serverName"></el-table-column>
+      <el-table-column prop="stat" label="服务状态">
+        <template #default="scoped">
+          <div>
+            <span v-if="!scoped.row.stat">运行中</span>
+            <span v-if="scoped.row.stat == -1">已停用</span>
+          </div>
+        </template>
+      </el-table-column>
       <el-table-column prop="servantGroupId" label="servantGroupId"></el-table-column>
       <el-table-column prop="execPath" label="execPath"></el-table-column>
       <el-table-column prop="language" label="language"></el-table-column>
       <el-table-column prop="protocol" label="protocol"></el-table-column>
-      <el-table-column prop="serverName" label="serverName"></el-table-column>
       <el-table-column label="操作">
         <template #default="scoped">
           <el-button @click="updateServant(scoped.row)">修改</el-button>
-          <el-button @click="deleteServant(scoped.row)" type="danger">删除</el-button>
+          <el-button @click="deleteServant(scoped.row)" type="danger">停用</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -52,6 +60,7 @@
 
 <script setup lang="ts">
 import api from "@/api/server";
+import { ElMessage, ElMessageBox } from "element-plus";
 import _ from "lodash";
 import { onMounted, ref } from "vue";
 
@@ -91,8 +100,32 @@ function updateServant(row: T_Servant) {
 
 function confirmUpdateServant() {}
 
-function deleteServant(row: T_Servant) {
-  console.log("row", row);
+async function deleteServant(row: T_Servant) {
+  ElMessageBox.confirm("确认停用?", {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
+    .then(async () => {
+      const resp = await api.delServant(row.id);
+      if (resp.code) {
+        return ElMessage.error({
+          type: "error",
+          message: resp.message,
+        });
+      }
+      await getServantList();
+      ElMessage({
+        type: "success",
+        message: "停用成功",
+      });
+    })
+    .catch(() => {
+      ElMessage({
+        type: "info",
+        message: "取消停用",
+      });
+    });
 }
 </script>
 

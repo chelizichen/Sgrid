@@ -10,7 +10,7 @@ import { RouterView } from "vue-router";
           Sgrid
         </div>
         <div
-          style="left: 88%; bottom: 1px"
+          style="left: 87%; bottom: 1px"
           class="title title-pos"
           @click="$router.push('/dashboard')"
         >

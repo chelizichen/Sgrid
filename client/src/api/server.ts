@@ -173,6 +173,13 @@ const api = {
       params:{id}
     }) as unknown as BasicResp<any>
   },
+  delServant(id:number){
+    return HttpReq({
+      url: '/devops/delServant',
+      method: 'post',
+      params:{id}
+    }) as unknown as BasicResp<any>
+  }
 }
 
 export default api

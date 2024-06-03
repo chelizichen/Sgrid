@@ -88,6 +88,11 @@ func saveServant(c *gin.Context) {
 		return
 	}
 	now := time.Now()
+	isExist := storage.GetServantByNameAndGroup(req.ServerName, req.ServantGroupId)
+	if isExist {
+		handlers.AbortWithError(c, "该服务组下已存在同名服务")
+		return
+	}
 	record := &pojo.Servant{
 		ServerName:     req.ServerName,
 		Language:       req.Language,
@@ -118,14 +123,14 @@ func updateServant(c *gin.Context) {
 }
 
 func delServant(c *gin.Context) {
-	var req *dto.SaveServantDto
-	err := c.BindJSON(&req)
+	servant_id := c.Query("id")
+	servantId, err := strconv.Atoi(servant_id)
 	if err != nil {
 		handlers.AbortWithError(c, err.Error())
 		return
 	}
 	record := &pojo.Servant{
-		Id: req.Id,
+		Id: servantId,
 	}
 	vsg := storage.DelServant(record)
 	handlers.AbortWithSucc(c, vsg)

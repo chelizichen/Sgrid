@@ -15,6 +15,13 @@ func SaveHashPackage(pkg pojo.ServantPackage) int {
 	return pkg.Id
 }
 
+func GetServantByNameAndGroup(name string, groupId int) bool {
+	var svr pojo.Servant
+	c.GORM.Where("server_name = ? and servant_group_id = ?", name, groupId).First(&svr)
+	fmt.Println("svr", svr)
+	return svr.Id != 0
+}
+
 func SaveServant(svr *pojo.Servant) int {
 	c.GORM.Create(&svr)
 	return svr.Id
@@ -33,7 +40,7 @@ func UpdateServant(svr *pojo.Servant) int {
 }
 
 func DelServant(svr *pojo.Servant) int {
-	c.GORM.
+	c.GORM.Debug().
 		Model(&svr).
 		Where("id = ?", svr.Id).
 		Updates(&pojo.Servant{

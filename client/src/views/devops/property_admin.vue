@@ -36,6 +36,7 @@
 
 <script setup lang="ts">
 import api from "@/api/server";
+import { ElMessage, ElMessageBox } from "element-plus";
 import _ from "lodash";
 import { onMounted, ref } from "vue";
 
@@ -71,8 +72,32 @@ function reset() {
   servant.value.value = "";
 }
 async function deleteProperty(row: typeof servant.value) {
-  await api.delProperty(row.id);
-  await getPropertyList();
+  ElMessageBox.confirm("确认删除?", {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
+    .then(async () => {
+      const resp = await api.delProperty(row.id);
+      await getPropertyList();
+      if (resp.code) {
+        return ElMessage.error({
+          type: "error",
+          message: resp.message,
+        });
+      }
+      ElMessage({
+        type: "success",
+        message: "删除成功",
+      });
+    })
+    .catch(() => {
+      ElMessage({
+        type: "info",
+        message: "取消删除",
+      });
+    });
+
   editDialogVisible.value = false;
 }
 
