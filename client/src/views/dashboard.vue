@@ -5,7 +5,7 @@ export default {
 </script>
 
 <template>
-  <div style="padding: 20px">
+  <div style="padding: 20px; min-height: 100vh">
     <el-card shadow="always" style="margin: 20px 0">
       <div style="display: flex">
         <div style="flex: 1">
