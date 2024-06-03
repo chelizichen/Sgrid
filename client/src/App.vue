@@ -10,15 +10,23 @@ import { RouterView } from "vue-router";
           Sgrid
         </div>
         <div
-          style="left: 50%; bottom: 1px"
+          style="left: 88%; bottom: 1px"
           class="title title-pos"
           @click="$router.push('/dashboard')"
         >
-          <img src="@/assets/dashboard.png" style="width: 40px; height: 40px" />
+          <img src="@/assets/dashboard.png" style="width: 38px; height: 38px" />
         </div>
-        <div class="title title-pos devops" @click="$router.push('/devops')">
+        <div class="title title-pos" style="right: 5%; bottom:0"  @click="$router.push('/devops')">
           <img src="@/assets/admin.png" style="width: 100px; height: 100px" />
         </div>
+        <div
+          style="right: 2%; bottom: 8px"
+          class="title title-pos"
+          @click="$router.push('/userInfo')"
+        >
+          <img src="@/assets/user.png" style="width: 70px; height: 70px" />
+        </div>
+        
       </div>
     </el-header>
     <RouterView />
@@ -51,10 +59,5 @@ import { RouterView } from "vue-router";
 .title-pos {
   position: absolute;
   top: 10px;
-}
-.devops {
-  right: 0;
-  bottom: 0;
-  font-size: 24px;
 }
 </style>
