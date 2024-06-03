@@ -159,14 +159,8 @@ router.beforeEach(async (to, from, next) => {
   const tkn = localGet(constants.TOKEN)
   const userStore = useUserStore()
   // 没登陆，但是在白名单内，直接跳转
-  if (whileList.includes(to.path) && !tkn) {
+  if (whileList.includes(to.path)) {
     next()
-  }
-  // 登陆了，但是在白名单内，属于无效跳转，重定向至 dashboard
-  else if (whileList.includes(to.path) && tkn) {
-    next({
-      path:"/dashboard"
-    })
   }
   // 登陆了，但是store里面没有用户信息，需要重新获取用户信息
   else if (tkn &&  (!userStore.userInfo.userName && !userStore.userInfo.password && !userStore.userInfo.token)) {

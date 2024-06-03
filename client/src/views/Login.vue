@@ -6,11 +6,13 @@ export default {
 <script lang="ts" setup>
 import API from "@/api/server";
 import { ElNotification } from "element-plus";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { md5 } from "js-md5";
-import { constants, localSet } from "@/constant";
+import { constants, localGet, localSet } from "@/constant";
+import { useUserStore } from "@/stores/counter";
 const router = useRouter();
+const userStore = useUserStore()
 const username = ref("");
 const password = ref("");
 
@@ -27,6 +29,14 @@ async function login() {
     localSet(constants.TOKEN, ret.data.token);
   }
 }
+
+onMounted(()=>{
+  const token = localGet(constants.TOKEN);
+  if(token && userStore.userInfo.userName && userStore.userInfo.password){
+    router.push('/dashboard')
+  }
+})
+
 </script>
 <template>
   <div class="body">
