@@ -3,7 +3,6 @@ package storage
 import (
 	protocol "Sgrid/server/SgridLogTraceServer/proto"
 	c "Sgrid/src/configuration"
-	"Sgrid/src/public"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
 	"errors"
@@ -41,38 +40,49 @@ func UpdateServant(svr *pojo.Servant) int {
 }
 
 func DelServant(svr *pojo.Servant) int {
+	fmt.Println("svr", svr.Stat)
+	fmt.Println("svr", svr.Id)
 	c.GORM.Debug().
 		Model(&svr).
 		Where("id = ?", svr.Id).
-		Updates(&pojo.Servant{
-			Stat: public.STAT_SERVANT_DELETE,
-		})
+		Update("stat", svr.Stat)
 	return svr.Id
 }
 
 func SaveServantGroup(group *pojo.ServantGroup) int {
-	c.GORM.Create(&group)
-	return group.Id
+	if group.Id == 0 {
+		c.GORM.Create(&group)
+		return group.Id
+	} else {
+		c.GORM.Debug().
+			Model(&group).
+			Where("id = ?", group.Id).
+			Updates(&pojo.ServantGroup{
+				TagName:        group.TagName,
+				TagEnglishName: group.TagEnglishName,
+			})
+		return group.Id
+	}
 }
 
 func SaveStatLog(stat *pojo.StatLog) {
 	c.GORM.Debug().Create(&stat)
 }
 
-func UpdateGrid(group *pojo.Grid) int {
-	if group.Id == 0 {
-		c.GORM.Debug().Create(&group)
-		return (group.Id)
+func UpdateGrid(grid *pojo.Grid) int {
+	if grid.Id == 0 {
+		c.GORM.Debug().Create(&grid)
+		return (grid.Id)
 	} else {
 		c.GORM.Debug().
-			Model(&group).
+			Model(&grid).
 			Select("status", "pid").
-			Where("id = ?", group.Id).
+			Where("id = ?", grid.Id).
 			Updates(&pojo.Grid{
-				Status: group.Status,
-				Pid:    group.Pid,
+				Status: grid.Status,
+				Pid:    grid.Pid,
 			})
-		return (group.Id)
+		return (grid.Id)
 	}
 }
 
@@ -97,7 +107,7 @@ func DeletePackage(id int) {
 // 判断服务组下有无存在的服务，如果没有，则删除服务组
 func DelGroup(id int) error {
 	var count int64
-	c.GORM.Model(&pojo.Servant{}).Where("servant_group_id = ?", id).Count(&count)
+	c.GORM.Model(&pojo.Servant{}).Where("servant_group_id = ? and stat != -1", id).Count(&count)
 	if count > 0 {
 		st := fmt.Sprintf("服务组下存在%v个服务，不能删除", count)
 		return errors.New(st)

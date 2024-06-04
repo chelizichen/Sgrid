@@ -89,6 +89,7 @@ func InitStorage(ctx *config.SgridConf) {
 		db.Debug().AutoMigrate(&rbac.UserToRole{})
 		db.Debug().AutoMigrate(&rbac.RoleMenu{})
 		db.Debug().AutoMigrate(&rbac.RoleToMenu{})
+		db.Debug().AutoMigrate(&rbac.VersionUpdateLine{})
 
 	}
 	GORM = db

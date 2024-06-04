@@ -175,9 +175,16 @@ const api = {
       params:{id}
     }) as unknown as BasicResp<any>
   },
-  delServant(id:number){
+  delServant(id:number,stat:number){
     return HttpReq({
       url: '/devops/delServant',
+      method: 'post',
+      params:{id,stat}
+    }) as unknown as BasicResp<any>
+  },
+  deleteGroup(id:number){
+    return HttpReq({
+      url: '/devops/delGroup',
       method: 'post',
       params:{id}
     }) as unknown as BasicResp<any>

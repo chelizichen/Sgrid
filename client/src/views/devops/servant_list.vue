@@ -18,7 +18,15 @@
       <el-table-column label="操作">
         <template #default="scoped">
           <el-button @click="updateServant(scoped.row)">修改</el-button>
-          <el-button @click="deleteServant(scoped.row)" type="danger">停用</el-button>
+          <el-button
+            v-if="scoped.row.stat != -1"
+            @click="deleteServant(scoped.row, -1)"
+            type="danger"
+            >停用</el-button
+          >
+          <el-button v-else @click="deleteServant(scoped.row, 0)" type="success"
+            >启用</el-button
+          >
         </template>
       </el-table-column>
     </el-table>
@@ -92,7 +100,7 @@ onMounted(async () => {
 function updateServant(row: T_Servant) {
   editDialogVisible.value = true;
   servant.value = _.cloneDeep(row);
-  api.getGroup().then((getGroup) => {
+  api.getGroup(userStore.userInfo.id).then((getGroup) => {
     console.log("getGroup", getGroup);
     editLoading.value = false;
     groupList.value = getGroup.data;
@@ -102,14 +110,15 @@ function updateServant(row: T_Servant) {
 
 function confirmUpdateServant() {}
 
-async function deleteServant(row: T_Servant) {
-  ElMessageBox.confirm("确认停用?", {
+async function deleteServant(row: T_Servant, stat: number) {
+  const text = stat == -1 ? "停用" : " 启用";
+  ElMessageBox.confirm(`确认${text}?`, {
     confirmButtonText: "确认",
     cancelButtonText: "取消",
     type: "warning",
   })
     .then(async () => {
-      const resp = await api.delServant(row.id);
+      const resp = await api.delServant(row.id, stat);
       if (resp.code) {
         return ElMessage.error({
           type: "error",
@@ -119,13 +128,13 @@ async function deleteServant(row: T_Servant) {
       await getServantList();
       ElMessage({
         type: "success",
-        message: "停用成功",
+        message: text + "成功",
       });
     })
     .catch(() => {
       ElMessage({
         type: "info",
-        message: "取消停用",
+        message: "取消" + text,
       });
     });
 }

@@ -39,3 +39,11 @@ type RoleMenu struct {
 	Component string `json:"component,omitempty"` // 组建路径
 	ParentId  int    `json:"parentId,omitempty"`  // 父级id
 }
+
+type VersionUpdateLine struct {
+	Id         int        `json:"id,omitempty"`
+	Title      string     `json:"title,omitempty"`
+	Content    string     `gorm:"type:text" json:"content,omitempty" `
+	UserId     int        `json:"userId,omitempty"`
+	CreateTime *time.Time `gorm:"autoCreateTime" json:"createTime,omitempty"`
+}

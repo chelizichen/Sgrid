@@ -85,6 +85,7 @@ func saveGroup(c *gin.Context) {
 	}
 	now := time.Now()
 	record := pojo.ServantGroup{
+		Id:             req.Id,
 		TagName:        req.TagName,
 		TagEnglishName: req.TagEnglishName,
 		CreateTime:     &now,
@@ -154,13 +155,24 @@ func updateServant(c *gin.Context) {
 
 func delServant(c *gin.Context) {
 	servant_id := c.Query("id")
+	stat := c.Query("stat")
 	servantId, err := strconv.Atoi(servant_id)
 	if err != nil {
 		handlers.AbortWithError(c, err.Error())
 		return
 	}
+	Stat, err := strconv.Atoi(stat)
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
 	record := &pojo.Servant{
-		Id: servantId,
+		Id:   servantId,
+		Stat: Stat,
 	}
 	vsg := storage.DelServant(record)
 	handlers.AbortWithSucc(c, vsg)

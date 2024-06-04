@@ -46,9 +46,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { ElNotification } from "element-plus";
 import { getBackupList, getBackupFile, merge, test, reload } from "@/api/nginx";
+async function init() {
+  const data = await getBackupList();
+  data.data.unshift("origin");
+  expansionForm.value.list = data.data;
+}
+onMounted(async () => {
+  await init();
+});
 
 const expansionForm = ref({
   list: [],
