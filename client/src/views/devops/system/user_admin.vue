@@ -150,12 +150,12 @@ async function handleSetRole(row: UserVo) {
   const rels = await getUserToRoleRelation(row.id);
   const roles = await getRole(undefined);
   roleList.value = roles.data;
-  relList.value = rels.data.map((v: any) => v.id).filter((v: any) => !isEmptyObj(v));
+  relList.value = rels.data.filter((v: any) => !isEmptyObj(v)).map((v: any) => v.id);
 }
 async function submitSetRole() {
   const body = {
     userId: userId.value,
-    roleIds: relList.value,
+    roleIds: relList.value.filter((v) => v),
   };
   const ret = setUserToRole(body);
   if (ret.code) {

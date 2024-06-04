@@ -16,7 +16,7 @@ import { RouterView } from "vue-router";
           <img src="@/assets/title.png" style="width: 120px; height: 60px" />
         </div>
         <div
-          style="left: 87%; bottom: 1px"
+          style="right: 11%; bottom: 1px"
           class="title title-pos"
           @click="$router.push('/dashboard')"
         >

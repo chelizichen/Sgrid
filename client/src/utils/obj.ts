@@ -3,13 +3,16 @@ import { loadView } from '@/permission'
 import _ from 'lodash'
 import type { RouteRecordRaw } from 'vue-router'
 export function isEmptyObj(target: any): boolean {
+  if(target == null || target == undefined){
+    return true;
+  }
   if (_.isObject(target)) {
     if (Object.keys(target).length == 0) {
       return true
     }
     return false
   }
-  return false
+  return true
 }
 
 export function reduceMenu(list: Array<MenuVo>): Tree[] {

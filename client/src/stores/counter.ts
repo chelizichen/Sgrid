@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import { reduceMenu, reduceMenuToRouter } from '@/utils/obj'
 import type { RouteRecordRaw } from 'vue-router'
 import router from '@/router'
+import {uniqWith,isEqual} from 'lodash'
 type userVo = {
   id: number
   password: string
@@ -22,6 +23,11 @@ export const useUserStore = defineStore('user', () => {
     userInfo.value = userInfoDto
   }
   async function setMenu(obj: any) {
+    if(obj == null || obj == undefined){
+      obj = []
+    }
+    obj = uniqWith(obj, isEqual)
+    // obj = Array.from(new Set())
     const toRouters = reduceMenuToRouter(obj)
     menus.value = await toRouters
     menus.value.forEach((fatherRoute) => {
