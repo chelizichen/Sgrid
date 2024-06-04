@@ -22,6 +22,7 @@ func DevopsService(ctx *handlers.SgridServerCtx) {
 	GROUP.GET("/devops/getGroups", getGroups)
 	// 1.选择服务组 ｜ 创建
 	GROUP.POST("/devops/saveGroup", saveGroup)
+	GROUP.POST("/devops/delGroup", delGroup)
 	// 2.创建服务
 	GROUP.POST("/devops/saveServant", saveServant)
 	GROUP.POST("/devops/updateServant", updateServant)
@@ -87,9 +88,25 @@ func saveGroup(c *gin.Context) {
 		TagName:        req.TagName,
 		TagEnglishName: req.TagEnglishName,
 		CreateTime:     &now,
+		UserId:         req.UserId,
 	}
 	vsg := storage.SaveServantGroup(&record)
 	handlers.AbortWithSucc(c, vsg)
+}
+
+func delGroup(c *gin.Context) {
+	group_id := c.DefaultQuery("id", "0")
+	groupId, err := strconv.Atoi(group_id)
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	err = storage.DelGroup(groupId)
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	handlers.AbortWithSucc(c, nil)
 }
 
 func saveServant(c *gin.Context) {

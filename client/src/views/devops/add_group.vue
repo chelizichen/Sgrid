@@ -19,10 +19,12 @@
 import { ref, watch } from "vue";
 import api from "@/api/server";
 import { ElNotification } from "element-plus";
+import { useUserStore } from "@/stores/counter";
 
 const formData = ref({
   tagName: "",
   tagEnglishName: "",
+  userId: 0,
 });
 const rules = ref({
   tagName: [{ required: true, message: "Please Input TagName", trigger: "blur" }],
@@ -30,8 +32,9 @@ const rules = ref({
     { required: true, message: "Please Input TagEnglishName", trigger: "blur" },
   ],
 });
-
+const userStore = useUserStore();
 async function devopsAddGroup() {
+  formData.value.userId = userStore.userInfo.id;
   const data = await api.saveGroup(formData.value);
   if (data.code) {
     return ElNotification.error(data.message);

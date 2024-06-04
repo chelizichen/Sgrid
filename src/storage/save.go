@@ -6,6 +6,7 @@ import (
 	"Sgrid/src/public"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -91,6 +92,23 @@ func DeletePackage(id int) {
 		Updates(&pojo.Grid{
 			Status: -1,
 		})
+}
+
+// 判断服务组下有无存在的服务，如果没有，则删除服务组
+func DelGroup(id int) error {
+	var count int64
+	c.GORM.Model(&pojo.Servant{}).Where("servant_group_id = ?", id).Count(&count)
+	if count > 0 {
+		st := fmt.Sprintf("服务组下存在%v个服务，不能删除", count)
+		return errors.New(st)
+	}
+	c.GORM.Debug().
+		Model(&pojo.ServantGroup{}).
+		Delete(&pojo.ServantGroup{
+			Id: id,
+		})
+
+	return nil
 }
 
 func UpdatePackageVersion(dto *pojo.ServantPackage) {

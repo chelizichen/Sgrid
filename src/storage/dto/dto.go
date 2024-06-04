@@ -24,6 +24,7 @@ type SaveServantGroupDto struct {
 	TagName        string     `json:"tagName,omitempty"`        // 服务标签
 	TagEnglishName string     `json:"tagEnglishName,omitempty"` // 英文
 	CreateTime     *time.Time `json:"createTime,omitempty"`     // 创建时间
+	UserId         int        `json:"userId,omitempty"`         // 用户ID
 }
 
 type SaveServantDto struct {
