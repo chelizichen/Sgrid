@@ -11,7 +11,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -36,12 +35,12 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 		F, err := c.FormFile("file")
 		content := c.PostForm("content")
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "file error"+string(err.Error()), nil))
+			handlers.AbortWithError(c, "file error"+string(err.Error()))
 			return
 		}
 		file, err := F.Open()
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "open error"+string(err.Error()), nil))
+			handlers.AbortWithError(c, "open error"+string(err.Error()))
 			return
 		}
 		defer file.Close()
@@ -55,61 +54,72 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 			syncPackage.Add(1)
 			go func(client *clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]) {
 				stream, _ := client.GetClient().StreamFile(ctx)
-				defer func() {
-					if err := stream.CloseSend(); err != nil {
-						fmt.Println("err.Error()", err.Error())
-						log.Fatalf("无法关闭流: %v", err)
-						c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "StreamFile error"+string(err.Error()), nil))
+				buffer := make([]byte, public.ChunkFileSize)
+				go func() {
+					for {
+						res, recvErr := stream.Recv()
+						if recvErr != nil {
+							fmt.Println("src.service.package.uploadServer.recvErr ", recvErr.Error())
+							break
+						}
+						if res != nil {
+							fmt.Println("fr.Message Success", res)
+							if res.Code == 200 {
+								syncPackage.Done()
+								break
+							}
+						}
 					}
 				}()
-				buffer := make([]byte, public.ChunkFileSize)
 				var of int64 = 0
-				for {
-					// 构造文件块
-					n, readErr := file.ReadAt(buffer, of)
-					if readErr == io.EOF && n != 0 {
-						fmt.Println("读取完成至最后一个Chunk", readErr.Error(), n)
-						of += int64(n)
-					} else if readErr == io.EOF && n == 0 {
-						fmt.Println("读取完成", readErr.Error())
-						break
-					} else if readErr != nil && readErr != io.EOF {
-						fmt.Println("读取错误", readErr.Error())
-						break
-					} else {
-						of += int64(n)
-
-					}
-					fmt.Println("read offset", n)
-					chunk := &protocol.FileChunk{
-						Data:       buffer[:n],
-						Offset:     int64(n), // 当前文件块在文件中的偏移量
-						ServerName: serverName,
-						FileHash:   fileHash,
-					}
-					if sendError := stream.Send(chunk); sendError != nil {
-						if sendError == io.EOF {
-							fmt.Println("Send EOF " + string(sendError.Error()))
+				go func() {
+					for {
+						// 构造文件块
+						n, readErr := file.ReadAt(buffer, of)
+						if readErr == io.EOF && n != 0 {
+							fmt.Println("读取完成至最后一个Chunk", readErr.Error(), n)
+							of += int64(n)
+						} else if readErr == io.EOF && n == 0 {
+							fmt.Println("读取完成", readErr.Error())
+							break
+						} else if readErr != nil && readErr != io.EOF {
+							fmt.Println("读取错误", readErr.Error())
+							break
 						} else {
-							break
+							of += int64(n)
+						}
+						fmt.Println("read offset", n)
+						chunk := &protocol.FileChunk{
+							Data:       buffer[:n],
+							Offset:     int64(n), // 当前文件块在文件中的偏移量
+							ServerName: serverName,
+							FileHash:   fileHash,
+						}
+						if sendError := stream.Send(chunk); sendError != nil {
+							if sendError != io.EOF {
+								defer func() {
+									if err := stream.CloseSend(); err != nil {
+										fmt.Println("service.package.uploadServer.error 无法关闭流", err.Error())
+										handlers.AbortWithError(c, "StreamFile error"+string(err.Error()))
+										return
+									}
+								}()
+								fmt.Println("service.package.uploadServer.stream.Send,EOF ERROR")
+								break
+							} else {
+								defer func() {
+									if err := stream.CloseSend(); err != nil {
+										fmt.Println("service.package.uploadServer.error 无法关闭流", err.Error())
+										handlers.AbortWithError(c, "StreamFile error"+string(err.Error()))
+										return
+									}
+								}()
+								handlers.AbortWithError(c, "service.package.uploadServer.stream.send.error "+string(sendError.Error()))
+							}
 						}
 					}
-				}
-				for {
-					res, recvErr := stream.Recv()
-					if recvErr != nil {
-						fmt.Println("recvErr", recvErr.Error())
-						break
-					}
-					if res != nil {
-						fmt.Println("fr.Message Success", res)
-						if res.Code == 200 {
-							syncPackage.Done()
-							break
-						}
-					}
+				}()
 
-				}
 			}(client)
 		}
 		syncPackage.Wait()
@@ -221,7 +231,7 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 		offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
 		size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
 		sl := storage.QueryStatLogById(id, offset, size)
-		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", sl))
+		handlers.AbortWithSucc(c, sl)
 	})
 
 	router.GET("/statlog/getLogFileList", func(c *gin.Context) {
