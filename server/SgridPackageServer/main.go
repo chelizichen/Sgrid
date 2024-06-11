@@ -597,75 +597,195 @@ func (s *fileTransferServer) GetPidInfo(ctx context.Context, in *protocol.GetPid
 	}
 	fmt.Println("in", in)
 	for _, v := range in.HostPids {
-		if v.Host == globalConf.Server.Host {
-			fmt.Println("int(v.Pid)", int(v.Pid))
-			statInfo := getStat(int(v.Pid))
-			if statInfo == nil {
-				fmt.Println("error process", v.Pid)
-				now := time.Now()
-				storage.UpdateGrid(&pojo.Grid{
-					Id:         int(v.GridId),
-					Status:     0,
-					Pid:        int(v.Pid),
-					UpdateTime: &now,
-				})
-				storage.SaveStatLog(&pojo.StatLog{
-					GridId: int(v.GridId),
-					Stat:   BEHAVIOR_CHECK,
-					Pid:    int(v.Pid),
-				})
-				continue
-			}
-			Stat, _ := statInfo.Status()
-			cpu, _ := statInfo.CPUPercent()
-			threads, _ := statInfo.NumThreads()
-			name, _ := statInfo.Name()
-			isRuning, _ := statInfo.IsRunning()
-			mis, _ := statInfo.MemoryInfo()
-			stack := mis.Stack
-			running := "not run"
-			if isRuning {
-				running = "running"
-			}
-			MemoryData := mis.Data
-			ret.Data = append(ret.Data, &protocol.HostPidInfo{
-				Pid:         v.Pid,
-				MemoryStack: stack,
-				MemoryData:  MemoryData,
-				Threads:     int64(threads),
-				IsRuning:    running,
-				Cpu:         float32(cpu),
-				Name:        name,
-				Stat:        Stat,
-			})
-			var gridStat int = 0
-			if Stat == "Z" { // down 了 进行物理kill
-				gridStat = 0
-			} else {
-				gridStat = 1
-			}
+		if v.Host != globalConf.Server.Host {
+			continue
+		}
+		fmt.Println("int(v.Pid)", int(v.Pid))
+		statInfo := getStat(int(v.Pid))
+		if statInfo == nil {
+			fmt.Println("error process", v.Pid)
 			now := time.Now()
 			storage.UpdateGrid(&pojo.Grid{
 				Id:         int(v.GridId),
-				Status:     gridStat,
-				Pid:        int(statInfo.Pid),
+				Status:     0,
+				Pid:        int(v.Pid),
 				UpdateTime: &now,
 			})
 			storage.SaveStatLog(&pojo.StatLog{
-				GridId:      int(v.GridId),
-				Stat:        BEHAVIOR_CHECK,
-				Pid:         int(statInfo.Pid),
-				CPU:         cpu,
-				Threads:     threads,
-				Name:        name,
-				IsRunning:   running,
-				MemoryStack: stack,
-				MemoryData:  MemoryData,
+				GridId: int(v.GridId),
+				Stat:   BEHAVIOR_CHECK,
+				Pid:    int(v.Pid),
 			})
+			continue
 		}
+		Stat, _ := statInfo.Status()
+		cpu, _ := statInfo.CPUPercent()
+		threads, _ := statInfo.NumThreads()
+		name, _ := statInfo.Name()
+		isRuning, _ := statInfo.IsRunning()
+		mis, _ := statInfo.MemoryInfo()
+		stack := mis.Stack
+		running := "not run"
+		if isRuning {
+			running = "running"
+		}
+		MemoryData := mis.Data
+		ret.Data = append(ret.Data, &protocol.HostPidInfo{
+			Pid:         v.Pid,
+			MemoryStack: stack,
+			MemoryData:  MemoryData,
+			Threads:     int64(threads),
+			IsRuning:    running,
+			Cpu:         float32(cpu),
+			Name:        name,
+			Stat:        Stat,
+		})
+		var gridStat int = 0
+		if Stat == "Z" { // down 了 进行物理kill
+			gridStat = 0
+		} else {
+			gridStat = 1
+		}
+		now := time.Now()
+		storage.UpdateGrid(&pojo.Grid{
+			Id:         int(v.GridId),
+			Status:     gridStat,
+			Pid:        int(statInfo.Pid),
+			UpdateTime: &now,
+		})
+		storage.SaveStatLog(&pojo.StatLog{
+			GridId:      int(v.GridId),
+			Stat:        BEHAVIOR_CHECK,
+			Pid:         int(statInfo.Pid),
+			CPU:         cpu,
+			Threads:     threads,
+			Name:        name,
+			IsRunning:   running,
+			MemoryStack: stack,
+			MemoryData:  MemoryData,
+		})
 
 	}
 	return ret, nil
+}
+
+func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.PatchServerReq) (*protocol.BasicResp, error) {
+	gridsInfo := in.Req
+	var servantIds = make(map[int]struct{})
+	for _, v := range gridsInfo {
+		servantIds[int(v.ServantId)] = struct{}{}
+	}
+	toIds := make([]int, 0, len(servantIds))
+	for k := range servantIds {
+		toIds = append(toIds, k)
+	}
+	confs, err := storage.BatchQueryServantConf(toIds)
+	if err != nil {
+		return nil, err
+	}
+
+	servantIds2Grids := make(map[int][]*protocol.PatchServerDto)
+
+	for _, psd := range gridsInfo {
+		psd2 := servantIds2Grids[int(psd.ServantId)]
+		psd2 = append(psd2, psd)
+		servantIds2Grids[int(psd.ServantId)] = psd2
+	}
+
+	for servantId, gridList := range servantIds2Grids {
+		for processIndex, req := range gridList {
+			servantId := servantId
+			servantConf := confs[servantId]
+			execFilePath := req.ExecPath                                    // 服务路径
+			serverLanguage := req.ServerLanguage                            // 服务语言
+			serverName := req.ServerName                                    // 服务名称
+			serverProtocol := req.ServerProtocol                            // 服务协议
+			startDir := SgridPackageInstance.JoinPath(Servants, serverName) // 解压目录
+			host := req.Host
+			if host != globalConf.Server.Host {
+				fmt.Println("server is not equal")
+				continue
+			}
+			item, ok := globalGrids[int(servantId)]
+			if ok {
+				continue // 已存在，不用起
+			}
+			var cmd *exec.Cmd
+			var startFile string // 启动文件
+
+			if serverProtocol == public.PROTOCOL_GRPC {
+				if serverLanguage == public.RELEASE_GO {
+					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
+					cmd = exec.Command(startFile)
+				}
+				if serverLanguage == public.RELEASE_NODE {
+					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
+					cmd = exec.Command("node", startFile)
+				}
+				if serverLanguage == public.RELEASE_JAVA {
+					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
+					prodConf := path.Join(startDir, public.PROD_CONF_NAME)
+					cmd = exec.Command("java", "-jar", startFile, fmt.Sprintf("-Dspring.config.location=file:%v", prodConf))
+					cmd.Env = append(cmd.Env, fmt.Sprintf("SGRID_PROD_CONF_PATH=%v", prodConf))
+				}
+			}
+
+			if serverProtocol == public.PROTOCOL_HTTP {
+				if serverLanguage == public.RELEASE_GO {
+					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
+					cmd = exec.Command(startFile)
+				}
+				if serverLanguage == public.RELEASE_NODE {
+					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
+					cmd = exec.Command("node", startFile)
+				}
+				if serverLanguage == public.RELEASE_JAVA {
+					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
+					prodConf := path.Join(startDir, public.PROD_CONF_NAME)
+					cmd = exec.Command("java", "-jar", startFile, fmt.Sprintf("-Dspring.config.location=file:%v", prodConf))
+					cmd.Env = append(cmd.Env, fmt.Sprintf("SGRID_PROD_CONF_PATH=%v", prodConf))
+				}
+			}
+			cmd.Env = append(cmd.Env,
+				fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, req.Port),       // 指定端口
+				fmt.Sprintf("%v=%v", public.ENV_PRODUCTION, startDir),        // 开启目录
+				fmt.Sprintf("%v=%v", public.SGRID_CONFIG, servantConf),       // 配置
+				fmt.Sprintf("%v=%v", public.ENV_PROCESS_INDEX, processIndex), // 服务运行索引
+			)
+			cmd.Dir = startDir // 指定工作目录
+			fmt.Println("startFile", startFile)
+			fmt.Println("cmd.Env", cmd.Env)
+
+			monitor := NewSgridMonitor(
+				WithMonitorInterval(time.Second*5),
+				WithMonitorSetCmd(cmd),
+				WithMonitorServerName(serverName),
+				WithMonitorGridID(int(item.gridId)),
+			)
+
+			globalGrids[int(req.GridId)] = monitor
+
+			monitor.PrintLogger()
+			err = cmd.Start()
+			fmt.Println("*************服务启动**************")
+			if err != nil {
+				storage.PushErr(&pojo.SystemErr{
+					Type: "system/error/SgridPackageServer/cmd.Start()",
+					Info: err.Error(),
+				})
+			}
+			storage.SaveStatLog(&pojo.StatLog{
+				GridId: int(req.GridId),
+				Stat:   BEHAVIOR_PULL,
+				// Pid:    monitor.getPid(),
+			})
+
+			fmt.Println("*************开始日志上报**************")
+			go monitor.Report()
+		}
+	}
+
+	return nil, nil
 }
 
 func initDir() {

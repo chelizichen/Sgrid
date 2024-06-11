@@ -280,6 +280,157 @@ func (x *ReleaseServerReq) GetServantId() int32 {
 	return 0
 }
 
+type PatchServerReq struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Req []*PatchServerDto `protobuf:"bytes,1,rep,name=req,proto3" json:"req,omitempty"`
+}
+
+func (x *PatchServerReq) Reset() {
+	*x = PatchServerReq{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_SgridPackage_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PatchServerReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PatchServerReq) ProtoMessage() {}
+
+func (x *PatchServerReq) ProtoReflect() protoreflect.Message {
+	mi := &file_SgridPackage_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PatchServerReq.ProtoReflect.Descriptor instead.
+func (*PatchServerReq) Descriptor() ([]byte, []int) {
+	return file_SgridPackage_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *PatchServerReq) GetReq() []*PatchServerDto {
+	if x != nil {
+		return x.Req
+	}
+	return nil
+}
+
+// 单个拉起 不涉及服务文件覆盖
+type PatchServerDto struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ExecPath       string `protobuf:"bytes,1,opt,name=execPath,proto3" json:"execPath,omitempty"`     // 执行路径
+	ServerName     string `protobuf:"bytes,2,opt,name=serverName,proto3" json:"serverName,omitempty"` // 服务名，用于定位
+	ServantId      int32  `protobuf:"varint,3,opt,name=servantId,proto3" json:"servantId,omitempty"`
+	GridId         int32  `protobuf:"varint,4,opt,name=gridId,proto3" json:"gridId,omitempty"`
+	Host           string `protobuf:"bytes,5,opt,name=host,proto3" json:"host,omitempty"`
+	ServerLanguage string `protobuf:"bytes,6,opt,name=serverLanguage,proto3" json:"serverLanguage,omitempty"`
+	ServerProtocol string `protobuf:"bytes,7,opt,name=serverProtocol,proto3" json:"serverProtocol,omitempty"`
+	Port           int32  `protobuf:"varint,8,opt,name=port,proto3" json:"port,omitempty"`
+}
+
+func (x *PatchServerDto) Reset() {
+	*x = PatchServerDto{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_SgridPackage_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PatchServerDto) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PatchServerDto) ProtoMessage() {}
+
+func (x *PatchServerDto) ProtoReflect() protoreflect.Message {
+	mi := &file_SgridPackage_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PatchServerDto.ProtoReflect.Descriptor instead.
+func (*PatchServerDto) Descriptor() ([]byte, []int) {
+	return file_SgridPackage_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *PatchServerDto) GetExecPath() string {
+	if x != nil {
+		return x.ExecPath
+	}
+	return ""
+}
+
+func (x *PatchServerDto) GetServerName() string {
+	if x != nil {
+		return x.ServerName
+	}
+	return ""
+}
+
+func (x *PatchServerDto) GetServantId() int32 {
+	if x != nil {
+		return x.ServantId
+	}
+	return 0
+}
+
+func (x *PatchServerDto) GetGridId() int32 {
+	if x != nil {
+		return x.GridId
+	}
+	return 0
+}
+
+func (x *PatchServerDto) GetHost() string {
+	if x != nil {
+		return x.Host
+	}
+	return ""
+}
+
+func (x *PatchServerDto) GetServerLanguage() string {
+	if x != nil {
+		return x.ServerLanguage
+	}
+	return ""
+}
+
+func (x *PatchServerDto) GetServerProtocol() string {
+	if x != nil {
+		return x.ServerProtocol
+	}
+	return ""
+}
+
+func (x *PatchServerDto) GetPort() int32 {
+	if x != nil {
+		return x.Port
+	}
+	return 0
+}
+
 type BasicResp struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -292,7 +443,7 @@ type BasicResp struct {
 func (x *BasicResp) Reset() {
 	*x = BasicResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_SgridPackage_proto_msgTypes[4]
+		mi := &file_SgridPackage_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -305,7 +456,7 @@ func (x *BasicResp) String() string {
 func (*BasicResp) ProtoMessage() {}
 
 func (x *BasicResp) ProtoReflect() protoreflect.Message {
-	mi := &file_SgridPackage_proto_msgTypes[4]
+	mi := &file_SgridPackage_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -318,7 +469,7 @@ func (x *BasicResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BasicResp.ProtoReflect.Descriptor instead.
 func (*BasicResp) Descriptor() ([]byte, []int) {
-	return file_SgridPackage_proto_rawDescGZIP(), []int{4}
+	return file_SgridPackage_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *BasicResp) GetCode() int32 {
@@ -351,7 +502,7 @@ type FileChunk struct {
 func (x *FileChunk) Reset() {
 	*x = FileChunk{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_SgridPackage_proto_msgTypes[5]
+		mi := &file_SgridPackage_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -364,7 +515,7 @@ func (x *FileChunk) String() string {
 func (*FileChunk) ProtoMessage() {}
 
 func (x *FileChunk) ProtoReflect() protoreflect.Message {
-	mi := &file_SgridPackage_proto_msgTypes[5]
+	mi := &file_SgridPackage_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -377,7 +528,7 @@ func (x *FileChunk) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileChunk.ProtoReflect.Descriptor instead.
 func (*FileChunk) Descriptor() ([]byte, []int) {
-	return file_SgridPackage_proto_rawDescGZIP(), []int{5}
+	return file_SgridPackage_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *FileChunk) GetData() []byte {
@@ -427,7 +578,7 @@ type FileResp struct {
 func (x *FileResp) Reset() {
 	*x = FileResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_SgridPackage_proto_msgTypes[6]
+		mi := &file_SgridPackage_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -440,7 +591,7 @@ func (x *FileResp) String() string {
 func (*FileResp) ProtoMessage() {}
 
 func (x *FileResp) ProtoReflect() protoreflect.Message {
-	mi := &file_SgridPackage_proto_msgTypes[6]
+	mi := &file_SgridPackage_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -453,7 +604,7 @@ func (x *FileResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileResp.ProtoReflect.Descriptor instead.
 func (*FileResp) Descriptor() ([]byte, []int) {
-	return file_SgridPackage_proto_rawDescGZIP(), []int{6}
+	return file_SgridPackage_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *FileResp) GetMsg() string {
@@ -481,7 +632,7 @@ type ShutdownGridReq struct {
 func (x *ShutdownGridReq) Reset() {
 	*x = ShutdownGridReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_SgridPackage_proto_msgTypes[7]
+		mi := &file_SgridPackage_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -494,7 +645,7 @@ func (x *ShutdownGridReq) String() string {
 func (*ShutdownGridReq) ProtoMessage() {}
 
 func (x *ShutdownGridReq) ProtoReflect() protoreflect.Message {
-	mi := &file_SgridPackage_proto_msgTypes[7]
+	mi := &file_SgridPackage_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -507,7 +658,7 @@ func (x *ShutdownGridReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ShutdownGridReq.ProtoReflect.Descriptor instead.
 func (*ShutdownGridReq) Descriptor() ([]byte, []int) {
-	return file_SgridPackage_proto_rawDescGZIP(), []int{7}
+	return file_SgridPackage_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ShutdownGridReq) GetReq() []*ShutdownGridInfo {
@@ -531,7 +682,7 @@ type ShutdownGridInfo struct {
 func (x *ShutdownGridInfo) Reset() {
 	*x = ShutdownGridInfo{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_SgridPackage_proto_msgTypes[8]
+		mi := &file_SgridPackage_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -544,7 +695,7 @@ func (x *ShutdownGridInfo) String() string {
 func (*ShutdownGridInfo) ProtoMessage() {}
 
 func (x *ShutdownGridInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_SgridPackage_proto_msgTypes[8]
+	mi := &file_SgridPackage_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -557,7 +708,7 @@ func (x *ShutdownGridInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ShutdownGridInfo.ProtoReflect.Descriptor instead.
 func (*ShutdownGridInfo) Descriptor() ([]byte, []int) {
-	return file_SgridPackage_proto_rawDescGZIP(), []int{8}
+	return file_SgridPackage_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ShutdownGridInfo) GetPid() int32 {
@@ -601,7 +752,7 @@ type GetLogFileByHostReq struct {
 func (x *GetLogFileByHostReq) Reset() {
 	*x = GetLogFileByHostReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_SgridPackage_proto_msgTypes[9]
+		mi := &file_SgridPackage_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -614,7 +765,7 @@ func (x *GetLogFileByHostReq) String() string {
 func (*GetLogFileByHostReq) ProtoMessage() {}
 
 func (x *GetLogFileByHostReq) ProtoReflect() protoreflect.Message {
-	mi := &file_SgridPackage_proto_msgTypes[9]
+	mi := &file_SgridPackage_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -627,7 +778,7 @@ func (x *GetLogFileByHostReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetLogFileByHostReq.ProtoReflect.Descriptor instead.
 func (*GetLogFileByHostReq) Descriptor() ([]byte, []int) {
-	return file_SgridPackage_proto_rawDescGZIP(), []int{9}
+	return file_SgridPackage_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetLogFileByHostReq) GetHost() string {
@@ -663,7 +814,7 @@ type GetLogFileByHostVo struct {
 func (x *GetLogFileByHostVo) Reset() {
 	*x = GetLogFileByHostVo{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_SgridPackage_proto_msgTypes[10]
+		mi := &file_SgridPackage_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -676,7 +827,7 @@ func (x *GetLogFileByHostVo) String() string {
 func (*GetLogFileByHostVo) ProtoMessage() {}
 
 func (x *GetLogFileByHostVo) ProtoReflect() protoreflect.Message {
-	mi := &file_SgridPackage_proto_msgTypes[10]
+	mi := &file_SgridPackage_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -689,7 +840,7 @@ func (x *GetLogFileByHostVo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetLogFileByHostVo.ProtoReflect.Descriptor instead.
 func (*GetLogFileByHostVo) Descriptor() ([]byte, []int) {
-	return file_SgridPackage_proto_rawDescGZIP(), []int{10}
+	return file_SgridPackage_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetLogFileByHostVo) GetDateTime() string {
@@ -719,7 +870,7 @@ type GetLogFileByHostResp struct {
 func (x *GetLogFileByHostResp) Reset() {
 	*x = GetLogFileByHostResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_SgridPackage_proto_msgTypes[11]
+		mi := &file_SgridPackage_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -732,7 +883,7 @@ func (x *GetLogFileByHostResp) String() string {
 func (*GetLogFileByHostResp) ProtoMessage() {}
 
 func (x *GetLogFileByHostResp) ProtoReflect() protoreflect.Message {
-	mi := &file_SgridPackage_proto_msgTypes[11]
+	mi := &file_SgridPackage_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -745,7 +896,7 @@ func (x *GetLogFileByHostResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetLogFileByHostResp.ProtoReflect.Descriptor instead.
 func (*GetLogFileByHostResp) Descriptor() ([]byte, []int) {
-	return file_SgridPackage_proto_rawDescGZIP(), []int{11}
+	return file_SgridPackage_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *GetLogFileByHostResp) GetData() []*GetLogFileByHostVo {
@@ -787,7 +938,7 @@ type GetLogByFileReq struct {
 func (x *GetLogByFileReq) Reset() {
 	*x = GetLogByFileReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_SgridPackage_proto_msgTypes[12]
+		mi := &file_SgridPackage_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -800,7 +951,7 @@ func (x *GetLogByFileReq) String() string {
 func (*GetLogByFileReq) ProtoMessage() {}
 
 func (x *GetLogByFileReq) ProtoReflect() protoreflect.Message {
-	mi := &file_SgridPackage_proto_msgTypes[12]
+	mi := &file_SgridPackage_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -813,7 +964,7 @@ func (x *GetLogByFileReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetLogByFileReq.ProtoReflect.Descriptor instead.
 func (*GetLogByFileReq) Descriptor() ([]byte, []int) {
-	return file_SgridPackage_proto_rawDescGZIP(), []int{12}
+	return file_SgridPackage_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *GetLogByFileReq) GetLogType() string {
@@ -884,7 +1035,7 @@ type GetLogByFileResp struct {
 func (x *GetLogByFileResp) Reset() {
 	*x = GetLogByFileResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_SgridPackage_proto_msgTypes[13]
+		mi := &file_SgridPackage_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -897,7 +1048,7 @@ func (x *GetLogByFileResp) String() string {
 func (*GetLogByFileResp) ProtoMessage() {}
 
 func (x *GetLogByFileResp) ProtoReflect() protoreflect.Message {
-	mi := &file_SgridPackage_proto_msgTypes[13]
+	mi := &file_SgridPackage_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -910,7 +1061,7 @@ func (x *GetLogByFileResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetLogByFileResp.ProtoReflect.Descriptor instead.
 func (*GetLogByFileResp) Descriptor() ([]byte, []int) {
-	return file_SgridPackage_proto_rawDescGZIP(), []int{13}
+	return file_SgridPackage_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *GetLogByFileResp) GetData() []string {
@@ -938,7 +1089,7 @@ type GetPidInfoReq struct {
 func (x *GetPidInfoReq) Reset() {
 	*x = GetPidInfoReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_SgridPackage_proto_msgTypes[14]
+		mi := &file_SgridPackage_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -951,7 +1102,7 @@ func (x *GetPidInfoReq) String() string {
 func (*GetPidInfoReq) ProtoMessage() {}
 
 func (x *GetPidInfoReq) ProtoReflect() protoreflect.Message {
-	mi := &file_SgridPackage_proto_msgTypes[14]
+	mi := &file_SgridPackage_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -964,7 +1115,7 @@ func (x *GetPidInfoReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPidInfoReq.ProtoReflect.Descriptor instead.
 func (*GetPidInfoReq) Descriptor() ([]byte, []int) {
-	return file_SgridPackage_proto_rawDescGZIP(), []int{14}
+	return file_SgridPackage_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *GetPidInfoReq) GetHostPids() []*HostPids {
@@ -987,7 +1138,7 @@ type HostPids struct {
 func (x *HostPids) Reset() {
 	*x = HostPids{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_SgridPackage_proto_msgTypes[15]
+		mi := &file_SgridPackage_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1000,7 +1151,7 @@ func (x *HostPids) String() string {
 func (*HostPids) ProtoMessage() {}
 
 func (x *HostPids) ProtoReflect() protoreflect.Message {
-	mi := &file_SgridPackage_proto_msgTypes[15]
+	mi := &file_SgridPackage_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1013,7 +1164,7 @@ func (x *HostPids) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HostPids.ProtoReflect.Descriptor instead.
 func (*HostPids) Descriptor() ([]byte, []int) {
-	return file_SgridPackage_proto_rawDescGZIP(), []int{15}
+	return file_SgridPackage_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *HostPids) GetPid() int32 {
@@ -1055,7 +1206,7 @@ type HostPidInfo struct {
 func (x *HostPidInfo) Reset() {
 	*x = HostPidInfo{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_SgridPackage_proto_msgTypes[16]
+		mi := &file_SgridPackage_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1068,7 +1219,7 @@ func (x *HostPidInfo) String() string {
 func (*HostPidInfo) ProtoMessage() {}
 
 func (x *HostPidInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_SgridPackage_proto_msgTypes[16]
+	mi := &file_SgridPackage_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1081,7 +1232,7 @@ func (x *HostPidInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HostPidInfo.ProtoReflect.Descriptor instead.
 func (*HostPidInfo) Descriptor() ([]byte, []int) {
-	return file_SgridPackage_proto_rawDescGZIP(), []int{16}
+	return file_SgridPackage_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *HostPidInfo) GetPid() int32 {
@@ -1151,7 +1302,7 @@ type GetPidInfoResp struct {
 func (x *GetPidInfoResp) Reset() {
 	*x = GetPidInfoResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_SgridPackage_proto_msgTypes[17]
+		mi := &file_SgridPackage_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1164,7 +1315,7 @@ func (x *GetPidInfoResp) String() string {
 func (*GetPidInfoResp) ProtoMessage() {}
 
 func (x *GetPidInfoResp) ProtoReflect() protoreflect.Message {
-	mi := &file_SgridPackage_proto_msgTypes[17]
+	mi := &file_SgridPackage_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1177,7 +1328,7 @@ func (x *GetPidInfoResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPidInfoResp.ProtoReflect.Descriptor instead.
 func (*GetPidInfoResp) Descriptor() ([]byte, []int) {
-	return file_SgridPackage_proto_rawDescGZIP(), []int{17}
+	return file_SgridPackage_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *GetPidInfoResp) GetData() []*HostPidInfo {
@@ -1221,7 +1372,27 @@ var file_SgridPackage_proto_rawDesc = []byte{
 	0x6c, 0x2e, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x54, 0x61, 0x72, 0x67, 0x65, 0x74, 0x52,
 	0x0c, 0x73, 0x65, 0x72, 0x76, 0x61, 0x6e, 0x74, 0x47, 0x72, 0x69, 0x64, 0x73, 0x12, 0x1c, 0x0a,
 	0x09, 0x73, 0x65, 0x72, 0x76, 0x61, 0x6e, 0x74, 0x49, 0x64, 0x18, 0x07, 0x20, 0x01, 0x28, 0x05,
-	0x52, 0x09, 0x73, 0x65, 0x72, 0x76, 0x61, 0x6e, 0x74, 0x49, 0x64, 0x22, 0x39, 0x0a, 0x09, 0x62,
+	0x52, 0x09, 0x73, 0x65, 0x72, 0x76, 0x61, 0x6e, 0x74, 0x49, 0x64, 0x22, 0x41, 0x0a, 0x0e, 0x70,
+	0x61, 0x74, 0x63, 0x68, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x52, 0x65, 0x71, 0x12, 0x2f, 0x0a,
+	0x03, 0x72, 0x65, 0x71, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x53, 0x67, 0x72,
+	0x69, 0x64, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2e, 0x70, 0x61, 0x74, 0x63, 0x68,
+	0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x44, 0x74, 0x6f, 0x52, 0x03, 0x72, 0x65, 0x71, 0x22, 0xfa,
+	0x01, 0x0a, 0x0e, 0x70, 0x61, 0x74, 0x63, 0x68, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x44, 0x74,
+	0x6f, 0x12, 0x1a, 0x0a, 0x08, 0x65, 0x78, 0x65, 0x63, 0x50, 0x61, 0x74, 0x68, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x08, 0x65, 0x78, 0x65, 0x63, 0x50, 0x61, 0x74, 0x68, 0x12, 0x1e, 0x0a,
+	0x0a, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x4e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x0a, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x1c, 0x0a,
+	0x09, 0x73, 0x65, 0x72, 0x76, 0x61, 0x6e, 0x74, 0x49, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05,
+	0x52, 0x09, 0x73, 0x65, 0x72, 0x76, 0x61, 0x6e, 0x74, 0x49, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x67,
+	0x72, 0x69, 0x64, 0x49, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x05, 0x52, 0x06, 0x67, 0x72, 0x69,
+	0x64, 0x49, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x68, 0x6f, 0x73, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x04, 0x68, 0x6f, 0x73, 0x74, 0x12, 0x26, 0x0a, 0x0e, 0x73, 0x65, 0x72, 0x76, 0x65,
+	0x72, 0x4c, 0x61, 0x6e, 0x67, 0x75, 0x61, 0x67, 0x65, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x0e, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x4c, 0x61, 0x6e, 0x67, 0x75, 0x61, 0x67, 0x65, 0x12,
+	0x26, 0x0a, 0x0e, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f,
+	0x6c, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x50,
+	0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x6f, 0x72, 0x74, 0x18,
+	0x08, 0x20, 0x01, 0x28, 0x05, 0x52, 0x04, 0x70, 0x6f, 0x72, 0x74, 0x22, 0x39, 0x0a, 0x09, 0x62,
 	0x61, 0x73, 0x69, 0x63, 0x52, 0x65, 0x73, 0x70, 0x12, 0x12, 0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x18, 0x0a, 0x07,
 	0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d,
@@ -1310,7 +1481,7 @@ var file_SgridPackage_proto_rawDesc = []byte{
 	0x74, 0x50, 0x69, 0x64, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x12, 0x2e, 0x0a, 0x04,
 	0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x53, 0x67, 0x72,
 	0x69, 0x64, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2e, 0x48, 0x6f, 0x73, 0x74, 0x50,
-	0x69, 0x64, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x32, 0xcc, 0x04, 0x0a,
+	0x69, 0x64, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x32, 0x96, 0x05, 0x0a,
 	0x13, 0x46, 0x69, 0x6c, 0x65, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x66, 0x65, 0x72, 0x53, 0x65, 0x72,
 	0x76, 0x69, 0x63, 0x65, 0x12, 0x45, 0x0a, 0x0a, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x46, 0x69,
 	0x6c, 0x65, 0x12, 0x18, 0x2e, 0x53, 0x67, 0x72, 0x69, 0x64, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63,
@@ -1327,29 +1498,33 @@ var file_SgridPackage_proto_rawDesc = []byte{
 	0x63, 0x6f, 0x6c, 0x2e, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x53, 0x65, 0x72, 0x76, 0x65,
 	0x72, 0x52, 0x65, 0x71, 0x1a, 0x18, 0x2e, 0x53, 0x67, 0x72, 0x69, 0x64, 0x50, 0x72, 0x6f, 0x74,
 	0x6f, 0x63, 0x6f, 0x6c, 0x2e, 0x62, 0x61, 0x73, 0x69, 0x63, 0x52, 0x65, 0x73, 0x70, 0x22, 0x00,
-	0x12, 0x4a, 0x0a, 0x0c, 0x53, 0x68, 0x75, 0x74, 0x64, 0x6f, 0x77, 0x6e, 0x47, 0x72, 0x69, 0x64,
-	0x12, 0x1e, 0x2e, 0x53, 0x67, 0x72, 0x69, 0x64, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c,
-	0x2e, 0x53, 0x68, 0x75, 0x74, 0x64, 0x6f, 0x77, 0x6e, 0x47, 0x72, 0x69, 0x64, 0x52, 0x65, 0x71,
-	0x1a, 0x18, 0x2e, 0x53, 0x67, 0x72, 0x69, 0x64, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c,
-	0x2e, 0x62, 0x61, 0x73, 0x69, 0x63, 0x52, 0x65, 0x73, 0x70, 0x22, 0x00, 0x12, 0x5d, 0x0a, 0x10,
-	0x47, 0x65, 0x74, 0x4c, 0x6f, 0x67, 0x46, 0x69, 0x6c, 0x65, 0x42, 0x79, 0x48, 0x6f, 0x73, 0x74,
-	0x12, 0x22, 0x2e, 0x53, 0x67, 0x72, 0x69, 0x64, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c,
-	0x2e, 0x47, 0x65, 0x74, 0x4c, 0x6f, 0x67, 0x46, 0x69, 0x6c, 0x65, 0x42, 0x79, 0x48, 0x6f, 0x73,
-	0x74, 0x52, 0x65, 0x71, 0x1a, 0x23, 0x2e, 0x53, 0x67, 0x72, 0x69, 0x64, 0x50, 0x72, 0x6f, 0x74,
-	0x6f, 0x63, 0x6f, 0x6c, 0x2e, 0x47, 0x65, 0x74, 0x4c, 0x6f, 0x67, 0x46, 0x69, 0x6c, 0x65, 0x42,
-	0x79, 0x48, 0x6f, 0x73, 0x74, 0x52, 0x65, 0x73, 0x70, 0x22, 0x00, 0x12, 0x51, 0x0a, 0x0c, 0x47,
-	0x65, 0x74, 0x4c, 0x6f, 0x67, 0x42, 0x79, 0x46, 0x69, 0x6c, 0x65, 0x12, 0x1e, 0x2e, 0x53, 0x67,
-	0x72, 0x69, 0x64, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2e, 0x47, 0x65, 0x74, 0x4c,
-	0x6f, 0x67, 0x42, 0x79, 0x46, 0x69, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x1a, 0x1f, 0x2e, 0x53, 0x67,
-	0x72, 0x69, 0x64, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2e, 0x47, 0x65, 0x74, 0x4c,
-	0x6f, 0x67, 0x42, 0x79, 0x46, 0x69, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x22, 0x00, 0x12, 0x4b,
-	0x0a, 0x0a, 0x47, 0x65, 0x74, 0x50, 0x69, 0x64, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x1c, 0x2e, 0x53,
-	0x67, 0x72, 0x69, 0x64, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2e, 0x47, 0x65, 0x74,
-	0x50, 0x69, 0x64, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x71, 0x1a, 0x1d, 0x2e, 0x53, 0x67, 0x72,
-	0x69, 0x64, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2e, 0x47, 0x65, 0x74, 0x50, 0x69,
-	0x64, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x22, 0x00, 0x42, 0x0c, 0x5a, 0x0a, 0x2e,
-	0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x33,
+	0x12, 0x48, 0x0a, 0x0b, 0x50, 0x61, 0x74, 0x63, 0x68, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x12,
+	0x1d, 0x2e, 0x53, 0x67, 0x72, 0x69, 0x64, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2e,
+	0x70, 0x61, 0x74, 0x63, 0x68, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x52, 0x65, 0x71, 0x1a, 0x18,
+	0x2e, 0x53, 0x67, 0x72, 0x69, 0x64, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2e, 0x62,
+	0x61, 0x73, 0x69, 0x63, 0x52, 0x65, 0x73, 0x70, 0x22, 0x00, 0x12, 0x4a, 0x0a, 0x0c, 0x53, 0x68,
+	0x75, 0x74, 0x64, 0x6f, 0x77, 0x6e, 0x47, 0x72, 0x69, 0x64, 0x12, 0x1e, 0x2e, 0x53, 0x67, 0x72,
+	0x69, 0x64, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2e, 0x53, 0x68, 0x75, 0x74, 0x64,
+	0x6f, 0x77, 0x6e, 0x47, 0x72, 0x69, 0x64, 0x52, 0x65, 0x71, 0x1a, 0x18, 0x2e, 0x53, 0x67, 0x72,
+	0x69, 0x64, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2e, 0x62, 0x61, 0x73, 0x69, 0x63,
+	0x52, 0x65, 0x73, 0x70, 0x22, 0x00, 0x12, 0x5d, 0x0a, 0x10, 0x47, 0x65, 0x74, 0x4c, 0x6f, 0x67,
+	0x46, 0x69, 0x6c, 0x65, 0x42, 0x79, 0x48, 0x6f, 0x73, 0x74, 0x12, 0x22, 0x2e, 0x53, 0x67, 0x72,
+	0x69, 0x64, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2e, 0x47, 0x65, 0x74, 0x4c, 0x6f,
+	0x67, 0x46, 0x69, 0x6c, 0x65, 0x42, 0x79, 0x48, 0x6f, 0x73, 0x74, 0x52, 0x65, 0x71, 0x1a, 0x23,
+	0x2e, 0x53, 0x67, 0x72, 0x69, 0x64, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2e, 0x47,
+	0x65, 0x74, 0x4c, 0x6f, 0x67, 0x46, 0x69, 0x6c, 0x65, 0x42, 0x79, 0x48, 0x6f, 0x73, 0x74, 0x52,
+	0x65, 0x73, 0x70, 0x22, 0x00, 0x12, 0x51, 0x0a, 0x0c, 0x47, 0x65, 0x74, 0x4c, 0x6f, 0x67, 0x42,
+	0x79, 0x46, 0x69, 0x6c, 0x65, 0x12, 0x1e, 0x2e, 0x53, 0x67, 0x72, 0x69, 0x64, 0x50, 0x72, 0x6f,
+	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2e, 0x47, 0x65, 0x74, 0x4c, 0x6f, 0x67, 0x42, 0x79, 0x46, 0x69,
+	0x6c, 0x65, 0x52, 0x65, 0x71, 0x1a, 0x1f, 0x2e, 0x53, 0x67, 0x72, 0x69, 0x64, 0x50, 0x72, 0x6f,
+	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2e, 0x47, 0x65, 0x74, 0x4c, 0x6f, 0x67, 0x42, 0x79, 0x46, 0x69,
+	0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x22, 0x00, 0x12, 0x4b, 0x0a, 0x0a, 0x47, 0x65, 0x74, 0x50,
+	0x69, 0x64, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x1c, 0x2e, 0x53, 0x67, 0x72, 0x69, 0x64, 0x50, 0x72,
+	0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2e, 0x47, 0x65, 0x74, 0x50, 0x69, 0x64, 0x49, 0x6e, 0x66,
+	0x6f, 0x52, 0x65, 0x71, 0x1a, 0x1d, 0x2e, 0x53, 0x67, 0x72, 0x69, 0x64, 0x50, 0x72, 0x6f, 0x74,
+	0x6f, 0x63, 0x6f, 0x6c, 0x2e, 0x47, 0x65, 0x74, 0x50, 0x69, 0x64, 0x49, 0x6e, 0x66, 0x6f, 0x52,
+	0x65, 0x73, 0x70, 0x22, 0x00, 0x42, 0x0c, 0x5a, 0x0a, 0x2e, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x63, 0x6f, 0x6c, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1364,52 +1539,57 @@ func file_SgridPackage_proto_rawDescGZIP() []byte {
 	return file_SgridPackage_proto_rawDescData
 }
 
-var file_SgridPackage_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_SgridPackage_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_SgridPackage_proto_goTypes = []interface{}{
 	(*QueryIdReq)(nil),           // 0: SgridProtocol.queryIdReq
 	(*DeletePackageReq)(nil),     // 1: SgridProtocol.deletePackageReq
 	(*ReleaseTarget)(nil),        // 2: SgridProtocol.releaseTarget
 	(*ReleaseServerReq)(nil),     // 3: SgridProtocol.releaseServerReq
-	(*BasicResp)(nil),            // 4: SgridProtocol.basicResp
-	(*FileChunk)(nil),            // 5: SgridProtocol.FileChunk
-	(*FileResp)(nil),             // 6: SgridProtocol.FileResp
-	(*ShutdownGridReq)(nil),      // 7: SgridProtocol.ShutdownGridReq
-	(*ShutdownGridInfo)(nil),     // 8: SgridProtocol.ShutdownGridInfo
-	(*GetLogFileByHostReq)(nil),  // 9: SgridProtocol.GetLogFileByHostReq
-	(*GetLogFileByHostVo)(nil),   // 10: SgridProtocol.GetLogFileByHostVo
-	(*GetLogFileByHostResp)(nil), // 11: SgridProtocol.GetLogFileByHostResp
-	(*GetLogByFileReq)(nil),      // 12: SgridProtocol.GetLogByFileReq
-	(*GetLogByFileResp)(nil),     // 13: SgridProtocol.GetLogByFileResp
-	(*GetPidInfoReq)(nil),        // 14: SgridProtocol.GetPidInfoReq
-	(*HostPids)(nil),             // 15: SgridProtocol.HostPids
-	(*HostPidInfo)(nil),          // 16: SgridProtocol.HostPidInfo
-	(*GetPidInfoResp)(nil),       // 17: SgridProtocol.GetPidInfoResp
+	(*PatchServerReq)(nil),       // 4: SgridProtocol.patchServerReq
+	(*PatchServerDto)(nil),       // 5: SgridProtocol.patchServerDto
+	(*BasicResp)(nil),            // 6: SgridProtocol.basicResp
+	(*FileChunk)(nil),            // 7: SgridProtocol.FileChunk
+	(*FileResp)(nil),             // 8: SgridProtocol.FileResp
+	(*ShutdownGridReq)(nil),      // 9: SgridProtocol.ShutdownGridReq
+	(*ShutdownGridInfo)(nil),     // 10: SgridProtocol.ShutdownGridInfo
+	(*GetLogFileByHostReq)(nil),  // 11: SgridProtocol.GetLogFileByHostReq
+	(*GetLogFileByHostVo)(nil),   // 12: SgridProtocol.GetLogFileByHostVo
+	(*GetLogFileByHostResp)(nil), // 13: SgridProtocol.GetLogFileByHostResp
+	(*GetLogByFileReq)(nil),      // 14: SgridProtocol.GetLogByFileReq
+	(*GetLogByFileResp)(nil),     // 15: SgridProtocol.GetLogByFileResp
+	(*GetPidInfoReq)(nil),        // 16: SgridProtocol.GetPidInfoReq
+	(*HostPids)(nil),             // 17: SgridProtocol.HostPids
+	(*HostPidInfo)(nil),          // 18: SgridProtocol.HostPidInfo
+	(*GetPidInfoResp)(nil),       // 19: SgridProtocol.GetPidInfoResp
 }
 var file_SgridPackage_proto_depIdxs = []int32{
 	2,  // 0: SgridProtocol.releaseServerReq.servantGrids:type_name -> SgridProtocol.releaseTarget
-	8,  // 1: SgridProtocol.ShutdownGridReq.req:type_name -> SgridProtocol.ShutdownGridInfo
-	10, // 2: SgridProtocol.GetLogFileByHostResp.data:type_name -> SgridProtocol.GetLogFileByHostVo
-	15, // 3: SgridProtocol.GetPidInfoReq.hostPids:type_name -> SgridProtocol.HostPids
-	16, // 4: SgridProtocol.GetPidInfoResp.data:type_name -> SgridProtocol.HostPidInfo
-	5,  // 5: SgridProtocol.FileTransferService.StreamFile:input_type -> SgridProtocol.FileChunk
-	1,  // 6: SgridProtocol.FileTransferService.DeletePackage:input_type -> SgridProtocol.deletePackageReq
-	3,  // 7: SgridProtocol.FileTransferService.ReleaseServerByPackage:input_type -> SgridProtocol.releaseServerReq
-	7,  // 8: SgridProtocol.FileTransferService.ShutdownGrid:input_type -> SgridProtocol.ShutdownGridReq
-	9,  // 9: SgridProtocol.FileTransferService.GetLogFileByHost:input_type -> SgridProtocol.GetLogFileByHostReq
-	12, // 10: SgridProtocol.FileTransferService.GetLogByFile:input_type -> SgridProtocol.GetLogByFileReq
-	14, // 11: SgridProtocol.FileTransferService.GetPidInfo:input_type -> SgridProtocol.GetPidInfoReq
-	6,  // 12: SgridProtocol.FileTransferService.StreamFile:output_type -> SgridProtocol.FileResp
-	4,  // 13: SgridProtocol.FileTransferService.DeletePackage:output_type -> SgridProtocol.basicResp
-	4,  // 14: SgridProtocol.FileTransferService.ReleaseServerByPackage:output_type -> SgridProtocol.basicResp
-	4,  // 15: SgridProtocol.FileTransferService.ShutdownGrid:output_type -> SgridProtocol.basicResp
-	11, // 16: SgridProtocol.FileTransferService.GetLogFileByHost:output_type -> SgridProtocol.GetLogFileByHostResp
-	13, // 17: SgridProtocol.FileTransferService.GetLogByFile:output_type -> SgridProtocol.GetLogByFileResp
-	17, // 18: SgridProtocol.FileTransferService.GetPidInfo:output_type -> SgridProtocol.GetPidInfoResp
-	12, // [12:19] is the sub-list for method output_type
-	5,  // [5:12] is the sub-list for method input_type
-	5,  // [5:5] is the sub-list for extension type_name
-	5,  // [5:5] is the sub-list for extension extendee
-	0,  // [0:5] is the sub-list for field type_name
+	5,  // 1: SgridProtocol.patchServerReq.req:type_name -> SgridProtocol.patchServerDto
+	10, // 2: SgridProtocol.ShutdownGridReq.req:type_name -> SgridProtocol.ShutdownGridInfo
+	12, // 3: SgridProtocol.GetLogFileByHostResp.data:type_name -> SgridProtocol.GetLogFileByHostVo
+	17, // 4: SgridProtocol.GetPidInfoReq.hostPids:type_name -> SgridProtocol.HostPids
+	18, // 5: SgridProtocol.GetPidInfoResp.data:type_name -> SgridProtocol.HostPidInfo
+	7,  // 6: SgridProtocol.FileTransferService.StreamFile:input_type -> SgridProtocol.FileChunk
+	1,  // 7: SgridProtocol.FileTransferService.DeletePackage:input_type -> SgridProtocol.deletePackageReq
+	3,  // 8: SgridProtocol.FileTransferService.ReleaseServerByPackage:input_type -> SgridProtocol.releaseServerReq
+	4,  // 9: SgridProtocol.FileTransferService.PatchServer:input_type -> SgridProtocol.patchServerReq
+	9,  // 10: SgridProtocol.FileTransferService.ShutdownGrid:input_type -> SgridProtocol.ShutdownGridReq
+	11, // 11: SgridProtocol.FileTransferService.GetLogFileByHost:input_type -> SgridProtocol.GetLogFileByHostReq
+	14, // 12: SgridProtocol.FileTransferService.GetLogByFile:input_type -> SgridProtocol.GetLogByFileReq
+	16, // 13: SgridProtocol.FileTransferService.GetPidInfo:input_type -> SgridProtocol.GetPidInfoReq
+	8,  // 14: SgridProtocol.FileTransferService.StreamFile:output_type -> SgridProtocol.FileResp
+	6,  // 15: SgridProtocol.FileTransferService.DeletePackage:output_type -> SgridProtocol.basicResp
+	6,  // 16: SgridProtocol.FileTransferService.ReleaseServerByPackage:output_type -> SgridProtocol.basicResp
+	6,  // 17: SgridProtocol.FileTransferService.PatchServer:output_type -> SgridProtocol.basicResp
+	6,  // 18: SgridProtocol.FileTransferService.ShutdownGrid:output_type -> SgridProtocol.basicResp
+	13, // 19: SgridProtocol.FileTransferService.GetLogFileByHost:output_type -> SgridProtocol.GetLogFileByHostResp
+	15, // 20: SgridProtocol.FileTransferService.GetLogByFile:output_type -> SgridProtocol.GetLogByFileResp
+	19, // 21: SgridProtocol.FileTransferService.GetPidInfo:output_type -> SgridProtocol.GetPidInfoResp
+	14, // [14:22] is the sub-list for method output_type
+	6,  // [6:14] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_SgridPackage_proto_init() }
@@ -1467,7 +1647,7 @@ func file_SgridPackage_proto_init() {
 			}
 		}
 		file_SgridPackage_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*BasicResp); i {
+			switch v := v.(*PatchServerReq); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1479,7 +1659,7 @@ func file_SgridPackage_proto_init() {
 			}
 		}
 		file_SgridPackage_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*FileChunk); i {
+			switch v := v.(*PatchServerDto); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1491,7 +1671,7 @@ func file_SgridPackage_proto_init() {
 			}
 		}
 		file_SgridPackage_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*FileResp); i {
+			switch v := v.(*BasicResp); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1503,7 +1683,7 @@ func file_SgridPackage_proto_init() {
 			}
 		}
 		file_SgridPackage_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ShutdownGridReq); i {
+			switch v := v.(*FileChunk); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1515,7 +1695,7 @@ func file_SgridPackage_proto_init() {
 			}
 		}
 		file_SgridPackage_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ShutdownGridInfo); i {
+			switch v := v.(*FileResp); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1527,7 +1707,7 @@ func file_SgridPackage_proto_init() {
 			}
 		}
 		file_SgridPackage_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetLogFileByHostReq); i {
+			switch v := v.(*ShutdownGridReq); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1539,7 +1719,7 @@ func file_SgridPackage_proto_init() {
 			}
 		}
 		file_SgridPackage_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetLogFileByHostVo); i {
+			switch v := v.(*ShutdownGridInfo); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1551,7 +1731,7 @@ func file_SgridPackage_proto_init() {
 			}
 		}
 		file_SgridPackage_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetLogFileByHostResp); i {
+			switch v := v.(*GetLogFileByHostReq); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1563,7 +1743,7 @@ func file_SgridPackage_proto_init() {
 			}
 		}
 		file_SgridPackage_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetLogByFileReq); i {
+			switch v := v.(*GetLogFileByHostVo); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1575,7 +1755,7 @@ func file_SgridPackage_proto_init() {
 			}
 		}
 		file_SgridPackage_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetLogByFileResp); i {
+			switch v := v.(*GetLogFileByHostResp); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1587,7 +1767,7 @@ func file_SgridPackage_proto_init() {
 			}
 		}
 		file_SgridPackage_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetPidInfoReq); i {
+			switch v := v.(*GetLogByFileReq); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1599,7 +1779,7 @@ func file_SgridPackage_proto_init() {
 			}
 		}
 		file_SgridPackage_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*HostPids); i {
+			switch v := v.(*GetLogByFileResp); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1611,7 +1791,7 @@ func file_SgridPackage_proto_init() {
 			}
 		}
 		file_SgridPackage_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*HostPidInfo); i {
+			switch v := v.(*GetPidInfoReq); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1623,6 +1803,30 @@ func file_SgridPackage_proto_init() {
 			}
 		}
 		file_SgridPackage_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*HostPids); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_SgridPackage_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*HostPidInfo); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_SgridPackage_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GetPidInfoResp); i {
 			case 0:
 				return &v.state
@@ -1641,7 +1845,7 @@ func file_SgridPackage_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_SgridPackage_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   18,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -88,7 +88,7 @@ func initRds(ctx *config.SgridConf) {
 	// rds
 	redis_addr := ctx.GetString("redis-addr")
 	redis_pass := ctx.GetString("redis-pass")
-	if len(redis_addr) != 0 && len(redis_pass) != 0 {
+	if len(redis_addr) != 0 {
 		GRDB = redis.NewClient(&redis.Options{
 			Addr:     redis_addr,
 			Password: redis_pass,

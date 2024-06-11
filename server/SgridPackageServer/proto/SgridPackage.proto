@@ -31,6 +31,22 @@ message releaseServerReq{
     int32 servantId = 7;
 }
 
+message patchServerReq{
+    repeated patchServerDto req = 1;
+}
+
+// 单个拉起 不涉及服务文件覆盖
+message patchServerDto{
+    string execPath = 1; // 执行路径
+    string serverName = 2; // 服务名，用于定位
+    int32 servantId = 3;
+    int32 gridId = 4;
+    string host = 5;
+    string serverLanguage = 6;
+    string serverProtocol = 7;
+    int32 port = 8;
+}
+
 
 message basicResp {
     int32 code = 1;
@@ -131,6 +147,9 @@ service FileTransferService {
     
     // 发布服务
     rpc ReleaseServerByPackage(releaseServerReq)returns(basicResp){}
+
+    // 拉起服务
+    rpc PatchServer(patchServerReq)returns(basicResp){}
 
     // 关闭指定节点服务
     rpc ShutdownGrid(ShutdownGridReq)returns(basicResp){}

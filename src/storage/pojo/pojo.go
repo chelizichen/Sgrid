@@ -117,11 +117,13 @@ func (t *TraceLog) FmtGetLog() string {
 }
 
 type AssetsAdmin struct {
-	Id            int        `json:"id,omitempty"`
-	GridId        int        `json:"gridId,omitempty"`
-	Mark          string     `json:"mark,omitempty"`
-	ExpireTime    *time.Time `json:"expireTime,omitempty"`
-	CreateTime    *time.Time `json:"createTime,omitempty"`
-	UpdateTime    *time.Time `json:"updateTime,omitempty"`
-	OperateUserId int        `json:"operateUserId,omitempty"`
+	Id            int        `json:"id,omitempty"`                               // ID
+	GridId        int        `json:"gridId,omitempty"`                           // 网格ID
+	Mark          string     `json:"mark,omitempty"`                             // 备注
+	ExpireTime    *time.Time `json:"expireTime,omitempty"`                       // 下线时间
+	ActiveTime    *time.Time `json:"activeTime,omitempty"`                       // 上线时间
+	CreateTime    *time.Time `gorm:"autoCreateTime" json:"createTime,omitempty"` // 创建时间
+	UpdateTime    *time.Time `gorm:"autoCreateTime" json:"updateTime,omitempty"` // 更新时间
+	OperateUserId int        `json:"operateUserId,omitempty"`                    // 操作人ID
+	ServantId     int        `json:"servantId,omitempty"`
 }

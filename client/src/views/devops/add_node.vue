@@ -23,6 +23,9 @@
           <el-form-item label="ChooseNode">
             <el-input v-model.number="addGridForm.port[index]">
               <template #prepend>{{ item.ip }}</template>
+              <template #append>
+                <el-button type="success" @click="randomSet(index)">自动分配</el-button>
+              </template>
             </el-input>
           </el-form-item>
         </template>
@@ -102,6 +105,15 @@ function addNode() {
 function handleSelectionChange(value: never[]) {
   selectionNodes.value = value;
   addGridForm.value.selectionNodes = value;
+}
+
+async function randomSet(index) {
+  const portResp = await api.getRandomPort();
+  if (portResp.code) {
+    return ElNotification.error(portResp.message);
+  }
+  const port = portResp.data;
+  addGridForm.value.port[index] = port;
 }
 
 async function devopsAddGrid() {

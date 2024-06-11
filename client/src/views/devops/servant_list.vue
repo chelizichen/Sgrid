@@ -15,7 +15,15 @@
       <el-table-column prop="execPath" label="execPath"></el-table-column>
       <el-table-column prop="language" label="language"></el-table-column>
       <el-table-column prop="protocol" label="protocol"></el-table-column>
-      <el-table-column label="操作">
+      <el-table-column label="操作" align="center">
+        <template #default="scoped">
+          <el-button type="primary" @click="setCronTask(scoped.row)">
+            定时设置
+          </el-button>
+        </template>
+      </el-table-column>
+
+      <el-table-column label="操作" align="center">
         <template #default="scoped">
           <el-button @click="updateServant(scoped.row)">修改</el-button>
           <el-button
@@ -64,6 +72,68 @@
       <el-button @click="editDialogVisible = false">取消</el-button>
     </el-form>
   </el-dialog>
+
+  <el-dialog v-model="cronTaskDialogVisible" title="定时设置" width="80%">
+    <el-form :model="form" label-width="auto">
+      <el-form-item label="Server Grids">
+        <el-table :data="cronTaskNodes" border @selection-change="handleSelectionChange">
+          <el-table-column type="selection" width="55" />
+          <el-table-column label="Grid">
+            <template #default="scoped">
+              <el-button type="text" @click="toLog(scoped.row)"
+                >{{ scoped.row.gridNode.ip }}:{{ scoped.row.port }}</el-button
+              >
+            </template>
+          </el-table-column>
+          <el-table-column label="Status">
+            <template #default="scoped">
+              <div
+                :class="gridStatus[scoped.row.status] || 'offline'"
+                @click="$emit('checkStatus')"
+              >
+                {{ gridStatus[scoped.row.status] || "offline" }}
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="pid" label="PID"></el-table-column>
+          <el-table-column label="Type">
+            <template #default="scoped">
+              <div>{{ scoped.row.gridServant.language }}</div>
+            </template>
+          </el-table-column>
+          <el-table-column label="Protocol">
+            <template #default="scoped">
+              <div>{{ scoped.row.gridServant.protocol }}</div>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-form-item>
+      <el-form-item label="Server Name">
+        <el-input v-model="selectRow.serverName" disabled />
+      </el-form-item>
+      <el-form-item label="Activity Time">
+        <el-date-picker
+          v-model="form.activeTime"
+          type="datetime"
+          placeholder="上线时间"
+        />
+      </el-form-item>
+      <el-form-item label="ExpireTime Time">
+        <el-date-picker
+          v-model="form.expireTime"
+          type="datetime"
+          placeholder="下线时间"
+        />
+      </el-form-item>
+      <el-form-item label="Set Mark">
+        <el-input v-model="form.mark" type="textarea" />
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="onSubmit">Create</el-button>
+        <el-button>Cancel</el-button>
+      </el-form-item>
+    </el-form>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
@@ -71,7 +141,9 @@ import api from "@/api/server";
 import { useUserStore } from "@/stores/counter";
 import { ElMessage, ElMessageBox } from "element-plus";
 import _ from "lodash";
-import { onMounted, ref } from "vue";
+import moment from "moment";
+import { computed, onMounted, reactive, ref } from "vue";
+import { useRouter } from "vue-router";
 
 const userStore = useUserStore();
 const servantDemo = {
@@ -137,6 +209,99 @@ async function deleteServant(row: T_Servant, stat: number) {
         message: "取消" + text,
       });
     });
+}
+
+const cronTaskDialogVisible = ref(false);
+const cronTaskNodes = ref([]);
+const selectRow = ref<T_Servant>({});
+function setCronTask(row: T_Servant) {
+  console.log("row", row);
+  cronTaskDialogVisible.value = true;
+  api.queryGrid({ id: row.id }).then((res) => {
+    cronTaskNodes.value = res.data;
+    selectRow.value = row;
+  });
+}
+
+const router = useRouter();
+function toLog(row: any) {
+  const text = router.resolve({
+    path: "/logpage",
+    query: {
+      host: row.gridNode.ip,
+      serverName: selectRow.value.serverName,
+      gridId: row.id,
+    },
+  });
+  window.open(text.href, "_blank");
+}
+
+const selectionGrid = ref([]);
+function handleSelectionChange(value: any) {
+  selectionGrid.value = value;
+}
+
+const gridStatus: any = {
+  "1": "online",
+  "0": "offline",
+};
+
+const form = reactive({
+  mark: "",
+  activeTime: "",
+  expireTime: "",
+});
+
+const submitBody = computed(() => {
+  return {
+    mark: form.mark,
+    activeTime: form.activeTime,
+    expireTime: form.expireTime,
+    gridIds: selectionGrid.value.map((item) => item.id),
+    operateUserId: userStore.userInfo.id,
+    servantId: selectRow.value.id,
+  };
+});
+
+function onSubmit() {
+  const now = moment();
+  if (!submitBody.value.activeTime && !submitBody.value.expireTime) {
+    return ElMessage.error({
+      type: "error",
+      message: "请至少选择一个上线时间或过期时间",
+    });
+  }
+  if (submitBody.value.activeTime && now.isAfter(submitBody.value.activeTime)) {
+    return ElMessage.error({
+      type: "error",
+      message: "上线时间不能小于当前时间",
+    });
+  }
+  if (submitBody.value.expireTime && now.isAfter(submitBody.value.expireTime)) {
+    return ElMessage.error({
+      type: "error",
+      message: "过期时间不能小于当前时间",
+    });
+  }
+  if (submitBody.value.gridIds.length == 0) {
+    return ElMessage.error({
+      type: "error",
+      message: "请至少选择一个节点",
+    });
+  }
+
+  const bodys = submitBody.value.gridIds.map((v) => {
+    return {
+      gridId: v,
+      mark: submitBody.value.mark,
+      activeTime: moment(submitBody.value.activeTime).format("YYYY-MM-DD HH:mm:ss"),
+      expireTime: moment(submitBody.value.expireTime).format("YYYY-MM-DD HH:mm:ss"),
+      operateUserId: submitBody.value.operateUserId,
+      ServantId: submitBody.value.servantId,
+    };
+  });
+
+  console.log("bodys", bodys);
 }
 </script>
 

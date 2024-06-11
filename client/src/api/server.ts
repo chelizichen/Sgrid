@@ -188,7 +188,13 @@ const api = {
       method: 'post',
       params:{id}
     }) as unknown as BasicResp<any>
-  }
+  },
+  getRandomPort(){
+    return HttpReq({
+      url: '/main/port/random',
+      method: 'get',
+    }) as unknown as BasicResp<any>
+  },
 }
 
 export default api

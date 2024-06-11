@@ -305,13 +305,21 @@ func GetTraceLogFiles(gridId int, log_server_name string) []TraceLogFileVo {
 	return selectResp
 }
 
-// todo： 当前时间大于过期时间，需要设置状态
-// auto:  查询当前需要关闭的，进行自动关闭
-func QueryAssetsTime() []*pojo.AssetsAdmin {
+func QueryNeedShutDownAssets() []*pojo.AssetsAdmin {
 	var findList []*pojo.AssetsAdmin
 	c.GORM.
 		Model(&pojo.AssetsAdmin{}).
 		Where("expire_time < ?", time.Now()).
+		Find(&findList)
+
+	return findList
+}
+
+func QueryNeedPullAssets() []*pojo.AssetsAdmin {
+	var findList []*pojo.AssetsAdmin
+	c.GORM.
+		Model(&pojo.AssetsAdmin{}).
+		Where("active_time > ?", time.Now()).
 		Find(&findList)
 
 	return findList
@@ -337,10 +345,15 @@ func QueryAssets(obj *dto.PageBasicReq) (resp []*pojo.AssetsAdmin, total int64, 
 }
 
 type GridAndHost struct {
-	Port   int    `gorm:"column:port"`
-	Pid    int    `gorm:"column:pid"`
-	GridId int    `gorm:"column:grid_id"`
-	Host   string `gorm:"column:host"`
+	Port           int    `gorm:"column:port"`
+	Pid            int    `gorm:"column:pid"`
+	GridId         int    `gorm:"column:grid_id"`
+	Host           string `gorm:"column:host"`
+	ServerName     string `gorm:"column:server_name"`
+	ExecPath       string `gorm:"column:exec_path"`
+	ServantId      int    `gorm:"column:servant_id"`
+	ServerProtocol string `gorm:"column:server_protocol"`
+	ServerLanguage string `gorm:"column:server_language"`
 }
 
 func BatchQueryGrid(ids []int) []*GridAndHost {
@@ -350,13 +363,35 @@ func BatchQueryGrid(ids []int) []*GridAndHost {
 	gg.port ,
 	gg.pid ,
 	gg.id as grid_id ,
-	gn.ip as host
+	gn.ip as host,
+	gs.server_name as server_name,
+	gs.exec_path as exec_path,
+	gs.id as servant_id,
+	gs.protocol as server_protocol,
+	gs.language as server_language
 from
 	grid_grid gg
 left join grid_node gn on
 	gg.node_id = gn.id where grid_id in ?
+left join grid_servant gs on 
+	gs.id = gg.servant_id
 	`, ids).Scan(&findList)
 	return findList
+}
+
+func BatchQueryServantConf(ids []int) (map[int]*pojo.ServantConf, error) {
+	var findList []*pojo.ServantConf
+	err := c.GORM.Model(&pojo.ServantConf{}).
+		Where("servant_id in ?", ids).
+		Find(&findList).Error
+	if err != nil {
+		return nil, err
+	}
+	var resp = make(map[int]*pojo.ServantConf)
+	for i, sc := range findList {
+		resp[int(sc.Id)] = findList[i]
+	}
+	return resp, nil
 }
 
 func GetAllPort() []int {

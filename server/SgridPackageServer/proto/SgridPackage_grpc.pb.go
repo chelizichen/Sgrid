@@ -28,6 +28,8 @@ type FileTransferServiceClient interface {
 	DeletePackage(ctx context.Context, in *DeletePackageReq, opts ...grpc.CallOption) (*BasicResp, error)
 	// 发布服务
 	ReleaseServerByPackage(ctx context.Context, in *ReleaseServerReq, opts ...grpc.CallOption) (*BasicResp, error)
+	// 拉起服务
+	PatchServer(ctx context.Context, in *PatchServerReq, opts ...grpc.CallOption) (*BasicResp, error)
 	// 关闭指定节点服务
 	ShutdownGrid(ctx context.Context, in *ShutdownGridReq, opts ...grpc.CallOption) (*BasicResp, error)
 	// 获取服务日志列表
@@ -95,6 +97,15 @@ func (c *fileTransferServiceClient) ReleaseServerByPackage(ctx context.Context, 
 	return out, nil
 }
 
+func (c *fileTransferServiceClient) PatchServer(ctx context.Context, in *PatchServerReq, opts ...grpc.CallOption) (*BasicResp, error) {
+	out := new(BasicResp)
+	err := c.cc.Invoke(ctx, "/SgridProtocol.FileTransferService/PatchServer", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *fileTransferServiceClient) ShutdownGrid(ctx context.Context, in *ShutdownGridReq, opts ...grpc.CallOption) (*BasicResp, error) {
 	out := new(BasicResp)
 	err := c.cc.Invoke(ctx, "/SgridProtocol.FileTransferService/ShutdownGrid", in, out, opts...)
@@ -141,6 +152,8 @@ type FileTransferServiceServer interface {
 	DeletePackage(context.Context, *DeletePackageReq) (*BasicResp, error)
 	// 发布服务
 	ReleaseServerByPackage(context.Context, *ReleaseServerReq) (*BasicResp, error)
+	// 拉起服务
+	PatchServer(context.Context, *PatchServerReq) (*BasicResp, error)
 	// 关闭指定节点服务
 	ShutdownGrid(context.Context, *ShutdownGridReq) (*BasicResp, error)
 	// 获取服务日志列表
@@ -164,6 +177,9 @@ func (UnimplementedFileTransferServiceServer) DeletePackage(context.Context, *De
 }
 func (UnimplementedFileTransferServiceServer) ReleaseServerByPackage(context.Context, *ReleaseServerReq) (*BasicResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReleaseServerByPackage not implemented")
+}
+func (UnimplementedFileTransferServiceServer) PatchServer(context.Context, *PatchServerReq) (*BasicResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PatchServer not implemented")
 }
 func (UnimplementedFileTransferServiceServer) ShutdownGrid(context.Context, *ShutdownGridReq) (*BasicResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ShutdownGrid not implemented")
@@ -248,6 +264,24 @@ func _FileTransferService_ReleaseServerByPackage_Handler(srv interface{}, ctx co
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(FileTransferServiceServer).ReleaseServerByPackage(ctx, req.(*ReleaseServerReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FileTransferService_PatchServer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PatchServerReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FileTransferServiceServer).PatchServer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/SgridProtocol.FileTransferService/PatchServer",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FileTransferServiceServer).PatchServer(ctx, req.(*PatchServerReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -338,6 +372,10 @@ var FileTransferService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ReleaseServerByPackage",
 			Handler:    _FileTransferService_ReleaseServerByPackage_Handler,
+		},
+		{
+			MethodName: "PatchServer",
+			Handler:    _FileTransferService_PatchServer_Handler,
 		},
 		{
 			MethodName: "ShutdownGrid",

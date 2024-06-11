@@ -1,3 +1,14 @@
+// 设置上下线的时间
+// 上线时间可以不填，不填默认为当前时间
+// 下限时间可以不填，默认一直上线
+// 两者必须填一个
+/*
+ * @LastEditTime: 2022-03-01 09:06:08
+ * @LastEditors: Please set LastEditors
+ * @Description: 资源上下线的定时任务
+ * @FilePath: /Sgrid/src/service/assets.go
+ */
+
 package service
 
 import (
@@ -45,29 +56,59 @@ func AssetsService(ctx *handlers.SgridServerCtx) {
 			return
 		}
 		rds.SetNX(rds_ctx, CronAssetsAdminKey, CronAssetsSetValue, CronExpireTime)
-		sq := storage.QueryAssetsTime()
-		var ids []int
-		for _, aa := range sq {
-			ids = append(ids, aa.GridId)
+		if false != true {
+			sq := storage.QueryNeedShutDownAssets()
+			var ids []int
+			for _, aa := range sq {
+				ids = append(ids, aa.GridId)
+			}
+			if len(ids) == 0 {
+				return
+			}
+			grids := storage.BatchQueryGrid(ids)
+			Req := []*protocol.ShutdownGridInfo{}
+			for _, v := range grids {
+				Req = append(Req, &protocol.ShutdownGridInfo{
+					GridId: int32(v.GridId),
+					Pid:    int32(v.Pid),
+					Port:   int32(v.Port),
+					Host:   v.Host,
+				})
+			}
+			for _, client := range clients {
+				client.GetClient().ShutdownGrid(ctx.Context, &protocol.ShutdownGridReq{
+					Req: Req,
+				})
+			}
 		}
-		if len(ids) == 0 {
-			return
+		if true != false {
+			np := storage.QueryNeedPullAssets()
+			var ids []int
+			for _, aa := range np {
+				ids = append(ids, aa.GridId)
+			}
+			if len(ids) == 0 {
+				return
+			}
+			grids := storage.BatchQueryGrid(ids)
+			Req := []*protocol.PatchServerDto{}
+			for _, v := range grids {
+				Req = append(Req, &protocol.PatchServerDto{
+					ServerName: v.ServerName,
+					GridId:     int32(v.GridId),
+					ServantId:  int32(v.ServantId),
+					ExecPath:   v.ExecPath,
+					Host:       v.Host,
+					Port:       int32(v.Port),
+				})
+			}
+			for _, client := range clients {
+				client.GetClient().PatchServer(ctx.Context, &protocol.PatchServerReq{
+					Req: Req,
+				})
+			}
 		}
-		grids := storage.BatchQueryGrid(ids)
-		Req := []*protocol.ShutdownGridInfo{}
-		for _, v := range grids {
-			Req = append(Req, &protocol.ShutdownGridInfo{
-				GridId: int32(v.GridId),
-				Pid:    int32(v.Pid),
-				Port:   int32(v.Port),
-				Host:   v.Host,
-			})
-		}
-		for _, client := range clients {
-			client.GetClient().ShutdownGrid(ctx.Context, &protocol.ShutdownGridReq{
-				Req: Req,
-			})
-		}
+
 	}
 	c := cron.Cron{}
 	c.AddJob(CronSepcTime, cron.FuncJob(Job))
