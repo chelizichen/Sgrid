@@ -358,3 +358,11 @@ left join grid_node gn on
 	`, ids).Scan(&findList)
 	return findList
 }
+
+func GetAllPort() []int {
+	var PortList []int
+	c.GORM.Model(&pojo.Grid{}).
+		Select("port").
+		Find(&PortList)
+	return PortList
+}

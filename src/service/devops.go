@@ -8,6 +8,7 @@ import (
 	"Sgrid/src/storage/pojo"
 	utils "Sgrid/src/utils"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
@@ -52,6 +53,7 @@ func DevopsService(ctx *handlers.SgridServerCtx) {
 	GROUP.POST("/main/queryServantGroup", queryServantGroup)
 	GROUP.GET("/main/queryNodes", mainQueryNodes)
 
+	GROUP.GET("/main/port/random", getRandomPort)
 }
 
 func getGroups(c *gin.Context) {
@@ -310,4 +312,28 @@ func queryServantGroup(c *gin.Context) {
 func mainQueryNodes(c *gin.Context) {
 	nodes := storage.QueryNodes()
 	c.JSON(200, handlers.Resp(0, "ok", nodes))
+}
+
+func getRandomPort(c *gin.Context) {
+	registryPorts := storage.GetAllPort()
+	maxPort := 25000
+	minPort := 10000
+	port := 0
+	rand.NewSource(time.Now().UnixNano()) // 确保每次运行时随机种子不同
+	for {
+		port = rand.Intn(maxPort-minPort+1) + minPort // 在指定范围内生成随机端口
+		if port%10 != 0 {                             // 确保端口最后一位不是0
+			found := false
+			for _, registeredPort := range registryPorts {
+				if port == registeredPort {
+					found = true
+					break
+				}
+			}
+			if !found { // 检查端口是否已注册
+				handlers.AbortWithSucc(c, port)
+				break
+			}
+		}
+	}
 }
