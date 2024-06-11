@@ -211,7 +211,7 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 		var req *protocol.ShutdownGridReq
 		err := c.BindJSON(&req)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "err", err.Error()))
+			handlers.AbortWithError(c, err.Error())
 			return
 		}
 		var wg sync.WaitGroup
@@ -223,7 +223,7 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 			}(*client)
 		}
 		wg.Wait()
-		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", nil))
+		handlers.AbortWithSucc(c, nil)
 	})
 
 	router.GET("/statlog/getlist", func(c *gin.Context) {

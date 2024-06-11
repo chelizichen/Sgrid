@@ -401,7 +401,6 @@ func (s *fileTransferServer) ShutdownGrid(ctx context.Context, req *protocol.Shu
 	for _, _grid := range req.GetReq() {
 		grid := _grid
 		h := grid.GetHost()
-
 		if globalConf.Server.Host == h {
 			i := grid.GetGridId()
 			sm, ok := globalGrids[int(i)]

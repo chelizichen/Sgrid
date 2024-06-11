@@ -115,3 +115,13 @@ func (t *TraceLog) FmtGetLog() string {
 	s := fmt.Sprintf("%s | %s | %s", t.LogServerName, t.CreateTime.Format(time.DateTime), t.LogContent)
 	return s
 }
+
+type AssetsAdmin struct {
+	Id            int        `json:"id,omitempty"`
+	GridId        int        `json:"gridId,omitempty"`
+	Mark          string     `json:"mark,omitempty"`
+	ExpireTime    *time.Time `json:"expireTime,omitempty"`
+	CreateTime    *time.Time `json:"createTime,omitempty"`
+	UpdateTime    *time.Time `json:"updateTime,omitempty"`
+	OperateUserId int        `json:"operateUserId,omitempty"`
+}

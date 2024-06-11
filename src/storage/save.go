@@ -206,3 +206,22 @@ func DelProperty(id int) {
 		Id: id,
 	})
 }
+
+func UpsertAssets(d *pojo.AssetsAdmin) error {
+	if d.Id == 0 {
+		return c.GORM.Model(&pojo.AssetsAdmin{}).Create(d).Error
+	}
+	return c.GORM.Model(&pojo.AssetsAdmin{}).
+		Where("id = ?", d.Id).
+		Updates(&pojo.AssetsAdmin{
+			ExpireTime:    d.ExpireTime,
+			Mark:          d.Mark,
+			OperateUserId: d.OperateUserId,
+		}).Error
+}
+
+func DelAssetById(id int) error {
+	return c.GORM.Model(&pojo.AssetsAdmin{}).Delete(&pojo.AssetsAdmin{
+		Id: id,
+	}).Error
+}

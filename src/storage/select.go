@@ -8,6 +8,7 @@ import (
 	"Sgrid/src/storage/vo"
 	"Sgrid/src/utils"
 	"fmt"
+	"time"
 )
 
 // 查询标签组，创建时用
@@ -302,4 +303,58 @@ func GetTraceLogFiles(gridId int, log_server_name string) []TraceLogFileVo {
 		Find(&selectResp)
 	fmt.Println("selectResp", selectResp)
 	return selectResp
+}
+
+// todo： 当前时间大于过期时间，需要设置状态
+// auto:  查询当前需要关闭的，进行自动关闭
+func QueryAssetsTime() []*pojo.AssetsAdmin {
+	var findList []*pojo.AssetsAdmin
+	c.GORM.
+		Model(&pojo.AssetsAdmin{}).
+		Where("expire_time < ?", time.Now()).
+		Find(&findList)
+
+	return findList
+}
+
+// QueryAssets
+func QueryAssets(obj *dto.PageBasicReq) (resp []*pojo.AssetsAdmin, total int64, err error) {
+	where := `1 = 1`
+	params := []any{}
+
+	if len(obj.Keyword) != 0 {
+		where += ` and title like ? `
+		params = append(params, "%"+obj.Keyword+"%")
+	}
+	err = c.GORM.Model(&pojo.AssetsAdmin{}).
+		Where(where, params...).Count(&total).
+		Offset(obj.Offset).Limit(obj.Size).
+		Find(&resp).Error
+	if err != nil {
+		return nil, total, err
+	}
+	return resp, total, nil
+}
+
+type GridAndHost struct {
+	Port   int    `gorm:"column:port"`
+	Pid    int    `gorm:"column:pid"`
+	GridId int    `gorm:"column:grid_id"`
+	Host   string `gorm:"column:host"`
+}
+
+func BatchQueryGrid(ids []int) []*GridAndHost {
+	var findList []*GridAndHost
+	c.GORM.Raw(`
+	select
+	gg.port ,
+	gg.pid ,
+	gg.id as grid_id ,
+	gn.ip as host
+from
+	grid_grid gg
+left join grid_node gn on
+	gg.node_id = gn.id where grid_id in ?
+	`, ids).Scan(&findList)
+	return findList
 }
