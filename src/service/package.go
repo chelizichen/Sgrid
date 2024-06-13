@@ -209,6 +209,7 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 			}(*client)
 		}
 		wg.Wait()
+		handlers.AbortWithSucc(c, nil)
 	})
 
 	router.POST("/release/server", func(c *gin.Context) {

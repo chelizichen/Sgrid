@@ -389,7 +389,7 @@ func BatchQueryServantConf(ids []int) (map[int]*pojo.ServantConf, error) {
 	}
 	var resp = make(map[int]*pojo.ServantConf)
 	for i, sc := range findList {
-		resp[int(sc.Id)] = findList[i]
+		resp[int(*sc.ServantId)] = findList[i]
 	}
 	return resp, nil
 }

@@ -449,91 +449,90 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 		id := GRID.GridId
 		fmt.Println("GRID.IP", GRID.Ip)
 		fmt.Println("globalConf.Server.Host", globalConf.Server.Host)
+		// Host 确保与主控配置文件一致
 		if GRID.Ip != globalConf.Server.Host {
 			fmt.Println("server is not equal")
-		} else {
-			item, ok := globalGrids[int(id)]
-			if ok && item != nil { // 终止
-				item.kill()
-				delete(globalGrids, int(id))
-			}
-			fmt.Println("GRID", GRID)
-			fmt.Println("serverProtocol", serverProtocol)
-			err = public.CheckDirectoryOrCreate(startDir)
-			if err != nil {
-				fmt.Println("error", err.Error())
-			}
-			var cmd *exec.Cmd
-			if serverProtocol == public.PROTOCOL_GRPC {
-				if serverLanguage == public.RELEASE_GO {
-					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
-					cmd = exec.Command(startFile)
-				}
-				if serverLanguage == public.RELEASE_NODE {
-					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
-					cmd = exec.Command("node", startFile)
-				}
-				if serverLanguage == public.RELEASE_JAVA {
-					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
-					prodConf := path.Join(startDir, public.PROD_CONF_NAME)
-					cmd = exec.Command("java", "-jar", startFile, fmt.Sprintf("-Dspring.config.location=file:%v", prodConf))
-					cmd.Env = append(cmd.Env, fmt.Sprintf("SGRID_PROD_CONF_PATH=%v", prodConf))
-				}
-			}
-
-			if serverProtocol == public.PROTOCOL_HTTP {
-				if serverLanguage == public.RELEASE_GO {
-					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
-					cmd = exec.Command(startFile)
-				}
-				if serverLanguage == public.RELEASE_NODE {
-					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
-					cmd = exec.Command("node", startFile)
-				}
-				if serverLanguage == public.RELEASE_JAVA {
-					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
-					prodConf := path.Join(startDir, public.PROD_CONF_NAME)
-					cmd = exec.Command("java", "-jar", startFile, fmt.Sprintf("-Dspring.config.location=file:%v", prodConf))
-					cmd.Env = append(cmd.Env, fmt.Sprintf("SGRID_PROD_CONF_PATH=%v", prodConf))
-				}
-			}
-			cmd.Env = append(cmd.Env,
-				fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, grid.Port),      // 指定端口
-				fmt.Sprintf("%v=%v", public.ENV_PRODUCTION, startDir),        // 开启目录
-				fmt.Sprintf("%v=%v", public.SGRID_CONFIG, servantConf),       // 配置
-				fmt.Sprintf("%v=%v", public.ENV_PROCESS_INDEX, ProcessIndex), // 服务运行索引
-			)
-			cmd.Dir = startDir // 指定工作目录
-			fmt.Println("startFile", startFile)
-			fmt.Println("cmd.Env", cmd.Env)
-
-			monitor := NewSgridMonitor(
-				WithMonitorInterval(time.Second*5),
-				WithMonitorSetCmd(cmd),
-				WithMonitorServerName(serverName),
-				WithMonitorGridID(int(id)),
-			)
-
-			globalGrids[int(id)] = monitor
-
-			monitor.PrintLogger()
-			err = cmd.Start()
-			fmt.Println("*************服务启动**************")
-			if err != nil {
-				storage.PushErr(&pojo.SystemErr{
-					Type: "system/error/SgridPackageServer/cmd.Start()",
-					Info: err.Error(),
-				})
-			}
-			storage.SaveStatLog(&pojo.StatLog{
-				GridId: int(id),
-				Stat:   BEHAVIOR_PULL,
-				// Pid:    monitor.getPid(),
-			})
-
-			fmt.Println("*************开始日志上报**************")
-			go monitor.Report()
+			continue
 		}
+		item, ok := globalGrids[int(id)]
+		if ok && item != nil { // 终止
+			item.kill()
+			delete(globalGrids, int(id))
+		}
+		err = public.CheckDirectoryOrCreate(startDir)
+		if err != nil {
+			fmt.Println("error", err.Error())
+		}
+		var cmd *exec.Cmd
+		if serverProtocol == public.PROTOCOL_GRPC {
+			if serverLanguage == public.RELEASE_GO {
+				startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
+				cmd = exec.Command(startFile)
+			}
+			if serverLanguage == public.RELEASE_NODE {
+				startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
+				cmd = exec.Command("node", startFile)
+			}
+			if serverLanguage == public.RELEASE_JAVA {
+				startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
+				prodConf := path.Join(startDir, public.PROD_CONF_NAME)
+				cmd = exec.Command("java", "-jar", startFile, fmt.Sprintf("-Dspring.config.location=file:%v", prodConf))
+				cmd.Env = append(cmd.Env, fmt.Sprintf("SGRID_PROD_CONF_PATH=%v", prodConf))
+			}
+		}
+
+		if serverProtocol == public.PROTOCOL_HTTP {
+			if serverLanguage == public.RELEASE_GO {
+				startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
+				cmd = exec.Command(startFile)
+			}
+			if serverLanguage == public.RELEASE_NODE {
+				startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
+				cmd = exec.Command("node", startFile)
+			}
+			if serverLanguage == public.RELEASE_JAVA {
+				startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
+				prodConf := path.Join(startDir, public.PROD_CONF_NAME)
+				cmd = exec.Command("java", "-jar", startFile, fmt.Sprintf("-Dspring.config.location=file:%v", prodConf))
+				cmd.Env = append(cmd.Env, fmt.Sprintf("SGRID_PROD_CONF_PATH=%v", prodConf))
+			}
+		}
+		cmd.Env = append(cmd.Env,
+			fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, grid.Port),      // 指定端口
+			fmt.Sprintf("%v=%v", public.ENV_PRODUCTION, startDir),        // 开启目录
+			fmt.Sprintf("%v=%v", public.SGRID_CONFIG, servantConf),       // 配置
+			fmt.Sprintf("%v=%v", public.ENV_PROCESS_INDEX, ProcessIndex), // 服务运行索引
+		)
+		cmd.Dir = startDir // 指定工作目录
+		fmt.Println("startFile", startFile)
+		fmt.Println("cmd.Env", cmd.Env)
+
+		monitor := NewSgridMonitor(
+			WithMonitorInterval(time.Second*5),
+			WithMonitorSetCmd(cmd),
+			WithMonitorServerName(serverName),
+			WithMonitorGridID(int(id)),
+		)
+
+		globalGrids[int(id)] = monitor
+
+		monitor.PrintLogger()
+		err = cmd.Start()
+		fmt.Println("*************服务启动**************")
+		if err != nil {
+			storage.PushErr(&pojo.SystemErr{
+				Type: "system/error/SgridPackageServer/cmd.Start()",
+				Info: err.Error(),
+			})
+		}
+		storage.SaveStatLog(&pojo.StatLog{
+			GridId: int(id),
+			Stat:   BEHAVIOR_PULL,
+			// Pid:    monitor.getPid(),
+		})
+
+		fmt.Println("*************开始日志上报**************")
+		go monitor.Report()
 	}
 
 	//  ********************** debug *********************
@@ -681,9 +680,9 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 	}
 	confs, err := storage.BatchQueryServantConf(toIds)
 	if err != nil {
+		fmt.Println("storage.BatchQueryServantConf.err", err.Error())
 		return nil, err
 	}
-
 	servantIds2Grids := make(map[int][]*protocol.PatchServerDto)
 
 	for _, psd := range gridsInfo {
@@ -691,24 +690,30 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 		psd2 = append(psd2, psd)
 		servantIds2Grids[int(psd.ServantId)] = psd2
 	}
+	fmt.Println("servantIds2Grids", servantIds2Grids)
 
 	for servantId, gridList := range servantIds2Grids {
 		for processIndex, req := range gridList {
-			servantId := servantId
-			servantConf := confs[servantId]
+			id := req.GridId
+			fmt.Println("confs", confs)
+			fmt.Println("servantId", servantId)
+			servantConf := confs[servantId].Conf
+			fmt.Println("servantConf", servantConf)
 			execFilePath := req.ExecPath                                    // 服务路径
 			serverLanguage := req.ServerLanguage                            // 服务语言
 			serverName := req.ServerName                                    // 服务名称
 			serverProtocol := req.ServerProtocol                            // 服务协议
 			startDir := SgridPackageInstance.JoinPath(Servants, serverName) // 解压目录
 			host := req.Host
+			// Host 确保与主控配置文件一致
 			if host != globalConf.Server.Host {
 				fmt.Println("server is not equal")
 				continue
 			}
-			item, ok := globalGrids[int(servantId)]
-			if ok {
-				continue // 已存在，不用起
+			item, ok := globalGrids[int(id)]
+			if ok && item != nil {
+				item.kill()
+				delete(globalGrids, int(id))
 			}
 			var cmd *exec.Cmd
 			var startFile string // 启动文件
@@ -760,11 +765,9 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 				WithMonitorInterval(time.Second*5),
 				WithMonitorSetCmd(cmd),
 				WithMonitorServerName(serverName),
-				WithMonitorGridID(int(item.gridId)),
+				WithMonitorGridID(int(id)),
 			)
-
-			globalGrids[int(req.GridId)] = monitor
-
+			globalGrids[int(id)] = monitor
 			monitor.PrintLogger()
 			err = cmd.Start()
 			fmt.Println("*************服务启动**************")
@@ -775,7 +778,7 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 				})
 			}
 			storage.SaveStatLog(&pojo.StatLog{
-				GridId: int(req.GridId),
+				GridId: int(id),
 				Stat:   BEHAVIOR_PULL,
 				// Pid:    monitor.getPid(),
 			})
@@ -785,7 +788,10 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 		}
 	}
 
-	return nil, nil
+	return &protocol.BasicResp{
+		Code:    0,
+		Message: "ok",
+	}, nil
 }
 
 func initDir() {
