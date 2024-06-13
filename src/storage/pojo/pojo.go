@@ -117,7 +117,6 @@ func (t *TraceLog) FmtGetLog() string {
 }
 
 type AssetsAdmin struct {
-	Id            int        `json:"id,omitempty"`                               // ID
 	GridId        int        `json:"gridId,omitempty"`                           // 网格ID
 	Mark          string     `json:"mark,omitempty"`                             // 备注
 	ExpireTime    *time.Time `json:"expireTime,omitempty"`                       // 下线时间

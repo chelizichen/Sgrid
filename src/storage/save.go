@@ -208,20 +208,28 @@ func DelProperty(id int) {
 }
 
 func UpsertAssets(d *pojo.AssetsAdmin) error {
-	if d.Id == 0 {
-		return c.GORM.Model(&pojo.AssetsAdmin{}).Create(d).Error
+	fmt.Println("d", d.GridId)
+	err := DelAssetById(d.GridId)
+	if err != nil {
+		return err
 	}
-	return c.GORM.Model(&pojo.AssetsAdmin{}).
-		Where("id = ?", d.Id).
-		Updates(&pojo.AssetsAdmin{
-			ExpireTime:    d.ExpireTime,
-			Mark:          d.Mark,
-			OperateUserId: d.OperateUserId,
-		}).Error
+	return c.GORM.
+		Debug().
+		Model(&pojo.AssetsAdmin{}).
+		Create(&d).Error
 }
 
 func DelAssetById(id int) error {
-	return c.GORM.Model(&pojo.AssetsAdmin{}).Delete(&pojo.AssetsAdmin{
-		Id: id,
-	}).Error
+	return c.GORM.
+		Model(&pojo.AssetsAdmin{}).
+		Delete("grid_id = ?", id).Error
+}
+
+func GetAssetById(id int) (resp *pojo.AssetsAdmin, err error) {
+	err = c.GORM.
+		Model(&pojo.AssetsAdmin{}).
+		Where(&pojo.AssetsAdmin{
+			GridId: id,
+		}).Find(&resp).Error
+	return resp, err
 }

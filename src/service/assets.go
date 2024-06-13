@@ -32,8 +32,8 @@ import (
 const (
 	CronAssetsAdminKey = "cron|assets|admin"     // rds 管理资源Key
 	CronAssetsSetValue = "cron|assets|set|value" // 值
-	CronSepcTime       = "* 1 * * * *"           // 定时任务时间
-	CronExpireTime     = time.Minute * 10        // 超时时间自动删
+	CronSepcTime       = "@every 3m"             // 定时任务时间
+	CronExpireTime     = time.Minute * 1         // 超时时间自动删
 )
 
 func AssetsService(ctx *handlers.SgridServerCtx) {
@@ -62,23 +62,23 @@ func AssetsService(ctx *handlers.SgridServerCtx) {
 			for _, aa := range sq {
 				ids = append(ids, aa.GridId)
 			}
-			if len(ids) == 0 {
-				return
-			}
-			grids := storage.BatchQueryGrid(ids)
-			Req := []*protocol.ShutdownGridInfo{}
-			for _, v := range grids {
-				Req = append(Req, &protocol.ShutdownGridInfo{
-					GridId: int32(v.GridId),
-					Pid:    int32(v.Pid),
-					Port:   int32(v.Port),
-					Host:   v.Host,
-				})
-			}
-			for _, client := range clients {
-				client.GetClient().ShutdownGrid(ctx.Context, &protocol.ShutdownGridReq{
-					Req: Req,
-				})
+			fmt.Println("storage.QueryNeedShutDownAssets.ids", ids)
+			if len(ids) != 0 {
+				grids := storage.BatchQueryGridByStat(ids, 1)
+				Req := []*protocol.ShutdownGridInfo{}
+				for _, v := range grids {
+					Req = append(Req, &protocol.ShutdownGridInfo{
+						GridId: int32(v.GridId),
+						Pid:    int32(v.Pid),
+						Port:   int32(v.Port),
+						Host:   v.Host,
+					})
+				}
+				for _, client := range clients {
+					client.GetClient().ShutdownGrid(ctx.Context, &protocol.ShutdownGridReq{
+						Req: Req,
+					})
+				}
 			}
 		}
 		if true != false {
@@ -87,39 +87,40 @@ func AssetsService(ctx *handlers.SgridServerCtx) {
 			for _, aa := range np {
 				ids = append(ids, aa.GridId)
 			}
-			if len(ids) == 0 {
-				return
-			}
-			grids := storage.BatchQueryGrid(ids)
-			Req := []*protocol.PatchServerDto{}
-			for _, v := range grids {
-				Req = append(Req, &protocol.PatchServerDto{
-					ServerName: v.ServerName,
-					GridId:     int32(v.GridId),
-					ServantId:  int32(v.ServantId),
-					ExecPath:   v.ExecPath,
-					Host:       v.Host,
-					Port:       int32(v.Port),
-				})
-			}
-			for _, client := range clients {
-				client.GetClient().PatchServer(ctx.Context, &protocol.PatchServerReq{
-					Req: Req,
-				})
+			fmt.Println("storage.QueryNeedPullAssets.ids", ids)
+			if len(ids) != 0 {
+				grids := storage.BatchQueryGridByStat(ids, 0)
+				Req := []*protocol.PatchServerDto{}
+				for _, v := range grids {
+					Req = append(Req, &protocol.PatchServerDto{
+						ServerName:     v.ServerName,
+						GridId:         int32(v.GridId),
+						ServantId:      int32(v.ServantId),
+						ExecPath:       v.ExecPath,
+						Host:           v.Host,
+						Port:           int32(v.Port),
+						ServerLanguage: v.ServerLanguage,
+						ServerProtocol: v.ServerProtocol,
+					})
+				}
+				for _, client := range clients {
+					client.GetClient().PatchServer(ctx.Context, &protocol.PatchServerReq{
+						Req: Req,
+					})
+				}
 			}
 		}
-
 	}
-	c := cron.Cron{}
-	c.AddJob(CronSepcTime, cron.FuncJob(Job))
+	c := cron.New()
+	c.AddFunc(CronSepcTime, Job)
+	go c.Start()
 
 	router := ctx.Engine.Group(strings.ToLower(ctx.Name))
-
-	router.POST("/getList", getList)
-
-	router.POST("/upsertAsset", upsertAsset)
-
-	router.GET("/delAssert", delAssert)
+	router.POST("/assets/admin/getList", getList)
+	// 按照grid 来，如果没有则创建，如果有责覆盖
+	router.POST("/assets/admin/upsertAsset", upsertAsset)
+	router.GET("/assets/admin/delAssert", delAssert)
+	router.GET("/assets/admin/getAssert", getAssert)
 }
 
 func getList(c *gin.Context) {
@@ -160,4 +161,14 @@ func delAssert(c *gin.Context) {
 		return
 	}
 	handlers.AbortWithSucc(c, nil)
+}
+
+func getAssert(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Query("id"))
+	resp, err := storage.GetAssetById(id)
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	handlers.AbortWithSucc(c, resp)
 }

@@ -697,14 +697,26 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 			id := req.GridId
 			fmt.Println("confs", confs)
 			fmt.Println("servantId", servantId)
+			if confs[servantId] == nil {
+				// 该服务没配置文件
+				// 暂时跳过
+				continue
+			}
 			servantConf := confs[servantId].Conf
-			fmt.Println("servantConf", servantConf)
+			if servantConf == "" {
+				continue
+			}
+
 			execFilePath := req.ExecPath                                    // 服务路径
 			serverLanguage := req.ServerLanguage                            // 服务语言
 			serverName := req.ServerName                                    // 服务名称
 			serverProtocol := req.ServerProtocol                            // 服务协议
 			startDir := SgridPackageInstance.JoinPath(Servants, serverName) // 解压目录
 			host := req.Host
+			fmt.Println("servantConf", servantConf)
+			fmt.Println("serverProtocol", serverProtocol)
+			fmt.Println("serverLanguage", serverLanguage)
+
 			// Host 确保与主控配置文件一致
 			if host != globalConf.Server.Host {
 				fmt.Println("server is not equal")
@@ -751,6 +763,7 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 					cmd.Env = append(cmd.Env, fmt.Sprintf("SGRID_PROD_CONF_PATH=%v", prodConf))
 				}
 			}
+			fmt.Println("cmd.Env", cmd)
 			cmd.Env = append(cmd.Env,
 				fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, req.Port),       // 指定端口
 				fmt.Sprintf("%v=%v", public.ENV_PRODUCTION, startDir),        // 开启目录

@@ -72,6 +72,7 @@ func initDB(ctx *config.SgridConf) {
 			db.Debug().AutoMigrate(&pojo.SystemErr{})
 			db.Debug().AutoMigrate(&pojo.ServantConf{})
 			db.Debug().AutoMigrate(&pojo.TraceLog{})
+			db.Debug().AutoMigrate(&pojo.AssetsAdmin{})
 			// rbac
 			db.Debug().AutoMigrate(&rbac.User{})
 			db.Debug().AutoMigrate(&rbac.UserRole{})

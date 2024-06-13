@@ -319,7 +319,7 @@ func QueryNeedPullAssets() []*pojo.AssetsAdmin {
 	var findList []*pojo.AssetsAdmin
 	c.GORM.
 		Model(&pojo.AssetsAdmin{}).
-		Where("active_time > ?", time.Now()).
+		Where("active_time < ?", time.Now()).
 		Find(&findList)
 
 	return findList
@@ -356,9 +356,9 @@ type GridAndHost struct {
 	ServerLanguage string `gorm:"column:server_language"`
 }
 
-func BatchQueryGrid(ids []int) []*GridAndHost {
+func BatchQueryGridByStat(ids []int, stat int) []*GridAndHost {
 	var findList []*GridAndHost
-	c.GORM.Raw(`
+	c.GORM.Debug().Raw(`
 	select
 	gg.port ,
 	gg.pid ,
@@ -372,10 +372,11 @@ func BatchQueryGrid(ids []int) []*GridAndHost {
 from
 	grid_grid gg
 left join grid_node gn on
-	gg.node_id = gn.id where grid_id in ?
+	gg.node_id = gn.id
 left join grid_servant gs on 
 	gs.id = gg.servant_id
-	`, ids).Scan(&findList)
+where gg.id in ? and gg.status = ?
+	`, ids, stat).Scan(&findList)
 	return findList
 }
 

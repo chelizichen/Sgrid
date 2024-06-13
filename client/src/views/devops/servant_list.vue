@@ -129,8 +129,8 @@
         <el-input v-model="form.mark" type="textarea" />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="onSubmit">Create</el-button>
-        <el-button>Cancel</el-button>
+        <el-button type="primary" @click="onSubmit">设置</el-button>
+        <el-button>取消</el-button>
       </el-form-item>
     </el-form>
   </el-dialog>
@@ -138,6 +138,7 @@
 
 <script setup lang="ts">
 import api from "@/api/server";
+import assetsApi from "@/api/assets";
 import { useUserStore } from "@/stores/counter";
 import { ElMessage, ElMessageBox } from "element-plus";
 import _ from "lodash";
@@ -263,7 +264,7 @@ const submitBody = computed(() => {
   };
 });
 
-function onSubmit() {
+async function onSubmit() {
   const now = moment();
   if (!submitBody.value.activeTime && !submitBody.value.expireTime) {
     return ElMessage.error({
@@ -294,13 +295,17 @@ function onSubmit() {
     return {
       gridId: v,
       mark: submitBody.value.mark,
-      activeTime: moment(submitBody.value.activeTime).format("YYYY-MM-DD HH:mm:ss"),
-      expireTime: moment(submitBody.value.expireTime).format("YYYY-MM-DD HH:mm:ss"),
+      activeTime: moment(submitBody.value.activeTime).toISOString(),
+      expireTime: moment(submitBody.value.expireTime).toISOString(),
       operateUserId: submitBody.value.operateUserId,
       ServantId: submitBody.value.servantId,
     };
   });
-
+  await Promise.all(
+    bodys.map(async (body) => {
+      await assetsApi.upsertAsset(body);
+    })
+  );
   console.log("bodys", bodys);
 }
 </script>
