@@ -29,7 +29,11 @@ export default {
           >
         </div>
         <div class="flex-item">
-          <el-button class="text" type="text" :disabled="selectionGrid.length == 0"
+          <el-button
+            class="text"
+            type="text"
+            @click="restartServer"
+            :disabled="selectionGrid.length == 0"
             >Restart</el-button
           >
         </div>
@@ -236,9 +240,35 @@ async function handleRelease(id) {
   console.log("body", body);
 
   const data = await api.releaseServer(body);
+  if (data.code) {
+    return ElNotification.error(data.message);
+  }
   ElNotification.success("success!");
   state.releaseVisible = false;
 }
+
+async function restartServer() {
+  const servantBaseInfo = props.gridsList[0];
+  const body = {
+    serverName: props.serverName,
+    filePath: "",
+    serverLanguage: servantBaseInfo.gridServant.language,
+    serverProtocol: servantBaseInfo.gridServant.protocol,
+    execPath: servantBaseInfo.gridServant.execPath,
+    servantGrids: selectionGrid.value.map((v) => ({
+      ip: v.gridNode.ip,
+      port: v.port,
+      gridId: v.id,
+    })),
+    servantId: Number(props.servantId),
+  };
+  const data = await api.restartServer(body);
+  if (data.code) {
+    return ElNotification.error(data.message);
+  }
+  ElNotification.success("success!");
+}
+
 const selectionGrid = ref([]);
 function handleSelectionChange(value) {
   selectionGrid.value = value;

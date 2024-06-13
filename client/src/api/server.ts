@@ -15,6 +15,12 @@ const api = {
       data
     }) as unknown as BasicResp<any>
   },
+  restartServer: function (data: any) {
+    return HttpReq({
+      url: '/restart/server',
+      data
+    }) as unknown as BasicResp<any>
+  },
   getServerList: function (id:number) {
     return HttpReq({
       url: '/main/queryServantGroup',

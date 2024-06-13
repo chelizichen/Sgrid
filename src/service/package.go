@@ -177,6 +177,40 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "params error ! [id] or [serverName]", nil))
 	})
 
+	router.POST("/restart/server", func(c *gin.Context) {
+		var req *protocol.ReleaseServerReq
+		err := c.BindJSON(&req)
+		if err != nil {
+			handlers.AbortWithError(c, err.Error())
+			return
+		}
+		var patchServerReq = &protocol.PatchServerReq{
+			Req: make([]*protocol.PatchServerDto, 0),
+		}
+		for _, rt := range req.ServantGrids {
+			psd := &protocol.PatchServerDto{
+				ServerName:     req.ServerName,
+				ServerLanguage: req.ServerLanguage,
+				ServantId:      req.ServantId,
+				ServerProtocol: req.ServerProtocol,
+				ExecPath:       req.ExecPath,
+				Port:           rt.Port,
+				GridId:         rt.GridId,
+				Host:           rt.Ip,
+			}
+			patchServerReq.Req = append(patchServerReq.Req, psd)
+		}
+		var wg sync.WaitGroup
+		for _, client := range clients {
+			wg.Add(1)
+			go func(client clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]) {
+				client.GetClient().PatchServer(&gin.Context{}, patchServerReq)
+				wg.Done()
+			}(*client)
+		}
+		wg.Wait()
+	})
+
 	router.POST("/release/server", func(c *gin.Context) {
 		var req *protocol.ReleaseServerReq
 		err := c.BindJSON(&req)
