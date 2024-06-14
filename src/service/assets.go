@@ -3,8 +3,7 @@
 // 下限时间可以不填，默认一直上线
 // 两者必须填一个
 /*
- * @LastEditTime: 2022-03-01 09:06:08
- * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2024-06-14
  * @Description: 资源上下线的定时任务
  * @FilePath: /Sgrid/src/service/assets.go
  */
@@ -37,6 +36,65 @@ const (
 )
 
 func AssetsService(ctx *handlers.SgridServerCtx) {
+	cronJob(ctx)
+	router := ctx.Engine.Group(strings.ToLower(ctx.Name))
+	router.POST("/assets/admin/getList", getList)
+	router.POST("/assets/admin/upsertAsset", upsertAsset)
+	router.GET("/assets/admin/delAssert", delAssert)
+	router.GET("/assets/admin/getAssert", getAssert)
+}
+
+func getList(c *gin.Context) {
+	var req *dto.PageBasicReq
+	err := c.BindJSON(&req)
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	resp, total, err := storage.QueryAssets(req)
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	handlers.AbortWithSuccList(c, resp, total)
+}
+
+func upsertAsset(c *gin.Context) {
+	var req *pojo.AssetsAdmin
+	err := c.BindJSON(&req)
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	err = storage.UpsertAssets(req)
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	handlers.AbortWithSucc(c, nil)
+}
+
+func delAssert(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Query("id"))
+	err := storage.DelAssetById(id)
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	handlers.AbortWithSucc(c, nil)
+}
+
+func getAssert(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Query("id"))
+	resp, err := storage.GetAssetById(id)
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	handlers.AbortWithSucc(c, resp)
+}
+
+func cronJob(ctx *handlers.SgridServerCtx) {
 	rds := configuration.GRDB
 	rds_ctx := configuration.RDBContext
 	clients := ctx.Context.Value(
@@ -114,61 +172,4 @@ func AssetsService(ctx *handlers.SgridServerCtx) {
 	c := cron.New()
 	c.AddFunc(CronSepcTime, Job)
 	go c.Start()
-
-	router := ctx.Engine.Group(strings.ToLower(ctx.Name))
-	router.POST("/assets/admin/getList", getList)
-	// 按照grid 来，如果没有则创建，如果有责覆盖
-	router.POST("/assets/admin/upsertAsset", upsertAsset)
-	router.GET("/assets/admin/delAssert", delAssert)
-	router.GET("/assets/admin/getAssert", getAssert)
-}
-
-func getList(c *gin.Context) {
-	var req *dto.PageBasicReq
-	err := c.BindJSON(&req)
-	if err != nil {
-		handlers.AbortWithError(c, err.Error())
-		return
-	}
-	resp, total, err := storage.QueryAssets(req)
-	if err != nil {
-		handlers.AbortWithError(c, err.Error())
-		return
-	}
-	handlers.AbortWithSuccList(c, resp, total)
-}
-
-func upsertAsset(c *gin.Context) {
-	var req *pojo.AssetsAdmin
-	err := c.BindJSON(&req)
-	if err != nil {
-		handlers.AbortWithError(c, err.Error())
-		return
-	}
-	err = storage.UpsertAssets(req)
-	if err != nil {
-		handlers.AbortWithError(c, err.Error())
-		return
-	}
-	handlers.AbortWithSucc(c, nil)
-}
-
-func delAssert(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Query("id"))
-	err := storage.DelAssetById(id)
-	if err != nil {
-		handlers.AbortWithError(c, err.Error())
-		return
-	}
-	handlers.AbortWithSucc(c, nil)
-}
-
-func getAssert(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Query("id"))
-	resp, err := storage.GetAssetById(id)
-	if err != nil {
-		handlers.AbortWithError(c, err.Error())
-		return
-	}
-	handlers.AbortWithSucc(c, resp)
 }

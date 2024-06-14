@@ -319,7 +319,7 @@ func QueryNeedPullAssets() []*pojo.AssetsAdmin {
 	var findList []*pojo.AssetsAdmin
 	c.GORM.
 		Model(&pojo.AssetsAdmin{}).
-		Where("active_time < ?", time.Now()).
+		Where("active_time < ? and expire_time > ?", time.Now(), time.Now()).
 		Find(&findList)
 
 	return findList
