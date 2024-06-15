@@ -680,7 +680,10 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 	}
 	confs, err := storage.BatchQueryServantConf(toIds)
 	if err != nil {
-		fmt.Println("storage.BatchQueryServantConf.err", err.Error())
+		storage.PushErr(&pojo.SystemErr{
+			Type: "system/error/SgridPackageServer.PactchServer.storage.BatchQueryServantConf",
+			Info: "getConfError" + err.Error(),
+		})
 		return nil, err
 	}
 	servantIds2Grids := make(map[int][]*protocol.PatchServerDto)
@@ -698,12 +701,18 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 			fmt.Println("confs", confs)
 			fmt.Println("servantId", servantId)
 			if confs[servantId] == nil {
-				// 该服务没配置文件
-				// 暂时跳过
+				storage.PushErr(&pojo.SystemErr{
+					Type: "system/error/SgridPackageServer.PactchServer.confs[servantId] == nilb",
+					Info: "confs[servantId] is nil , please check configuration",
+				})
 				continue
 			}
 			servantConf := confs[servantId].Conf
 			if servantConf == "" {
+				storage.PushErr(&pojo.SystemErr{
+					Type: "system/error/SgridPackageServer.PactchServer.confs[servantId] == nilb",
+					Info: "conf is nil , please check configuration",
+				})
 				continue
 			}
 
@@ -786,7 +795,7 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 			fmt.Println("*************服务启动**************")
 			if err != nil {
 				storage.PushErr(&pojo.SystemErr{
-					Type: "system/error/SgridPackageServer/cmd.Start()",
+					Type: "system/error/SgridPackageServer.PatchServer.cmd.Start()",
 					Info: err.Error(),
 				})
 			}
