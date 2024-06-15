@@ -140,7 +140,7 @@
 import api from "@/api/server";
 import assetsApi from "@/api/assets";
 import { useUserStore } from "@/stores/counter";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { ElMessage, ElMessageBox, ElNotification } from "element-plus";
 import _ from "lodash";
 import moment from "moment";
 import { computed, onMounted, reactive, ref } from "vue";
@@ -307,6 +307,8 @@ async function onSubmit() {
     })
   );
   console.log("bodys", bodys);
+  ElNotification.success("设置成功");
+  cronTaskDialogVisible.value = false;
 }
 </script>
 
