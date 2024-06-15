@@ -1,5 +1,12 @@
 <script setup lang="ts">
 import { RouterView } from "vue-router";
+import { useServersStore } from "./stores/counter";
+import { onMounted } from "vue";
+const serverStore = useServersStore();
+
+onMounted(() => {
+  serverStore.refreshServants();
+});
 </script>
 <template>
   <el-container>

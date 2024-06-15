@@ -35,6 +35,15 @@ func Resp(code int, message string, data interface{}) *gin.H {
 	}
 }
 
+func RespWithTotal(code int, message string, data interface{}, total int64) *gin.H {
+	return &gin.H{
+		"code":    code,
+		"message": message,
+		"data":    data,
+		"total":   total,
+	}
+}
+
 func (c *SgridServerCtx) RegistryHttpRouter(callback func(engine *SgridServerCtx)) {
 	callback(c)
 }
@@ -189,8 +198,5 @@ var AbortWithSucc = func(c *gin.Context, data interface{}) {
 
 // List
 var AbortWithSuccList = func(c *gin.Context, data interface{}, total int64) {
-	var listVo = make(map[string]interface{}, 0)
-	listVo["total"] = total
-	listVo["data"] = data
-	c.AbortWithStatusJSON(http.StatusOK, Resp(0, "ok", data))
+	c.AbortWithStatusJSON(http.StatusOK, RespWithTotal(0, "ok", data, total))
 }

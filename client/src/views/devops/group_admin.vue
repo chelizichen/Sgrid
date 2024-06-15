@@ -9,7 +9,7 @@
       <el-table-column type="index" label="序号" width="180"></el-table-column>
       <el-table-column prop="tagName" label="标签名"></el-table-column>
       <el-table-column prop="tagEnglishName" label="标签英文名"></el-table-column>
-      <el-table-column prop="createTime" label="createTime"></el-table-column>
+      <el-table-column prop="creatTime" label="creatTime"></el-table-column>
       <el-table-column label="操作">
         <template #default="scoped">
           <el-button @click="updateGroup(scoped.row)">修改</el-button>

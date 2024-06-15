@@ -56,6 +56,7 @@ func getList(c *gin.Context) {
 		handlers.AbortWithError(c, err.Error())
 		return
 	}
+	fmt.Println("total", total)
 	handlers.AbortWithSuccList(c, resp, total)
 }
 

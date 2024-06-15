@@ -3,7 +3,8 @@ import { defineStore } from 'pinia'
 import { reduceMenu, reduceMenuToRouter } from '@/utils/obj'
 import type { RouteRecordRaw } from 'vue-router'
 import router from '@/router'
-import {uniqWith,isEqual} from 'lodash'
+import _, {uniqWith,isEqual} from 'lodash'
+import api from '@/api/server'
 type userVo = {
   id: number
   password: string
@@ -41,4 +42,22 @@ export const useUserStore = defineStore('user', () => {
     console.log('getRoutes', router.getRoutes())
   }
   return { userInfo, setUserInfo, menus, setMenu }
+})
+
+export const useServersStore = defineStore('servers',()=>{
+  const user = useUserStore()
+  const servers = ref([])
+  function refreshServants(){
+    api.getServants(user.userInfo.id).then(res=>{
+      servers.value = res.data
+    })
+  }
+  function getServerNameById(id:number){
+    return _.get(servers.value.find(v=>v.id === id),'serverName','--')
+  }
+  return {
+    servers,
+    refreshServants,
+    getServerNameById
+  }
 })

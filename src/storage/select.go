@@ -326,17 +326,19 @@ func QueryNeedPullAssets() []*pojo.AssetsAdmin {
 }
 
 // QueryAssets
-func QueryAssets(obj *dto.PageBasicReq) (resp []*pojo.AssetsAdmin, total int64, err error) {
+func QueryAssets(obj *dto.PageBasicReq) (resp []*pojo.AssetsAdmin, count int64, err error) {
 	where := `1 = 1`
 	params := []any{}
-
+	var total int64
 	if len(obj.Keyword) != 0 {
-		where += ` and title like ? `
+		where += ` and mark like ? `
 		params = append(params, "%"+obj.Keyword+"%")
 	}
 	err = c.GORM.Model(&pojo.AssetsAdmin{}).
-		Where(where, params...).Count(&total).
-		Offset(obj.Offset).Limit(obj.Size).
+		Where(where, params...).
+		Count(&total).
+		Offset(obj.Offset).
+		Limit(obj.Size).
 		Find(&resp).Error
 	if err != nil {
 		return nil, total, err
