@@ -81,7 +81,7 @@ func QueryGrid(req *dto.PageBasicReq) (resp []vo.Grid) {
 // 2024.6.1 pageBasicReq.id as user_id
 func QueryServantGroup(req *dto.PageBasicReq) (resp []vo.VoServantGroup) {
 	if req.Id != 1 && req.Id != 0 {
-		c.GORM.Table("grid_servant_group gsg").
+		c.GORM.Debug().Table("grid_servant_group gsg").
 			Select(`
 		gsg.*,
 		gs.create_time AS gs_create_time,
@@ -94,7 +94,7 @@ func QueryServantGroup(req *dto.PageBasicReq) (resp []vo.VoServantGroup) {
 		gs.stat as gs_stat
 	`).
 			Joins("LEFT JOIN grid_servant gs ON gs.servant_group_id = gsg.id").
-			Where("gs.user_id = ?", req.Id).
+			Where("gs.user_id = ? or gsg.user_id = ?", req.Id, req.Id).
 			Find(&resp)
 	} else {
 		c.GORM.Table("grid_servant_group gsg").
