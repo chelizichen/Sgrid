@@ -29,9 +29,11 @@ import (
 	"time"
 
 	clientgrpc "Sgrid/src/public/client_grpc"
+	pk "Sgrid/src/public/process"
 
 	"github.com/panjf2000/ants"
 	p "github.com/shirou/gopsutil/process"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -401,19 +403,25 @@ func (s *fileTransferServer) ShutdownGrid(ctx context.Context, req *protocol.Shu
 	for _, _grid := range req.GetReq() {
 		grid := _grid
 		h := grid.GetHost()
-		if globalConf.Server.Host == h {
-			i := grid.GetGridId()
-			sm, ok := globalGrids[int(i)]
-			if ok && sm != nil {
-				storage.SaveStatLog(&pojo.StatLog{
-					GridId: int(i),
-					Stat:   BEHAVIOR_DOWN,
-					Pid:    sm.getPid(),
-				})
-				sm.kill()
-				delete(globalGrids, int(i))
-			}
+		if globalConf.Server.Host != h {
+			continue
 		}
+		i := grid.GetGridId()
+		sm, ok := globalGrids[int(i)]
+		if ok && sm != nil {
+			storage.SaveStatLog(&pojo.StatLog{
+				GridId: int(i),
+				Stat:   BEHAVIOR_DOWN,
+				Pid:    sm.getPid(),
+			})
+			sm.kill()
+			delete(globalGrids, int(i))
+			continue
+		} else {
+			pk.QueryProcessPidThenKill(string(grid.GetPort())) // 有可能需要强制down
+			continue
+		}
+
 	}
 	return &protocol.BasicResp{
 		Code:    0,
