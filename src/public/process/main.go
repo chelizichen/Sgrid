@@ -41,13 +41,15 @@ func killProcess(pid int32) error {
 func QueryProcessPidThenKill(port string) error {
 	pid, err := findPidByPort(port)
 	if err != nil {
-		fmt.Println("Error finding PID: %v", err)
+		fmt.Println("Error finding PID: ", err)
+		return err
 	}
-	fmt.Printf("Found process with PID %d on port %s\n", pid, port)
+	fmt.Println("Found process with PID on port ", pid, port)
 	err = killProcess(pid)
 	if err != nil {
-		fmt.Println("Error killing process: %v", err)
+		fmt.Println("Error killing process: ", err)
+		return err
 	}
-	fmt.Printf("Successfully killed process with PID %d\n", pid)
+	fmt.Println("Successfully killed process with PID ", pid)
 	return err
 }
