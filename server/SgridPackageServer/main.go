@@ -32,6 +32,7 @@ import (
 	pk "Sgrid/src/public/process"
 
 	"github.com/panjf2000/ants"
+	"github.com/robfig/cron"
 	p "github.com/shirou/gopsutil/process"
 
 	"google.golang.org/grpc"
@@ -73,11 +74,12 @@ func getStat(pid int) *p.Process {
 type WithSgridMonitorConfFunc func(*SgridMonitor)
 
 type SgridMonitor struct {
-	interval   time.Duration // 上报时间
-	cmd        *exec.Cmd
-	next       atomic.Bool
-	serverName string
-	gridId     int
+	interval     time.Duration // 上报时间
+	cmd          *exec.Cmd
+	next         atomic.Bool
+	serverName   string
+	gridId       int
+	cronInstance *cron.Cron
 }
 
 func WithMonitorInterval(interval time.Duration) func(*SgridMonitor) {
@@ -119,11 +121,12 @@ func NewSgridMonitor(opt ...WithSgridMonitorConfFunc) *SgridMonitor {
 }
 
 func (s *SgridMonitor) Report() {
-	for {
-		fmt.Println("Next Load Report", s.next.Load())
-		time.Sleep(s.interval)
+	s.cronInstance = cron.New()
+	var job = func() {
 		if s.next.Load() {
-			break
+			s.cronInstance.Stop()
+			s.cronInstance = nil
+			return
 		}
 		AntsPool.Submit(func() {
 			id := s.getPid()
@@ -183,6 +186,8 @@ func (s *SgridMonitor) Report() {
 			NewSgridLogTraceServant.BalanceSendLog(logReq)
 		})
 	}
+	s.cronInstance.AddFunc("@every 30s", job)
+	s.cronInstance.Start()
 }
 
 func (s *SgridMonitor) PrintLogger() {
@@ -202,6 +207,9 @@ func (s *SgridMonitor) PrintLogger() {
 	}
 	go func() {
 		for {
+			if s.next.Load() {
+				break
+			}
 			// 读取输出
 			buf := make([]byte, 1024)
 			n, err := op.Read(buf)
@@ -235,6 +243,9 @@ func (s *SgridMonitor) PrintLogger() {
 	}()
 	go func() {
 		for {
+			if s.next.Load() {
+				break
+			}
 			// 读取输出
 			buf := make([]byte, 1024)
 			now := public.GetCurrTime()
