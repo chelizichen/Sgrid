@@ -35,15 +35,6 @@ func Resp(code int, message string, data interface{}) *gin.H {
 	}
 }
 
-func RespWithTotal(code int, message string, data interface{}, total int64) *gin.H {
-	return &gin.H{
-		"code":    code,
-		"message": message,
-		"data":    data,
-		"total":   total,
-	}
-}
-
 func (c *SgridServerCtx) RegistryHttpRouter(callback func(engine *SgridServerCtx)) {
 	callback(c)
 }
@@ -67,54 +58,54 @@ func (c *SgridServerCtx) Static(realPath string, filePath string) {
 	c.Engine.Static(target, staticPath)
 }
 
-type InitConf struct {
+type sgridConf struct {
 	SgridController    bool
 	ServerType         string
 	SgridConfPath      string
 	SgridGinStaticPath [2]string
 	SgridGinWithCors   bool
 }
-type NewSgrid func(conf *InitConf)
+type NewSgrid func(conf *sgridConf)
 
 func WithSgridController() NewSgrid {
-	return func(conf *InitConf) {
+	return func(conf *sgridConf) {
 		conf.SgridController = true
 	}
 }
 
 func WithSgridServerType(T string) NewSgrid {
-	return func(conf *InitConf) {
+	return func(conf *sgridConf) {
 		conf.ServerType = T
 	}
 }
 
 func WithConfPath(P string) NewSgrid {
-	return func(conf *InitConf) {
+	return func(conf *sgridConf) {
 		conf.SgridConfPath = P
 	}
 }
 
 func WithSgridGinStatic(paths [2]string) NewSgrid {
-	return func(conf *InitConf) {
+	return func(conf *sgridConf) {
 		conf.SgridGinStaticPath = paths
 	}
 }
 
 func WithCors() NewSgrid {
-	return func(conf *InitConf) {
+	return func(conf *sgridConf) {
 		conf.SgridGinWithCors = true
 	}
 }
 
 func NewSgridServerCtx(opt ...NewSgrid) *SgridServerCtx {
-	initConf := &InitConf{}
+	sgridConf := &sgridConf{}
 	ctx := &SgridServerCtx{
 		Context: context.Background(),
 	}
 	for _, fn := range opt {
-		fn(initConf)
+		fn(sgridConf)
 	}
-	conf, err := public.NewConfig(public.WithTargetPath(initConf.SgridConfPath))
+	conf, err := public.NewConfig(public.WithTargetPath(sgridConf.SgridConfPath))
 	config.GlobalConf = conf
 	ctx.SgridConf = conf
 	if err != nil {
@@ -126,19 +117,19 @@ func NewSgridServerCtx(opt ...NewSgrid) *SgridServerCtx {
 	ctx.Name = conf.Server.Name
 	ctx.Port = ":" + strconv.Itoa(conf.Server.Port)
 
-	if initConf.ServerType == public.PROTOCOL_HTTP {
+	if sgridConf.ServerType == public.PROTOCOL_HTTP {
 		ctx.Engine = gin.Default()
-		if len(initConf.SgridGinStaticPath) != 0 {
+		if len(sgridConf.SgridGinStaticPath) != 0 {
 			GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
-			staticRoot := public.Join(initConf.SgridGinStaticPath[1])
-			GROUP.Static(initConf.SgridGinStaticPath[0], staticRoot)
+			staticRoot := public.Join(sgridConf.SgridGinStaticPath[1])
+			GROUP.Static(sgridConf.SgridGinStaticPath[0], staticRoot)
 		}
-		if initConf.SgridGinWithCors {
+		if sgridConf.SgridGinWithCors {
 			GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
 			GROUP.Use(withCORSMiddleware())
 		}
 	}
-	if initConf.ServerType == public.PROTOCOL_GRPC {
+	if sgridConf.ServerType == public.PROTOCOL_GRPC {
 		ctx.Engine = nil
 	}
 	return ctx
@@ -188,15 +179,28 @@ func withCORSMiddleware() gin.HandlerFunc {
 }
 
 var AbortWithError = func(c *gin.Context, err string) {
-	c.AbortWithStatusJSON(http.StatusOK, Resp(-1, "err ::"+err, nil))
+	c.AbortWithStatusJSON(http.StatusOK, &gin.H{
+		"code":    -1,
+		"message": err,
+		"data":    nil,
+	})
 }
 
 // Done
 var AbortWithSucc = func(c *gin.Context, data interface{}) {
-	c.AbortWithStatusJSON(http.StatusOK, Resp(0, "ok", data))
+	c.AbortWithStatusJSON(http.StatusOK, &gin.H{
+		"code":    0,
+		"message": "ok",
+		"data":    data,
+	})
 }
 
 // List
 var AbortWithSuccList = func(c *gin.Context, data interface{}, total int64) {
-	c.AbortWithStatusJSON(http.StatusOK, RespWithTotal(0, "ok", data, total))
+	c.AbortWithStatusJSON(http.StatusOK, &gin.H{
+		"code":    0,
+		"message": "ok",
+		"data":    data,
+		"total":   total,
+	})
 }

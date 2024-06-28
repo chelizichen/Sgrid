@@ -13,7 +13,7 @@ onMounted(() => {
     <el-header>
       <div class="head">
         <div style="left: 1%" class="title title-pos" @click="$router.push('/server')">
-          <img src="@/assets/icon.png" style="width: 40px" />
+          <img src="/icon.png" style="width: 40px" />
         </div>
         <div
           style="left: 3%; bottom: 10px"

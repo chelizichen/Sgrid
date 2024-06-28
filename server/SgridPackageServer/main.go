@@ -429,7 +429,7 @@ func (s *fileTransferServer) ShutdownGrid(ctx context.Context, req *protocol.Shu
 			delete(globalGrids, int(i))
 			continue
 		} else {
-			pk.QueryProcessPidThenKill(string(grid.GetPort())) // 有可能需要强制down
+			pk.SgridProcessUtil.QueryProcessPidThenKill(string(grid.GetPort())) // 有可能需要强制down
 			continue
 		}
 

@@ -7,15 +7,19 @@ import (
 	"github.com/shirou/gopsutil/process"
 )
 
+var SgridProcessUtil = new(sgridProcessUtil)
+
+type sgridProcessUtil struct{}
+
 // findPidByPort finds the process ID (PID) using the specified port.
-func findPidByPort(port string) (int32, error) {
+func (s *sgridProcessUtil) findPidByPort(port string) (int32, error) {
 	conns, err := net.Connections("tcp")
 	if err != nil {
 		return 0, err
 	}
 
 	for _, conn := range conns {
-		if conn.Laddr.Port == portToUint32(port) {
+		if conn.Laddr.Port == s.portToUint32(port) {
 			return conn.Pid, nil
 		}
 	}
@@ -23,14 +27,14 @@ func findPidByPort(port string) (int32, error) {
 }
 
 // portToUint32 converts a port string to uint32.
-func portToUint32(port string) uint32 {
+func (s *sgridProcessUtil) portToUint32(port string) uint32 {
 	var p uint32
 	fmt.Sscan(port, &p)
 	return p
 }
 
 // killProcess kills the process with the specified PID.
-func killProcess(pid int32) error {
+func (s *sgridProcessUtil) killProcess(pid int32) error {
 	proc, err := process.NewProcess(pid)
 	if err != nil {
 		return err
@@ -38,14 +42,14 @@ func killProcess(pid int32) error {
 	return proc.Kill()
 }
 
-func QueryProcessPidThenKill(port string) error {
-	pid, err := findPidByPort(port)
+func (s *sgridProcessUtil) QueryProcessPidThenKill(port string) error {
+	pid, err := s.findPidByPort(port)
 	if err != nil {
 		fmt.Println("Error finding PID: ", err)
 		return err
 	}
 	fmt.Println("Found process with PID on port ", pid, port)
-	err = killProcess(pid)
+	err = s.killProcess(pid)
 	if err != nil {
 		fmt.Println("Error killing process: ", err)
 		return err

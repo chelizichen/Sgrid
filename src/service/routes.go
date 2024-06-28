@@ -18,7 +18,7 @@ import (
 func Registry(ctx *handlers.SgridServerCtx) {
 	GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
 	GROUP.POST("/login", login)
-	GROUP.POST("/loginByCache", jwt.Validate, loginByCache)
+	GROUP.POST("/loginByCache", jwt.SgridJwtValidate.Validate, loginByCache)
 	GROUP.GET("/getUserMenusByUserId", getUserMenusByUserId)
 }
 
@@ -42,7 +42,7 @@ func login(c *gin.Context) {
 	}
 
 	expireTime := time.Hour * 12
-	token, err := jwt.GenToken(username, time.Now().Add(expireTime))
+	token, err := jwt.SgridJwtValidate.GenToken(username, time.Now().Add(expireTime))
 	if err != nil {
 		fmt.Println("gen token error")
 		handlers.AbortWithError(c, err.Error())
@@ -55,7 +55,7 @@ func login(c *gin.Context) {
 		Id:         v.Id,
 		Token:      token,
 	}
-	setTokenError := jwt.SetToken(token, expireTime, rsp)
+	setTokenError := jwt.RdsToken.SetToken(token, expireTime, rsp)
 	if err != nil {
 		fmt.Println("set token error", err.Error())
 		handlers.AbortWithError(c, setTokenError.Error())

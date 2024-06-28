@@ -12,16 +12,25 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	JwtTokenKey = "____Sgrid.src.public.jwt______"
+	JwtUserInfo = "userInfo"
+)
+
+var SgridJwtValidate = new(sgridJwtValidate)
+var RdsToken = new(rdsToken)
+
 type Claims struct {
 	UserId uint
 	jwt.StandardClaims
 }
 
-var jwtKey = []byte("____Sgrid.src.public.jwt______")
-var UserInfo = "userInfo"
+var jwtKey = []byte(JwtTokenKey)
+var UserInfo = JwtUserInfo
 
-var GenToken = func(username string, expiresAt time.Time) (string, error) {
-	fmt.Println("username", username)
+type sgridJwtValidate struct{}
+
+func (s *sgridJwtValidate) GenToken(username string, expiresAt time.Time) (string, error) {
 	claims := jwt.MapClaims{
 		"username": username,
 		"exp":      expiresAt.Unix(),
@@ -34,8 +43,7 @@ var GenToken = func(username string, expiresAt time.Time) (string, error) {
 	return signedToken, nil
 }
 
-// 解析从前端获取到的token值
-var ParseToken = func(tokenString string) (*jwt.Token, *Claims, error) {
+func (s *sgridJwtValidate) ParseToken(tokenString string) (*jwt.Token, *Claims, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
@@ -43,13 +51,13 @@ var ParseToken = func(tokenString string) (*jwt.Token, *Claims, error) {
 	return token, claims, err
 }
 
-func Validate(c *gin.Context) {
-	s := c.Request.Header["Token"]
-	if len(s) == 0 {
+func (s *sgridJwtValidate) Validate(c *gin.Context) {
+	tokenString := c.Request.Header["Token"]
+	if len(tokenString) == 0 {
 		h.AbortWithError(c, "empty token")
 		return
 	}
-	value, err := ValidateToken(s)
+	value, err := s.validateToken(tokenString)
 	if value == "" || err != nil {
 		h.AbortWithError(c, "token validate error")
 	} else {
@@ -58,9 +66,9 @@ func Validate(c *gin.Context) {
 	}
 }
 
-func ValidateToken(values []string) (val string, err error) {
+func (s *sgridJwtValidate) validateToken(values []string) (val string, err error) {
 	for _, v := range values {
-		s := GetToken(v)
+		s := RdsToken.GetToken(v)
 		if s != "" {
 			return s, nil
 		}
@@ -69,7 +77,9 @@ func ValidateToken(values []string) (val string, err error) {
 	return "", nil
 }
 
-func SetToken(Key string, expireTime time.Duration, val vo.VoUser) error {
+type rdsToken struct{}
+
+func (r *rdsToken) SetToken(Key string, expireTime time.Duration, val vo.VoUser) error {
 	b, err := json.Marshal(val)
 	if err != nil {
 		fmt.Println("Error to Marshal", err.Error(), val)
@@ -78,7 +88,7 @@ func SetToken(Key string, expireTime time.Duration, val vo.VoUser) error {
 	return configuration.GRDB.SetEX(configuration.RDBContext, Key, b, expireTime).Err()
 }
 
-func GetToken(Key string) string {
+func (r *rdsToken) GetToken(Key string) string {
 	s, err := configuration.GRDB.Get(configuration.RDBContext, Key).Result()
 	if err != nil {
 		fmt.Println("get  key Error", err.Error())

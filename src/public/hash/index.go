@@ -1,4 +1,4 @@
-package SSgridHash
+package SgridHashUtil
 
 type IHash interface {
 	Sum64(string) uint64
