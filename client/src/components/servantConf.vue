@@ -20,7 +20,7 @@
           rows="20"
         ></el-input>
         <el-card style="width: 100%" v-if="!isAble">
-          <hlComponent lang="yaml" :code="configForm.conf"></hlComponent>
+          <highlightjs language="yaml" :code="configForm.conf"></highlightjs>
         </el-card>
       </el-form-item>
       <el-form-item label="操作">
@@ -34,9 +34,7 @@
 import { getConfig, updateConfig } from "@/api/servantConf";
 import { ElNotification } from "element-plus";
 import { ref, watch } from "vue";
-import hljsVuePlugin from "@highlightjs/vue-plugin";
-const hlComponent = hljsVuePlugin.component;
-const isAble = ref();
+const isAble = ref(false);
 const configForm = ref({
   id: 0, // 假设我们有一个初始ID，或者你可以设置为null或undefined
   conf: "",
