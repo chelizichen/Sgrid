@@ -5,18 +5,25 @@
     @close="$emit('CLOSE_RELEASE_DIALOG')"
   >
     <el-form :model="configForm" ref="configFormRef" label-width="120px">
+      <el-form-item label="修改配置">
+        <el-switch v-model="isAble" inline-prompt />
+      </el-form-item>
       <el-form-item label="配置ID">
         <el-input v-model="configForm.id" disabled></el-input>
       </el-form-item>
       <el-form-item label="配置项">
         <el-input
+          v-if="isAble"
           v-model="configForm.conf"
           placeholder="请输入配置项"
           type="textarea"
           rows="20"
         ></el-input>
+        <el-card style="width: 100%" v-if="!isAble">
+          <hlComponent lang="yaml" :code="configForm.conf"></hlComponent>
+        </el-card>
       </el-form-item>
-      <el-form-item>
+      <el-form-item label="操作">
         <el-button type="primary" @click="submitConfig">保存</el-button>
       </el-form-item>
     </el-form>
@@ -27,7 +34,9 @@
 import { getConfig, updateConfig } from "@/api/servantConf";
 import { ElNotification } from "element-plus";
 import { ref, watch } from "vue";
-
+import hljsVuePlugin from "@highlightjs/vue-plugin";
+const hlComponent = hljsVuePlugin.component;
+const isAble = ref();
 const configForm = ref({
   id: 0, // 假设我们有一个初始ID，或者你可以设置为null或undefined
   conf: "",

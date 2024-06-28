@@ -12,7 +12,7 @@ import { md5 } from "js-md5";
 import { constants, localGet, localSet } from "@/constant";
 import { useUserStore } from "@/stores/counter";
 const router = useRouter();
-const userStore = useUserStore()
+const userStore = useUserStore();
 const username = ref("");
 const password = ref("");
 
@@ -23,20 +23,19 @@ async function login() {
   data.append("username", username.value);
   const ret = await API.Login(data);
   if (ret.code) {
-    ElNotification.error("Please enter a valid token.");
+    ElNotification.error("账号或密码错误");
   } else {
     router.push("/server");
     localSet(constants.TOKEN, ret.data.token);
   }
 }
 
-onMounted(()=>{
+onMounted(() => {
   const token = localGet(constants.TOKEN);
-  if(token && userStore.userInfo.userName && userStore.userInfo.password){
-    router.push('/dashboard')
+  if (token && userStore.userInfo.userName && userStore.userInfo.password) {
+    router.push("/dashboard");
   }
-})
-
+});
 </script>
 <template>
   <div class="body">
