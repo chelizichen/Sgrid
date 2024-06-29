@@ -10,7 +10,7 @@ import (
 )
 
 func SystemStatisticsRegisty(ctx *h.SgridServerCtx) {
-	GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
+	GROUP := ctx.Engine.Group(strings.ToLower(ctx.GetServerName()))
 	GROUP.GET("/system/statistics/getCpuInfo", getCpuInfo)
 	GROUP.GET("/system/statistics/getMemoryInfo", getMemoryInfo)
 }

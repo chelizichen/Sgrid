@@ -16,7 +16,7 @@ import (
 )
 
 func Registry(ctx *handlers.SgridServerCtx) {
-	GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
+	GROUP := ctx.Engine.Group(strings.ToLower(ctx.GetServerName()))
 	GROUP.POST("/login", login)
 	GROUP.POST("/loginByCache", jwt.SgridJwtValidate.Validate, loginByCache)
 	GROUP.GET("/getUserMenusByUserId", getUserMenusByUserId)

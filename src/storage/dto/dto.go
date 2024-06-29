@@ -2,7 +2,10 @@ package dto
 
 import (
 	"Sgrid/src/storage/pojo"
+	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 type PageBasicReq struct {
@@ -67,4 +70,18 @@ type TraceLogDto struct {
 	Size       int    `json:"size,omitempty"`
 	SearchTime string `json:"searchTime,omitempty"`
 	pojo.TraceLog
+}
+
+func NewPageBaiscReq(ctx *gin.Context) *PageBasicReq {
+	size, _ := strconv.Atoi(ctx.DefaultQuery("size", "10"))
+	offset, _ := strconv.Atoi(ctx.DefaultQuery("offset", "0"))
+	id, _ := strconv.Atoi(ctx.DefaultQuery("id", "0"))
+
+	keyword := ctx.DefaultQuery("keyword", "")
+	return &PageBasicReq{
+		Size:    size,
+		Offset:  offset,
+		Keyword: keyword,
+		Id:      id,
+	}
 }

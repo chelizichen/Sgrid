@@ -1,8 +1,9 @@
-package servant
+package rpc
 
 import "Sgrid/src/config"
 
-type SgridRegistryServiceInf interface {
+// child rpc server interface
+type SgridSubServer interface {
 	Registry(conf *config.SgridConf)
 	NameSpace() string
 	ServerPath() string

@@ -218,9 +218,20 @@ func IsExist(filePath string) bool {
 	}
 }
 
+// 暂时不可用
 func ThreadLock() bool {
 	if len(os.Getenv(ENV_PRODUCTION)) > 0 {
 		return os.Getenv(ENV_PROCESS_INDEX) == "1"
 	}
 	return false
+}
+
+func Removenullvalue(slice []interface{}) []interface{} {
+	var output []interface{}
+	for _, element := range slice {
+		if element != nil { //if condition satisfies add the elements in new slice
+			output = append(output, element)
+		}
+	}
+	return output //slice with no nil-values
 }

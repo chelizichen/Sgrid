@@ -37,7 +37,7 @@ const (
 
 func AssetsService(ctx *handlers.SgridServerCtx) {
 	cronJob(ctx)
-	router := ctx.Engine.Group(strings.ToLower(ctx.Name))
+	router := ctx.Engine.Group(strings.ToLower(ctx.GetServerName()))
 	router.POST("/assets/admin/getList", getList)
 	router.POST("/assets/admin/upsertAsset", upsertAsset)
 	router.GET("/assets/admin/delAssert", delAssert)

@@ -3,28 +3,27 @@ package http
 import (
 	"Sgrid/src/config"
 	"Sgrid/src/public"
-	"Sgrid/src/public/servant"
-	"Sgrid/src/utils"
+	"Sgrid/src/rpc"
 	"context"
 	"fmt"
 	"net"
 	"net/http"
 	"os"
+	"path"
 	"reflect"
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
 type SgridServerCtx struct {
-	Port       string
-	Name       string
-	Engine     *gin.Engine
-	Host       string
-	ServerConf map[string]interface{}
-	SgridConf  *config.SgridConf
-	Context    context.Context
+	Engine    *gin.Engine
+	SgridConf *config.SgridConf
+	Context   context.Context
+}
+
+func (c *SgridServerCtx) GetServerName() string {
+	return c.SgridConf.Server.Name
 }
 
 func Resp(code int, message string, data interface{}) *gin.H {
@@ -39,7 +38,7 @@ func (c *SgridServerCtx) RegistryHttpRouter(callback func(engine *SgridServerCtx
 	callback(c)
 }
 
-func (c *SgridServerCtx) RegistrySubServer(registry servant.SgridRegistryServiceInf) {
+func (c *SgridServerCtx) RegistrySubServer(registry rpc.SgridSubServer) {
 	pkgPath := reflect.TypeOf(registry).Elem().PkgPath()
 	packagePath := strings.ReplaceAll(pkgPath, "/", ".")
 	if !strings.HasSuffix(packagePath, registry.NameSpace()) {
@@ -48,12 +47,9 @@ func (c *SgridServerCtx) RegistrySubServer(registry servant.SgridRegistryService
 	go registry.Registry(config.GlobalConf.Servant[registry.NameSpace()])
 }
 
+// 静态资源托管
 func (c *SgridServerCtx) Static(realPath string, filePath string) {
-	s := c.Name
-	pre := strings.ToLower(s)
-	f := utils.Join(pre)
-	target := f(realPath)
-
+	target := join(strings.ToLower(c.GetServerName()))(realPath)
 	staticPath := public.Join(filePath)
 	c.Engine.Static(target, staticPath)
 }
@@ -112,20 +108,15 @@ func NewSgridServerCtx(opt ...NewSgrid) *SgridServerCtx {
 		fmt.Println("NewConfig Error:", err.Error())
 		panic(err.Error())
 	}
-	ctx.ServerConf = conf.Conf
-	ctx.Host = conf.Server.Host
-	ctx.Name = conf.Server.Name
-	ctx.Port = ":" + strconv.Itoa(conf.Server.Port)
-
 	if sgridConf.ServerType == public.PROTOCOL_HTTP {
 		ctx.Engine = gin.Default()
 		if len(sgridConf.SgridGinStaticPath) != 0 {
-			GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
+			GROUP := ctx.Engine.Group(strings.ToLower(ctx.GetServerName()))
 			staticRoot := public.Join(sgridConf.SgridGinStaticPath[1])
 			GROUP.Static(sgridConf.SgridGinStaticPath[0], staticRoot)
 		}
 		if sgridConf.SgridGinWithCors {
-			GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
+			GROUP := ctx.Engine.Group(strings.ToLower(ctx.GetServerName()))
 			GROUP.Use(withCORSMiddleware())
 		}
 	}
@@ -153,7 +144,7 @@ func NewSgridServer(ctx *SgridServerCtx, callback func(port string)) {
 	}
 
 	SIMP_TARGET_PORT := os.Getenv(public.ENV_TARGET_PORT)
-	SIMP_CONF_PORT := ctx.Port
+	SIMP_CONF_PORT := fmt.Sprintf(":%v", ctx.SgridConf.Server.Port)
 	var CallBackPort string = ""
 	if SIMP_TARGET_PORT != "" {
 		CallBackPort = ":" + SIMP_TARGET_PORT
@@ -203,4 +194,10 @@ var AbortWithSuccList = func(c *gin.Context, data interface{}, total int64) {
 		"data":    data,
 		"total":   total,
 	})
+}
+
+func join(pre string) func(t string) string {
+	return func(target string) string {
+		return path.Join(pre, target)
+	}
 }

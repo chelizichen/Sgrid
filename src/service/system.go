@@ -13,7 +13,7 @@ import (
 )
 
 func SystemService(ctx *handlers.SgridServerCtx) {
-	GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
+	GROUP := ctx.Engine.Group(strings.ToLower(ctx.GetServerName()))
 	// list get
 	GROUP.POST("/system/user/get", getUser)
 	GROUP.POST("/system/role/get", getRole)

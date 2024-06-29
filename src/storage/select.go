@@ -2,11 +2,11 @@ package storage
 
 import (
 	c "Sgrid/src/configuration"
+	"Sgrid/src/public"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
 	"Sgrid/src/storage/rbac"
 	"Sgrid/src/storage/vo"
-	"Sgrid/src/utils"
 	"fmt"
 	"time"
 )
@@ -73,7 +73,7 @@ func QueryGrid(req *dto.PageBasicReq) (resp []vo.Grid) {
 	`).
 		Joins("LEFT JOIN grid_servant gs ON gs.id = gg.servant_id").
 		Joins("LEFT JOIN grid_node gn ON gn.id = gg.node_id").
-		Where(where, utils.Removenullvalue(args)...).
+		Where(where, public.Removenullvalue(args)...).
 		Find(&resp)
 	return
 }
@@ -170,7 +170,7 @@ func QueryPackage(queryPackageDto *dto.QueryPackageDto) []vo.VoServantPackage {
 	`).Joins(`
 	left join grid_servant gs on
 	gsp.servant_id = gs.id
-	`).Where(where, utils.Removenullvalue(params)...).
+	`).Where(where, public.Removenullvalue(params)...).
 		Order(" gsp.create_time  DESC").
 		Find(&queryPackageResp)
 	return queryPackageResp
@@ -296,7 +296,7 @@ func GetTraceLogFiles(gridId int, log_server_name string) []TraceLogFileVo {
 	gtl.log_type as log_type,
 	date(gtl.create_time) as log_time
 	`).
-		Where(where, utils.Removenullvalue(params)...).
+		Where(where, public.Removenullvalue(params)...).
 		Group("log_type").
 		Group("log_time").
 		Order("log_time").
@@ -375,7 +375,7 @@ from
 	grid_grid gg
 left join grid_node gn on
 	gg.node_id = gn.id
-left join grid_servant gs on 
+left join grid_servant gs on
 	gs.id = gg.servant_id
 where gg.id in ? and gg.status = ?
 	`, ids, stat).Scan(&findList)

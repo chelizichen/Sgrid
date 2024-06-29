@@ -2,9 +2,9 @@ package storage
 
 import (
 	c "Sgrid/src/configuration"
+	"Sgrid/src/public"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/rbac"
-	"Sgrid/src/utils"
 	"fmt"
 )
 
@@ -24,7 +24,7 @@ func GetUserList(req *dto.PageBasicReq) ([]rbac.User, int64) {
 		Count(&count).
 		Where(
 			where,
-			utils.Removenullvalue(args)...,
+			public.Removenullvalue(args)...,
 		).
 		Find(&respList)
 	return respList, count
@@ -151,7 +151,7 @@ type RelationUserToRole struct {
 
 func GetUserToRoleRelation(id int) []RelationUserToRole {
 	var findList []RelationUserToRole
-	c.GORM.Debug().Raw(` 
+	c.GORM.Debug().Raw(`
 	select gsr.id,gsr.name from grid_user_to_role gstr
 	left join grid_user_role gsr on gstr.role_id = gsr.id
 	left join grid_user gu on gu.id = gstr.user_id
@@ -162,7 +162,7 @@ func GetUserToRoleRelation(id int) []RelationUserToRole {
 
 func GetUserMenusByUserId(id int) []rbac.RoleMenu {
 	var findList []rbac.RoleMenu
-	c.GORM.Raw(` 
+	c.GORM.Raw(`
 	select
 	grm.*
 from

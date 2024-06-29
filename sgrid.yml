@@ -7,13 +7,13 @@ server:
 config:
   db_migrate: true
   webStatic: static # gin 托管路径
-  db_master:  root:123456@tcp(127.0.0.1:3306)/sgrid?charset=utf8&parseTime=true
+  db_master: root:123456@tcp(127.0.0.1:3306)/sgrid?charset=utf8&parseTime=true
   db_slave: root:123456@tcp(127.0.0.1:3306)/sgrid?charset=utf8&parseTime=true
-  redis-addr: 127.0.0.1:6379
-  redis-pass: ''
+  redis_addr: 127.0.0.1:6379
+  redis_pass: ""
 # 子服务
 servant:
-  server.SgridPackageServer: 
+  server.SgridPackageServer:
     server:
       main: true
       name: SgridPackageServer
@@ -21,9 +21,9 @@ servant:
       port: 14938
       type: tcp
     config:
-      db_master:  root:123456@tcp(127.0.0.1:3306)/sgrid?charset=utf8&parseTime=true
-      db_slave:  root:123456@tcp(127.0.0.1:3306)/sgrid?charset=utf8&parseTime=true
-  server.SgridLogTraceServer: 
+      db_master: root:123456@tcp(127.0.0.1:3306)/sgrid?charset=utf8&parseTime=true
+      db_slave: root:123456@tcp(127.0.0.1:3306)/sgrid?charset=utf8&parseTime=true
+  server.SgridLogTraceServer:
     server:
       main: true
       name: SgridLogTraceServer
@@ -31,5 +31,5 @@ servant:
       port: 15887
       type: tcp
     config:
-      db_master:  root:123456@tcp(127.0.0.1:3306)/sgrid?charset=utf8&parseTime=true
-      db_slave:  root:123456@tcp(127.0.0.1:3306)/sgrid?charset=utf8&parseTime=true
+      db_master: root:123456@tcp(127.0.0.1:3306)/sgrid?charset=utf8&parseTime=true
+      db_slave: root:123456@tcp(127.0.0.1:3306)/sgrid?charset=utf8&parseTime=true

@@ -6,7 +6,6 @@ import (
 	"Sgrid/src/storage"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
-	utils "Sgrid/src/utils"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -18,7 +17,7 @@ import (
 )
 
 func DevopsService(ctx *handlers.SgridServerCtx) {
-	GROUP := ctx.Engine.Group(strings.ToLower(ctx.Name))
+	GROUP := ctx.Engine.Group(strings.ToLower(ctx.GetServerName()))
 	// devops component
 	GROUP.GET("/devops/getGroups", getGroups)
 	// 1.选择服务组 ｜ 创建
@@ -293,7 +292,7 @@ func delProperty(c *gin.Context) {
 }
 
 func queryGrid(c *gin.Context) {
-	pbr := utils.NewPageBaiscReq(c)
+	pbr := dto.NewPageBaiscReq(c)
 	gv := storage.QueryGrid(pbr)
 	c.JSON(200, handlers.Resp(0, "ok", gv))
 }
