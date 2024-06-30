@@ -201,6 +201,13 @@ const api = {
       method: 'get',
     }) as unknown as BasicResp<any>
   },
+  updateServant(data:any){
+    return HttpReq({
+      url: '/devops/updateServant',
+      method: 'post',
+      data
+    }) as unknown as BasicResp<any>
+  }
 }
 
 export default api

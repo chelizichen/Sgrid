@@ -149,6 +149,7 @@ func updateServant(c *gin.Context) {
 		Protocol:       req.Protocol,
 		ServantGroupId: req.ServantGroupId,
 		ExecPath:       req.ExecPath,
+		Id:             req.Id,
 	}
 	vsg := storage.UpdateServant(record)
 	handlers.AbortWithSucc(c, vsg)

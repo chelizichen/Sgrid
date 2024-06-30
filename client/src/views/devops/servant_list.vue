@@ -44,7 +44,7 @@
       <el-form-item label="ID">
         <el-input v-model="servant.id" disabled></el-input>
       </el-form-item>
-      <el-form-item label="服务器名称">
+      <el-form-item label="服务名">
         <el-input v-model="servant.serverName"></el-input>
       </el-form-item>
       <el-form-item label="语言">
@@ -56,7 +56,7 @@
       <el-form-item label="执行路径">
         <el-input v-model="servant.execPath"></el-input>
       </el-form-item>
-      <el-form-item label="服务组ID">
+      <el-form-item label="服务组">
         <el-skeleton style="width: 100%" :loading="editLoading" animated>
           <el-select v-model="servant.servantGroupId">
             <el-option
@@ -181,7 +181,34 @@ function updateServant(row: T_Servant) {
   console.log("row", row);
 }
 
-function confirmUpdateServant() {}
+function confirmUpdateServant() {
+  ElMessageBox.confirm(`确认修改?`, {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
+    .then(async () => {
+      const resp = await api.updateServant(servant.value);
+      if (resp.code) {
+        return ElMessage.error({
+          type: "error",
+          message: resp.message,
+        });
+      }
+      await getServantList();
+      ElMessage({
+        type: "success",
+        message: "修改成功",
+      });
+      editDialogVisible.value = false;
+    })
+    .catch(() => {
+      ElMessage({
+        type: "info",
+        message: "取消修改",
+      });
+    });
+}
 
 async function deleteServant(row: T_Servant, stat: number) {
   const text = stat == -1 ? "停用" : " 启用";

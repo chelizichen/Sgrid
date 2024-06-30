@@ -35,6 +35,7 @@ func UpdateServant(svr *pojo.Servant) int {
 			ServantGroupId: svr.ServantGroupId,
 			ExecPath:       svr.ExecPath,
 			Protocol:       svr.Protocol,
+			Language:       svr.Language,
 		})
 	return svr.Id
 }
