@@ -1,7 +1,7 @@
 package storage
 
 import (
-	c "Sgrid/src/configuration"
+	"Sgrid/src/pool"
 	"Sgrid/src/public"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/rbac"
@@ -17,7 +17,7 @@ func GetUserList(req *dto.PageBasicReq) ([]rbac.User, int64) {
 		where += " and user_name like ?"
 		args = append(args, "%"+req.Keyword+"%")
 	}
-	c.GORM.
+	pool.GORM.
 		Model(&rbac.User{}).
 		Offset(req.Offset).
 		Limit(req.Size).
@@ -32,7 +32,7 @@ func GetUserList(req *dto.PageBasicReq) ([]rbac.User, int64) {
 
 func GetMenuList() []rbac.RoleMenu {
 	var respList []rbac.RoleMenu
-	c.GORM.
+	pool.GORM.
 		Model(&rbac.RoleMenu{}).
 		Find(&respList)
 	return respList
@@ -40,7 +40,7 @@ func GetMenuList() []rbac.RoleMenu {
 
 func GetRoleList() []rbac.UserRole {
 	var respList []rbac.UserRole
-	c.GORM.
+	pool.GORM.
 		Model(&rbac.UserRole{}).
 		Find(&respList)
 
@@ -50,7 +50,7 @@ func GetRoleList() []rbac.UserRole {
 // 通过角色ID 拿到菜单列表
 func GetMenuListByRoleId(roleId int) []rbac.RoleToMenu {
 	var respList []rbac.RoleToMenu
-	c.GORM.
+	pool.GORM.
 		Model(&rbac.RoleToMenu{}).
 		Where("role_id = ?", roleId).
 		Find(&respList)
@@ -58,25 +58,25 @@ func GetMenuListByRoleId(roleId int) []rbac.RoleToMenu {
 }
 
 func DeleteMenu(id int) {
-	c.GORM.Model(&rbac.RoleMenu{}).Delete(&rbac.RoleMenu{
+	pool.GORM.Model(&rbac.RoleMenu{}).Delete(&rbac.RoleMenu{
 		Id: id,
 	})
-	c.GORM.Model(&rbac.RoleToMenu{}).Delete(&rbac.RoleToMenu{
+	pool.GORM.Model(&rbac.RoleToMenu{}).Delete(&rbac.RoleToMenu{
 		MenuId: id,
 	})
 }
 
 func DeleteRole(id int) {
-	c.GORM.Model(&rbac.UserRole{}).Delete(&rbac.UserRole{
+	pool.GORM.Model(&rbac.UserRole{}).Delete(&rbac.UserRole{
 		Id: id,
 	})
-	c.GORM.Model(&rbac.UserToRole{}).Delete(&rbac.UserToRole{
+	pool.GORM.Model(&rbac.UserToRole{}).Delete(&rbac.UserToRole{
 		RoleId: id,
 	})
 }
 
 func SetUserToRole(userId int, roleIds []int) {
-	c.GORM.Delete(&rbac.UserToRole{}, "user_id = ?", userId)
+	pool.GORM.Delete(&rbac.UserToRole{}, "user_id = ?", userId)
 	var userToRoles []*rbac.UserToRole
 	for _, v := range roleIds {
 		userToRoles = append(userToRoles, &rbac.UserToRole{
@@ -84,11 +84,11 @@ func SetUserToRole(userId int, roleIds []int) {
 			RoleId: v,
 		})
 	}
-	c.GORM.Create(userToRoles)
+	pool.GORM.Create(userToRoles)
 }
 
 func SetRoleToMenu(roleId int, menuIds []int) {
-	c.GORM.Delete(&rbac.RoleToMenu{}, "role_id = ?", roleId)
+	pool.GORM.Delete(&rbac.RoleToMenu{}, "role_id = ?", roleId)
 	var userToRoles []*rbac.RoleToMenu
 	for _, v := range menuIds {
 		userToRoles = append(userToRoles, &rbac.RoleToMenu{
@@ -96,14 +96,14 @@ func SetRoleToMenu(roleId int, menuIds []int) {
 			MenuId: v,
 		})
 	}
-	c.GORM.Create(userToRoles)
+	pool.GORM.Create(userToRoles)
 }
 
 func CreateRole(role *rbac.UserRole) {
 	if role.Id == 0 {
-		c.GORM.Create(role)
+		pool.GORM.Create(role)
 	} else {
-		c.GORM.Model(&rbac.UserRole{}).
+		pool.GORM.Model(&rbac.UserRole{}).
 			Where("id = ?", role.Id).
 			Updates(&rbac.UserRole{
 				Name:        role.Name,
@@ -117,9 +117,9 @@ func CreateUser(user *rbac.User) {
 	if user.Id == 0 {
 		user.Password = "e10adc3949ba59abbe56e057f20f883e" // 123456
 
-		c.GORM.Create(user)
+		pool.GORM.Create(user)
 	} else {
-		c.GORM.Model(&rbac.User{}).
+		pool.GORM.Model(&rbac.User{}).
 			Where("id = ?", user.Id).
 			Updates(&rbac.User{
 				UserName:  user.UserName,
@@ -130,9 +130,9 @@ func CreateUser(user *rbac.User) {
 
 func CreateMenu(menu *rbac.RoleMenu) {
 	if menu.Id == 0 {
-		c.GORM.Create(menu)
+		pool.GORM.Create(menu)
 	} else {
-		c.GORM.Model(&rbac.RoleMenu{}).
+		pool.GORM.Model(&rbac.RoleMenu{}).
 			Where("id = ?", menu.Id).
 			Updates(&rbac.RoleMenu{
 				Title:     menu.Title,
@@ -151,7 +151,7 @@ type RelationUserToRole struct {
 
 func GetUserToRoleRelation(id int) []RelationUserToRole {
 	var findList []RelationUserToRole
-	c.GORM.Debug().Raw(`
+	pool.GORM.Debug().Raw(`
 	select gsr.id,gsr.name from grid_user_to_role gstr
 	left join grid_user_role gsr on gstr.role_id = gsr.id
 	left join grid_user gu on gu.id = gstr.user_id
@@ -162,7 +162,7 @@ func GetUserToRoleRelation(id int) []RelationUserToRole {
 
 func GetUserMenusByUserId(id int) []rbac.RoleMenu {
 	var findList []rbac.RoleMenu
-	c.GORM.Raw(`
+	pool.GORM.Raw(`
 	select
 	grm.*
 from

@@ -1,11 +1,11 @@
 package SgridSet
 
-type EmptyStruct struct{}
+type ES struct{}
 
-type SgridSet[T comparable] map[T]EmptyStruct
+type SgridSet[T comparable] map[T]ES
 
 func (s *SgridSet[T]) Add(value T) {
-	(*s)[value] = EmptyStruct{}
+	(*s)[value] = ES{}
 }
 
 func (s *SgridSet[T]) GetAll() []T {

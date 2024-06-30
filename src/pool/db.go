@@ -1,4 +1,4 @@
-package configuration
+package pool
 
 import (
 	"Sgrid/src/config"

@@ -1,8 +1,8 @@
 package jwt
 
 import (
-	"Sgrid/src/configuration"
 	h "Sgrid/src/http"
+	"Sgrid/src/pool"
 	"Sgrid/src/storage/vo"
 	"encoding/json"
 	"fmt"
@@ -85,11 +85,11 @@ func (r *rdsToken) SetToken(Key string, expireTime time.Duration, val vo.VoUser)
 		fmt.Println("Error to Marshal", err.Error(), val)
 		return err
 	}
-	return configuration.GRDB.SetEX(configuration.RDBContext, Key, b, expireTime).Err()
+	return pool.GRDB.SetEX(pool.RDBContext, Key, b, expireTime).Err()
 }
 
 func (r *rdsToken) GetToken(Key string) string {
-	s, err := configuration.GRDB.Get(configuration.RDBContext, Key).Result()
+	s, err := pool.GRDB.Get(pool.RDBContext, Key).Result()
 	if err != nil {
 		fmt.Println("get  key Error", err.Error())
 		return ""

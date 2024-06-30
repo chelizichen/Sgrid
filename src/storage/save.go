@@ -2,7 +2,7 @@ package storage
 
 import (
 	protocol "Sgrid/server/SgridLogTraceServer/proto"
-	c "Sgrid/src/configuration"
+	"Sgrid/src/pool"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
 	"errors"
@@ -11,24 +11,24 @@ import (
 )
 
 func SaveHashPackage(pkg pojo.ServantPackage) int {
-	c.GORM.Create(&pkg)
+	pool.GORM.Create(&pkg)
 	return pkg.Id
 }
 
 func GetServantByNameAndGroup(name string, groupId int) bool {
 	var svr pojo.Servant
-	c.GORM.Where("server_name = ? and servant_group_id = ?", name, groupId).First(&svr)
+	pool.GORM.Where("server_name = ? and servant_group_id = ?", name, groupId).First(&svr)
 	fmt.Println("svr", svr)
 	return svr.Id != 0
 }
 
 func SaveServant(svr *pojo.Servant) int {
-	c.GORM.Create(&svr)
+	pool.GORM.Create(&svr)
 	return svr.Id
 }
 
 func UpdateServant(svr *pojo.Servant) int {
-	c.GORM.
+	pool.GORM.
 		Model(&svr).
 		Where("id = ?", svr.Id).
 		Updates(&pojo.Servant{
@@ -42,7 +42,7 @@ func UpdateServant(svr *pojo.Servant) int {
 func DelServant(svr *pojo.Servant) int {
 	fmt.Println("svr", svr.Stat)
 	fmt.Println("svr", svr.Id)
-	c.GORM.Debug().
+	pool.GORM.Debug().
 		Model(&svr).
 		Where("id = ?", svr.Id).
 		Update("stat", svr.Stat)
@@ -51,10 +51,10 @@ func DelServant(svr *pojo.Servant) int {
 
 func SaveServantGroup(group *pojo.ServantGroup) int {
 	if group.Id == 0 {
-		c.GORM.Create(&group)
+		pool.GORM.Create(&group)
 		return group.Id
 	} else {
-		c.GORM.Debug().
+		pool.GORM.Debug().
 			Model(&group).
 			Where("id = ?", group.Id).
 			Updates(&pojo.ServantGroup{
@@ -66,15 +66,15 @@ func SaveServantGroup(group *pojo.ServantGroup) int {
 }
 
 func SaveStatLog(stat *pojo.StatLog) {
-	c.GORM.Debug().Create(&stat)
+	pool.GORM.Debug().Create(&stat)
 }
 
 func UpdateGrid(grid *pojo.Grid) int {
 	if grid.Id == 0 {
-		c.GORM.Debug().Create(&grid)
+		pool.GORM.Debug().Create(&grid)
 		return (grid.Id)
 	} else {
-		c.GORM.Debug().
+		pool.GORM.Debug().
 			Model(&grid).
 			Select("status", "pid").
 			Where("id = ?", grid.Id).
@@ -87,7 +87,7 @@ func UpdateGrid(grid *pojo.Grid) int {
 }
 
 func DeleteGrid(id int) {
-	c.GORM.Debug().
+	pool.GORM.Debug().
 		Model(&pojo.Grid{}).
 		Delete(&pojo.Grid{
 			Id: id,
@@ -95,7 +95,7 @@ func DeleteGrid(id int) {
 }
 
 func DeletePackage(id int) {
-	c.GORM.Debug().
+	pool.GORM.Debug().
 		Model(&pojo.ServantPackage{}).
 		Select("status").
 		Where("id = ?", id).
@@ -107,12 +107,12 @@ func DeletePackage(id int) {
 // 判断服务组下有无存在的服务，如果没有，则删除服务组
 func DelGroup(id int) error {
 	var count int64
-	c.GORM.Model(&pojo.Servant{}).Where("servant_group_id = ? and stat != -1", id).Count(&count)
+	pool.GORM.Model(&pojo.Servant{}).Where("servant_group_id = ? and stat != -1", id).Count(&count)
 	if count > 0 {
 		st := fmt.Sprintf("服务组下存在%v个服务，不能删除", count)
 		return errors.New(st)
 	}
-	c.GORM.Debug().
+	pool.GORM.Debug().
 		Model(&pojo.ServantGroup{}).
 		Delete(&pojo.ServantGroup{
 			Id: id,
@@ -122,7 +122,7 @@ func DelGroup(id int) error {
 }
 
 func UpdatePackageVersion(dto *pojo.ServantPackage) {
-	c.GORM.Debug().
+	pool.GORM.Debug().
 		Model(dto).
 		Where("id = ?", dto.Id).
 		Updates(&pojo.ServantPackage{
@@ -141,12 +141,12 @@ func UpdateNode(d *dto.NodeDTO) int {
 		Ip:         d.Ip,
 		CreateTime: &t,
 	}
-	c.GORM.Debug().Create(obj)
+	pool.GORM.Debug().Create(obj)
 	return obj.Id
 }
 
 func PushErr(d *pojo.SystemErr) {
-	c.GORM.Debug().Create(d)
+	pool.GORM.Debug().Create(d)
 }
 
 func UpdateConf(d *pojo.ServantConf) {
@@ -154,7 +154,7 @@ func UpdateConf(d *pojo.ServantConf) {
 		CreateConf(d)
 		return
 	}
-	c.GORM.
+	pool.GORM.
 		Model(&pojo.ServantConf{}).
 		Where(&pojo.ServantConf{
 			ServantId: d.ServantId,
@@ -163,7 +163,7 @@ func UpdateConf(d *pojo.ServantConf) {
 }
 
 func CreateConf(d *pojo.ServantConf) {
-	c.GORM.Debug().Create(d)
+	pool.GORM.Debug().Create(d)
 }
 
 func SaveLog(d *protocol.LogTraceReq) error {
@@ -184,16 +184,16 @@ func SaveLog(d *protocol.LogTraceReq) error {
 		LogGridId:     d.LogGridId,
 		LogBytesLen:   d.LogBytesLen,
 	}
-	err = c.GORM.Debug().Create(pj).Error
+	err = pool.GORM.Debug().Create(pj).Error
 	return err
 }
 
 func UpsertProperty(p *pojo.Properties) {
 	if p.Id == 0 {
-		c.GORM.Model(&pojo.Properties{}).Create(p)
+		pool.GORM.Model(&pojo.Properties{}).Create(p)
 		return
 	}
-	c.GORM.Model(&pojo.Properties{}).
+	pool.GORM.Model(&pojo.Properties{}).
 		Where("id = ?", p.Id).
 		Updates(&pojo.Properties{
 			Key:   p.Key,
@@ -202,7 +202,7 @@ func UpsertProperty(p *pojo.Properties) {
 }
 
 func DelProperty(id int) {
-	c.GORM.Model(&pojo.Properties{}).Delete(&pojo.Properties{
+	pool.GORM.Model(&pojo.Properties{}).Delete(&pojo.Properties{
 		Id: id,
 	})
 }
@@ -213,20 +213,20 @@ func UpsertAssets(d *pojo.AssetsAdmin) error {
 	if err != nil {
 		return err
 	}
-	return c.GORM.
+	return pool.GORM.
 		Debug().
 		Model(&pojo.AssetsAdmin{}).
 		Create(&d).Error
 }
 
 func DelAssetById(id int) error {
-	return c.GORM.
+	return pool.GORM.
 		Model(&pojo.AssetsAdmin{}).
 		Delete("grid_id = ?", id).Error
 }
 
 func GetAssetById(id int) (resp *pojo.AssetsAdmin, err error) {
-	err = c.GORM.
+	err = pool.GORM.
 		Model(&pojo.AssetsAdmin{}).
 		Where(&pojo.AssetsAdmin{
 			GridId: id,

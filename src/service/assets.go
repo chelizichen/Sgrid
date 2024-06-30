@@ -12,8 +12,8 @@ package service
 
 import (
 	protocol "Sgrid/server/SgridPackageServer/proto"
-	"Sgrid/src/configuration"
 	handlers "Sgrid/src/http"
+	"Sgrid/src/pool"
 	"Sgrid/src/public"
 	clientgrpc "Sgrid/src/public/client_grpc"
 	"Sgrid/src/storage"
@@ -96,8 +96,8 @@ func getAssert(c *gin.Context) {
 }
 
 func cronJob(ctx *handlers.SgridServerCtx) {
-	rds := configuration.GRDB
-	rds_ctx := configuration.RDBContext
+	rds := pool.GRDB
+	rds_ctx := pool.RDBContext
 	clients := ctx.Context.Value(
 		public.GRPC_CLIENT_PROXYS{},
 	).([]*clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient])

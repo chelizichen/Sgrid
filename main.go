@@ -12,16 +12,16 @@ import (
 
 func init() {
 	fmt.Println(`
-	********* info **********
-			开始验证
-	********* info **********
+********* info **********
+		开始验证
+********* info **********
 		`)
 	b, err := saas.UsesaasPerm.CheckAuth()
 	if !b || err != nil {
 		fmt.Println(`
-	********* error **********
-			 验证失败
-	********* error **********
+********* error **********
+		验证失败
+********* error **********
 			`)
 		return
 	}
@@ -31,7 +31,6 @@ func main() {
 	ctx := h.NewSgridServerCtx(
 		h.WithSgridServerType(public.PROTOCOL_HTTP),
 		h.WithSgridGinStatic([2]string{"/web", "dist"}),
-		// h.WithSgridController(),
 		h.WithCors(),
 	)
 	ctx.RegistryHttpRouter(service.InitService)

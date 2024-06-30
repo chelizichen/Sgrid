@@ -2,8 +2,8 @@ package service
 
 import (
 	protocol "Sgrid/server/SgridPackageServer/proto"
-	"Sgrid/src/configuration"
 	handlers "Sgrid/src/http"
+	"Sgrid/src/pool"
 	"Sgrid/src/public"
 	clientgrpc "Sgrid/src/public/client_grpc"
 	"Sgrid/src/storage"
@@ -20,7 +20,7 @@ func InitService(ctx *handlers.SgridServerCtx) {
 	if err != nil {
 		fmt.Println("Error To NewConfig", err)
 	}
-	configuration.InitStorage(sc)
+	pool.InitStorage(sc)
 
 	gn := storage.QueryPropertiesByKey(SgridPackageServerHosts)
 	addresses := []string{}

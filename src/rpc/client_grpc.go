@@ -2,9 +2,10 @@ package rpc
 
 import (
 	set "Sgrid/src/public/set"
+	"context"
 	"fmt"
-	"regexp"
-	"strconv"
+	"sync"
+	"sync/atomic"
 
 	"google.golang.org/grpc"
 )
@@ -16,43 +17,67 @@ import (
 type SgridGrpcClient[T any] struct {
 	_opts    []grpc.DialOption  // grpc统一可选配置
 	_targets []string           // 链接地址
-	_servant string             // 服务名
+	_servant string             // 服务实例
+	_service string             // 服务名
 	_conns   []*grpc.ClientConn // grpc 客户端链接
+	_total   uint8              // 总共
+	_curr    atomic.Uint32
+	ctx      context.Context
 }
 
 func (s *SgridGrpcClient[T]) GetServantName() string {
 	return s._servant
 }
 
-type sgridOptCb[T any] func(s *SgridGrpcClient[T])
+// balance request
+func (s *SgridGrpcClient[T]) Request(pack RequestPack) (reply any, err error) {
+	u := s._curr.Add(1)
+	if u >= uint32(s._total) {
+		s._curr.Store(0)
+	}
+	curr := s._curr.Load()
+	err = s._conns[curr].Invoke(s.ctx, pack.method, pack.body, pack.reply)
+	return pack.reply, err
+}
+
+func (s *SgridGrpcClient[T]) RequestAll(pack RequestPack, replys []any) (reply []any, err error) {
+	var wg sync.WaitGroup
+	for i, cc := range s._conns {
+		err = cc.Invoke(s.ctx, pack.method, pack.body, replys[i])
+		wg.Add(1)
+	}
+	wg.Wait()
+	return replys, err
+}
 
 func WithDiaoptions[T any](opts ...grpc.DialOption) sgridOptCb[T] {
 	return func(s *SgridGrpcClient[T]) {
-		s._opts = opts
+		s._opts = append(s._opts, opts...)
 	}
 }
 
 func WithTargets[T any](targets []string) sgridOptCb[T] {
 	return func(s *SgridGrpcClient[T]) {
-		sets := new(set.SgridSet[string])
+		sets := make(set.SgridSet[string])
+		fmt.Println("targets", targets)
 		for _, v := range targets {
 			sets.Add(v)
 		}
 		s._targets = sets.GetAll()
+		fmt.Println("s._targets", s._targets)
 	}
-
 }
 
 func NewSgridGrpcClient[T any](clients []string, opts ...sgridOptCb[T]) (*SgridGrpcClient[T], error) {
 	confs := []*SgridGrpcServantConfig{}
 	targets := make([]string, 0)
 	for _, v := range clients {
-		prx, err := stringToProxy(v)
+		prx, err := StringToProxy(v)
 		if err != nil {
 			return nil, fmt.Errorf("stringToProxy.error %v", err.Error())
 		}
 		confs = append(confs, prx)
-		targets = append(targets, prx.Host)
+		targets = append(targets, fmt.Sprintf("%s:%d", prx.Host, prx.Port))
 	}
 	opts = append(opts, WithTargets[T](targets))
 	c := new(SgridGrpcClient[T])
@@ -67,38 +92,11 @@ func NewSgridGrpcClient[T any](clients []string, opts ...sgridOptCb[T]) (*SgridG
 		}
 		cc.Connect()
 		c._conns = append(c._conns, cc)
+		c._total += 1
+		fmt.Println("grpc.dial success ", v)
 	}
-	c._servant = confs[0].ServiceName
+	c._servant = confs[0].ServantName
+	c._service = confs[0].ServiceName
+	c.ctx = context.Background()
 	return c, nil
-}
-
-// server.SgridSubServer @grpc -h 127.0.0.1 -p 15996
-func stringToProxy(str string) (*SgridGrpcServantConfig, error) {
-	re := regexp.MustCompile(`(?P<ServiceName>\w+)\.\w+ @(?P<Protocol>\w+) -h (?P<Host>\d+\.\d+\.\d+\.\d+) -p (?P<Port>\d+)`)
-	matches := re.FindStringSubmatch(str)
-
-	if matches == nil {
-		return nil, fmt.Errorf("input string does not match expected format")
-	}
-
-	result := &SgridGrpcServantConfig{}
-
-	for i, name := range re.SubexpNames() {
-		switch name {
-		case "ServiceName":
-			result.ServiceName = matches[i]
-		case "Protocol":
-			result.Protocol = matches[i]
-		case "Host":
-			result.Host = matches[i]
-		case "Port":
-			port, err := strconv.Atoi(matches[i])
-			if err != nil {
-				return nil, err
-			}
-			result.Port = port
-		}
-	}
-
-	return result, nil
 }

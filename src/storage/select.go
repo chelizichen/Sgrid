@@ -1,7 +1,7 @@
 package storage
 
 import (
-	c "Sgrid/src/configuration"
+	"Sgrid/src/pool"
 	"Sgrid/src/public"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
@@ -14,14 +14,14 @@ import (
 // 查询标签组，创建时用
 func QueryTags() []pojo.ServantGroup {
 	var dataList []pojo.ServantGroup
-	c.GORM.Model(dataList).Find(&dataList)
+	pool.GORM.Model(dataList).Find(&dataList)
 	return dataList
 }
 
 // 查询节点组
 func QueryNodes() []*vo.GridNode {
 	var dataList []pojo.Node
-	c.GORM.Model(&pojo.Node{}).Find(&dataList)
+	pool.GORM.Model(&pojo.Node{}).Find(&dataList)
 	var respList []*vo.GridNode
 	for _, v := range dataList {
 		V := v
@@ -40,9 +40,9 @@ func QueryNodes() []*vo.GridNode {
 func QueryServants(userId int) *[]vo.VoServantObj {
 	var dataList []vo.VoServantObj
 	if userId == 0 || userId == 1 {
-		c.GORM.Model(&pojo.Servant{}).Find(&dataList)
+		pool.GORM.Model(&pojo.Servant{}).Find(&dataList)
 	} else {
-		c.GORM.Model(&pojo.Servant{}).Where("user_id = ?", userId).Find(&dataList)
+		pool.GORM.Model(&pojo.Servant{}).Where("user_id = ?", userId).Find(&dataList)
 	}
 	return &dataList
 }
@@ -54,7 +54,7 @@ func QueryGrid(req *dto.PageBasicReq) (resp []vo.Grid) {
 		where += " and gs.id  = ?"
 		args = append(args, req.Id)
 	}
-	c.GORM.Debug().Table("grid_grid gg").
+	pool.GORM.Debug().Table("grid_grid gg").
 		Select(`
 	gg.*,
 	gs.id AS gs_id,
@@ -81,7 +81,7 @@ func QueryGrid(req *dto.PageBasicReq) (resp []vo.Grid) {
 // 2024.6.1 pageBasicReq.id as user_id
 func QueryServantGroup(req *dto.PageBasicReq) (resp []vo.VoServantGroup) {
 	if req.Id != 1 && req.Id != 0 {
-		c.GORM.Debug().Table("grid_servant_group gsg").
+		pool.GORM.Debug().Table("grid_servant_group gsg").
 			Select(`
 		gsg.*,
 		gs.create_time AS gs_create_time,
@@ -97,7 +97,7 @@ func QueryServantGroup(req *dto.PageBasicReq) (resp []vo.VoServantGroup) {
 			Where("gs.user_id = ? or gsg.user_id = ?", req.Id, req.Id).
 			Find(&resp)
 	} else {
-		c.GORM.Table("grid_servant_group gsg").
+		pool.GORM.Table("grid_servant_group gsg").
 			Select(`
 		gsg.*,
 		gs.create_time AS gs_create_time,
@@ -159,7 +159,7 @@ func QueryPackage(queryPackageDto *dto.QueryPackageDto) []vo.VoServantPackage {
 		where += ` and gsp.version = ?`
 		params = append(params, queryPackageDto.Version)
 	}
-	c.GORM.Table("grid_servant_package gsp").
+	pool.GORM.Table("grid_servant_package gsp").
 		Select(`
 	gsp.*,
 	gs.server_name as gs_server_name,
@@ -177,7 +177,7 @@ func QueryPackage(queryPackageDto *dto.QueryPackageDto) []vo.VoServantPackage {
 }
 
 func QueryPackageById(id int) (rsp pojo.ServantPackage) {
-	c.GORM.Model(&pojo.ServantPackage{}).
+	pool.GORM.Model(&pojo.ServantPackage{}).
 		Where(&pojo.ServantPackage{
 			Id: id,
 		}).
@@ -188,7 +188,7 @@ func QueryPackageById(id int) (rsp pojo.ServantPackage) {
 func QueryStatLogById(id int, offset int, size int) any {
 	var total int64
 	var rsp []pojo.StatLog
-	c.GORM.
+	pool.GORM.
 		Model(rsp).
 		Where(&pojo.StatLog{
 			GridId: id,
@@ -205,19 +205,19 @@ func QueryStatLogById(id int, offset int, size int) any {
 }
 
 func QueryPropertiesByKey(key string) (resp []*pojo.Properties) {
-	c.GORM.Model(&pojo.Properties{}).Where(&pojo.Properties{
+	pool.GORM.Model(&pojo.Properties{}).Where(&pojo.Properties{
 		Key: key,
 	}).Find(&resp)
 	return resp
 }
 
 func QueryProperties() (resp []*pojo.Properties) {
-	c.GORM.Model(&pojo.Properties{}).Find(&resp)
+	pool.GORM.Model(&pojo.Properties{}).Find(&resp)
 	return
 }
 
 func QueryUser(userName string) (resp *rbac.User, err error) {
-	err = c.GORM.Model(&rbac.User{}).Where(&rbac.User{
+	err = pool.GORM.Model(&rbac.User{}).Where(&rbac.User{
 		UserName: userName,
 	}).Find(&resp).Error
 	if err != nil {
@@ -229,10 +229,10 @@ func QueryUser(userName string) (resp *rbac.User, err error) {
 func QueryGroups(id int) (resp *[]vo.VoGroupObj) {
 	// 超管
 	if id == 0 || id == 1 {
-		c.GORM.Model(&pojo.ServantGroup{}).Find(&resp)
+		pool.GORM.Model(&pojo.ServantGroup{}).Find(&resp)
 	} else {
 		fmt.Println("id", id)
-		c.GORM.Model(&pojo.ServantGroup{}).Where("user_id = ?", id).Find(&resp)
+		pool.GORM.Model(&pojo.ServantGroup{}).Where("user_id = ?", id).Find(&resp)
 	}
 	fmt.Println("resp", resp)
 	return
@@ -240,7 +240,7 @@ func QueryGroups(id int) (resp *[]vo.VoGroupObj) {
 
 func GetGridByNodePort(nodeId int, port int) int64 {
 	var total int64
-	c.GORM.Model(&pojo.Grid{}).Where(&pojo.Grid{
+	pool.GORM.Model(&pojo.Grid{}).Where(&pojo.Grid{
 		NodeId: nodeId,
 		Port:   port,
 	}).Count(&total)
@@ -248,7 +248,7 @@ func GetGridByNodePort(nodeId int, port int) int64 {
 }
 
 func GetServantConfById(ServantId int) (resp *pojo.ServantConf) {
-	c.GORM.Model(&pojo.ServantConf{}).Where(&pojo.ServantConf{
+	pool.GORM.Model(&pojo.ServantConf{}).Where(&pojo.ServantConf{
 		ServantId: &ServantId,
 	}).Find(&resp)
 	return resp
@@ -257,7 +257,7 @@ func GetServantConfById(ServantId int) (resp *pojo.ServantConf) {
 func GetTraceLog(req *dto.TraceLogDto) ([]string, int64, error) {
 	var resp []*pojo.TraceLog
 	var total int64
-	err := c.GORM.Model(&pojo.TraceLog{}).
+	err := pool.GORM.Model(&pojo.TraceLog{}).
 		Where("log_content like ?", "%"+req.Keyword+"%").
 		Where("log_grid_id = ?", req.LogGridId).
 		Where("date(create_time) = ?", req.SearchTime).
@@ -290,7 +290,7 @@ func GetTraceLogFiles(gridId int, log_server_name string) []TraceLogFileVo {
 		where += " AND gtl.log_grid_id = ?"
 		params = append(params, gridId)
 	}
-	c.GORM.Debug().
+	pool.GORM.Debug().
 		Table("grid_trace_log gtl").
 		Select(`
 	gtl.log_type as log_type,
@@ -307,7 +307,7 @@ func GetTraceLogFiles(gridId int, log_server_name string) []TraceLogFileVo {
 
 func QueryNeedShutDownAssets() []*pojo.AssetsAdmin {
 	var findList []*pojo.AssetsAdmin
-	c.GORM.
+	pool.GORM.
 		Model(&pojo.AssetsAdmin{}).
 		Where("expire_time < ?", time.Now()).
 		Find(&findList)
@@ -317,7 +317,7 @@ func QueryNeedShutDownAssets() []*pojo.AssetsAdmin {
 
 func QueryNeedPullAssets() []*pojo.AssetsAdmin {
 	var findList []*pojo.AssetsAdmin
-	c.GORM.
+	pool.GORM.
 		Model(&pojo.AssetsAdmin{}).
 		Where("active_time < ? and expire_time > ?", time.Now(), time.Now()).
 		Find(&findList)
@@ -334,7 +334,7 @@ func QueryAssets(obj *dto.PageBasicReq) (resp []*pojo.AssetsAdmin, count int64, 
 		where += ` and mark like ? `
 		params = append(params, "%"+obj.Keyword+"%")
 	}
-	err = c.GORM.Model(&pojo.AssetsAdmin{}).
+	err = pool.GORM.Model(&pojo.AssetsAdmin{}).
 		Where(where, params...).
 		Count(&total).
 		Offset(obj.Offset).
@@ -360,7 +360,7 @@ type GridAndHost struct {
 
 func BatchQueryGridByStat(ids []int, stat int) []*GridAndHost {
 	var findList []*GridAndHost
-	c.GORM.Debug().Raw(`
+	pool.GORM.Debug().Raw(`
 	select
 	gg.port ,
 	gg.pid ,
@@ -384,7 +384,7 @@ where gg.id in ? and gg.status = ?
 
 func BatchQueryServantConf(ids []int) (map[int]*pojo.ServantConf, error) {
 	var findList []*pojo.ServantConf
-	err := c.GORM.Model(&pojo.ServantConf{}).
+	err := pool.GORM.Model(&pojo.ServantConf{}).
 		Where("servant_id in ?", ids).
 		Find(&findList).Error
 	if err != nil {
@@ -399,7 +399,7 @@ func BatchQueryServantConf(ids []int) (map[int]*pojo.ServantConf, error) {
 
 func GetAllPort() []int {
 	var PortList []int
-	c.GORM.Model(&pojo.Grid{}).
+	pool.GORM.Model(&pojo.Grid{}).
 		Select("port").
 		Find(&PortList)
 	return PortList

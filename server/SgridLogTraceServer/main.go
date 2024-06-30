@@ -3,7 +3,7 @@ package SgridLogTraceServer
 import (
 	protocol "Sgrid/server/SgridLogTraceServer/proto"
 	"Sgrid/src/config"
-	"Sgrid/src/configuration"
+	"Sgrid/src/pool"
 	"Sgrid/src/public"
 	"Sgrid/src/storage"
 	"Sgrid/src/storage/pojo"
@@ -61,7 +61,7 @@ func (s *SgridLog) Registry(conf *config.SgridConf) {
 			Info: info,
 		})
 	}))
-	configuration.InitStorage(conf)
+	pool.InitStorage(conf)
 	port := fmt.Sprintf(":%v", conf.Server.Port)
 	lis, err := net.Listen("tcp", port)
 	if err != nil {

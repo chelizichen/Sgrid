@@ -26,11 +26,11 @@ type saasPerm struct {
 func (s *saasPerm) CheckAuth() (bool, error) {
 	if len(os.Args) != 2 {
 		panic(`
-		********* error **********
-		鉴权失败！请联系作者进行软件购买
-		phone: 13476973442
-		email: leemulus21@gmail.com
-		********* error **********
+********* error **********
+鉴权失败！请联系作者进行软件购买
+phone: 13476973442
+email: leemulus21@gmail.com
+********* error **********
 		`)
 	}
 	// 通过该 key 得到 开始时间，结束时间
@@ -39,11 +39,11 @@ func (s *saasPerm) CheckAuth() (bool, error) {
 	parseString, err := s.ParseAuthString()
 	if err != nil {
 		panic(`
-		********* error **********
-		鉴权Token失败！请联系作者进行软件购买
-		phone: 13476973442
-		email: leemulus21@gmail.com
-		********* error **********
+********* error **********
+鉴权Token失败！请联系作者进行软件购买
+phone: 13476973442
+email: leemulus21@gmail.com
+********* error **********
 		`)
 	}
 	s.SetAuthBody(parseString)
@@ -51,11 +51,11 @@ func (s *saasPerm) CheckAuth() (bool, error) {
 	isExpire, err := s.CheckExpireTime()
 	if err != nil || isExpire {
 		panic(`
-		********* error **********
-		凭证已过期或失效！请联系作者进行软件购买
-		phone: 13476973442
-		email: leemulus21@gmail.com
-		********* error **********
+********* error **********
+凭证已过期或失效！请联系作者进行软件购买
+phone: 13476973442
+email: leemulus21@gmail.com
+********* error **********
 		`)
 	}
 	return true, nil
