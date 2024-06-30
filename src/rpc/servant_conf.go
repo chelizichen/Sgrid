@@ -20,9 +20,9 @@ type SgridGrpcServantConfig struct {
 
 // rpc pack
 type RequestPack struct {
-	method string
-	body   any
-	reply  any
+	Method string
+	Body   any
+	Reply  any
 }
 
 // ************************* utils **************************

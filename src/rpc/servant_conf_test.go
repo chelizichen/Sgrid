@@ -1,6 +1,7 @@
 package rpc_test
 
 import (
+	protocol "Sgrid/server/SgridPackageServer/proto"
 	"Sgrid/src/rpc"
 	"fmt"
 	"testing"
@@ -10,10 +11,10 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-const traceServant = "server.SgridTraceServer@grpc -h 127.0.0.1 -p 15887"
+const packageServer = "server.SgridPackageServer@grpc -h 127.0.0.1 -p 14938"
 
 func TestStringToProxy(t *testing.T) {
-	sgsc, _ := rpc.StringToProxy(traceServant)
+	sgsc, _ := rpc.StringToProxy(packageServer)
 	fmt.Println(sgsc.Host)
 	fmt.Println(sgsc.ServiceName)
 	fmt.Println(sgsc.ServantName)
@@ -23,7 +24,32 @@ func TestStringToProxy(t *testing.T) {
 
 func TestConnTrace(t *testing.T) {
 	proxys := make([]string, 0)
-	proxys = append(proxys, traceServant)
+	proxys = append(proxys, packageServer)
 	_, err := rpc.NewSgridGrpcClient[any](proxys, rpc.WithDiaoptions[any](grpc.WithTransportCredentials(insecure.NewCredentials())))
 	assert.NoError(t, err)
+}
+
+func TestInvoke(t *testing.T) {
+	proxys := make([]string, 0)
+	proxys = append(proxys, packageServer)
+	prx, err := rpc.NewSgridGrpcClient[protocol.FileTransferServiceClient](proxys,
+		rpc.WithDiaoptions[protocol.FileTransferServiceClient](
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+		),
+	)
+	assert.NoError(t, err)
+	var rsp protocol.GetLogFileByHostResp
+	err = prx.Request(rpc.RequestPack{
+		Method: "/SgridProtocol.FileTransferService/GetLogFileByHost",
+		Body: &protocol.GetLogFileByHostReq{
+			Host:       "127.0.0.1",
+			ServerName: "ShopServer",
+			GridId:     28,
+		},
+		Reply: &rsp,
+	})
+	assert.NoError(t, err)
+	fmt.Println("rsp.Code", rsp.Code)
+	fmt.Println("rsp.Data", rsp.Data)
+	fmt.Println("rsp.Message", rsp.Message)
 }

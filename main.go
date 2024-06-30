@@ -5,27 +5,26 @@ import (
 	"Sgrid/server/SgridPackageServer"
 	h "Sgrid/src/http"
 	"Sgrid/src/public"
-	"Sgrid/src/saas"
 	service "Sgrid/src/service"
 	"fmt"
 )
 
-func init() {
-	fmt.Println(`
-********* info **********
-		开始验证
-********* info **********
-		`)
-	b, err := saas.UsesaasPerm.CheckAuth()
-	if !b || err != nil {
-		fmt.Println(`
-********* error **********
-		验证失败
-********* error **********
-			`)
-		return
-	}
-}
+// func init() {
+// 	fmt.Println(`
+// ********* info **********
+//          开始验证
+// ********* info **********
+// 		`)
+// 	b, err := saas.UsesaasPerm.CheckAuth()
+// 	if !b || err != nil {
+// 		fmt.Println(`
+// ********* error **********
+//          验证失败
+// ********* error **********
+// 			`)
+// 		return
+// 	}
+// }
 
 func main() {
 	ctx := h.NewSgridServerCtx(

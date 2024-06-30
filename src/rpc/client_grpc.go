@@ -30,20 +30,20 @@ func (s *SgridGrpcClient[T]) GetServantName() string {
 }
 
 // balance request
-func (s *SgridGrpcClient[T]) Request(pack RequestPack) (reply any, err error) {
+func (s *SgridGrpcClient[T]) Request(pack RequestPack) error {
 	u := s._curr.Add(1)
 	if u >= uint32(s._total) {
 		s._curr.Store(0)
 	}
 	curr := s._curr.Load()
-	err = s._conns[curr].Invoke(s.ctx, pack.method, pack.body, pack.reply)
-	return pack.reply, err
+	err := s._conns[curr].Invoke(s.ctx, pack.Method, pack.Body, pack.Reply)
+	return err
 }
 
 func (s *SgridGrpcClient[T]) RequestAll(pack RequestPack, replys []any) (reply []any, err error) {
 	var wg sync.WaitGroup
 	for i, cc := range s._conns {
-		err = cc.Invoke(s.ctx, pack.method, pack.body, replys[i])
+		err = cc.Invoke(s.ctx, pack.Method, pack.Body, replys[i])
 		wg.Add(1)
 	}
 	wg.Wait()
