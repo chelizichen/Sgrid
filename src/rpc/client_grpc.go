@@ -22,11 +22,16 @@ type SgridGrpcClient[T any] struct {
 	_conns   []*grpc.ClientConn // grpc 客户端链接
 	_total   uint8              // 总共
 	_curr    atomic.Uint32
+	_prefix  string
 	ctx      context.Context
 }
 
 func (s *SgridGrpcClient[T]) GetServantName() string {
 	return s._servant
+}
+
+func (s *SgridGrpcClient[T]) getFullRequestName(name string) string {
+	return s._prefix + name
 }
 
 // balance request
@@ -36,7 +41,12 @@ func (s *SgridGrpcClient[T]) Request(pack RequestPack) error {
 		s._curr.Store(0)
 	}
 	curr := s._curr.Load()
-	err := s._conns[curr].Invoke(s.ctx, pack.Method, pack.Body, pack.Reply)
+	err := s._conns[curr].Invoke(
+		s.ctx,
+		s.getFullRequestName(pack.Method),
+		pack.Body,
+		pack.Reply,
+	)
 	return err
 }
 
@@ -53,6 +63,12 @@ func (s *SgridGrpcClient[T]) RequestAll(pack RequestPack, replys []any) (reply [
 func WithDiaoptions[T any](opts ...grpc.DialOption) sgridOptCb[T] {
 	return func(s *SgridGrpcClient[T]) {
 		s._opts = append(s._opts, opts...)
+	}
+}
+
+func WithRequestPrefix[T any](prefix string) sgridOptCb[T] {
+	return func(s *SgridGrpcClient[T]) {
+		s._prefix = prefix
 	}
 }
 

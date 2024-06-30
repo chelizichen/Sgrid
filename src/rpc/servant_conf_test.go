@@ -33,6 +33,7 @@ func TestInvoke(t *testing.T) {
 	proxys := make([]string, 0)
 	proxys = append(proxys, packageServer)
 	prx, err := rpc.NewSgridGrpcClient[protocol.FileTransferServiceClient](proxys,
+		rpc.WithRequestPrefix[protocol.FileTransferServiceClient]("/SgridProtocol.FileTransferService/"),
 		rpc.WithDiaoptions[protocol.FileTransferServiceClient](
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		),
@@ -40,7 +41,8 @@ func TestInvoke(t *testing.T) {
 	assert.NoError(t, err)
 	var rsp protocol.GetLogFileByHostResp
 	err = prx.Request(rpc.RequestPack{
-		Method: "/SgridProtocol.FileTransferService/GetLogFileByHost",
+		// methodName 在 grpc桩文件里面可以找到
+		Method: "GetLogFileByHost",
 		Body: &protocol.GetLogFileByHostReq{
 			Host:       "127.0.0.1",
 			ServerName: "ShopServer",
