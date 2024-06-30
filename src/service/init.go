@@ -5,15 +5,16 @@ import (
 	handlers "Sgrid/src/http"
 	"Sgrid/src/pool"
 	"Sgrid/src/public"
-	clientgrpc "Sgrid/src/public/client_grpc"
+	"Sgrid/src/rpc"
 	"Sgrid/src/storage"
 	"context"
 	"fmt"
-	"log"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
+
+type PackageServantProxy struct{}
 
 func InitService(ctx *handlers.SgridServerCtx) {
 	sc, err := public.NewConfig()
@@ -24,26 +25,37 @@ func InitService(ctx *handlers.SgridServerCtx) {
 
 	gn := storage.QueryPropertiesByKey(SgridPackageServerHosts)
 	addresses := []string{}
-
 	for _, v := range gn {
 		addresses = append(addresses, v.Value)
 	}
 
-	clients := []*clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]{}
-	for _, v := range addresses {
-		add := v
-		conn, err := grpc.Dial(add, grpc.WithTransportCredentials(insecure.NewCredentials()))
-		if err != nil {
-			log.Fatalf("无法连接: %v", err)
-		}
-		// defer conn.Close() // 移动到循环内部
-		client := clientgrpc.NewSgridClient[protocol.FileTransferServiceClient](
-			protocol.NewFileTransferServiceClient(conn),
-			clientgrpc.WithSgridGrpcClientAddress[protocol.FileTransferServiceClient](add),
-		)
-		clients = append(clients, client)
+	packageServant, err := rpc.NewSgridGrpcClient[protocol.FileTransferServiceClient](
+		addresses,
+		rpc.WithDiaoptions[protocol.FileTransferServiceClient](
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+		),
+		rpc.WithClientService[protocol.FileTransferServiceClient](protocol.NewFileTransferServiceClient),
+	)
+	if err != nil {
+		fmt.Println("Error To NewSgridGrpcClient ", err.Error())
 	}
-	ctx.Context = context.WithValue(ctx.Context, public.GRPC_CLIENT_PROXYS{}, clients)
+	ctx.Context = context.WithValue(ctx.Context, PackageServantProxy{}, packageServant)
+
+	// clients := []*clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]{}
+	// for _, v := range addresses {
+	// 	add := v
+	// 	conn, err := grpc.Dial(add, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// 	if err != nil {
+	// 		log.Fatalf("无法连接: %v", err)
+	// 	}
+	// 	// defer conn.Close() // 移动到循环内部
+	// 	client := clientgrpc.NewSgridClient[protocol.FileTransferServiceClient](
+	// 		protocol.NewFileTransferServiceClient(conn),
+	// 		clientgrpc.WithSgridGrpcClientAddress[protocol.FileTransferServiceClient](add),
+	// 	)
+	// 	clients = append(clients, client)
+	// }
+	// ctx.Context = context.WithValue(ctx.Context, public.GRPC_CLIENT_PROXYS{}, clients)
 	ctx.RegistryHttpRouter(PackageService)
 	ctx.RegistryHttpRouter(Registry)
 	ctx.RegistryHttpRouter(DevopsService)

@@ -55,3 +55,18 @@ func TestInvoke(t *testing.T) {
 	fmt.Println("rsp.Data", rsp.Data)
 	fmt.Println("rsp.Message", rsp.Message)
 }
+
+// 验证 相同的Target会不会被Set过滤 Pass
+// targets [127.0.0.1:14938 127.0.0.1:14938]
+// s._targets [127.0.0.1:14938]
+func TestSet(t *testing.T) {
+	proxys := make([]string, 0)
+	proxys = append(proxys, packageServer, packageServer)
+	_, err := rpc.NewSgridGrpcClient[protocol.FileTransferServiceClient](proxys,
+		rpc.WithRequestPrefix[protocol.FileTransferServiceClient]("/SgridProtocol.FileTransferService/"),
+		rpc.WithDiaoptions[protocol.FileTransferServiceClient](
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+		),
+	)
+	assert.NoError(t, err)
+}

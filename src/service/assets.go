@@ -14,8 +14,7 @@ import (
 	protocol "Sgrid/server/SgridPackageServer/proto"
 	handlers "Sgrid/src/http"
 	"Sgrid/src/pool"
-	"Sgrid/src/public"
-	clientgrpc "Sgrid/src/public/client_grpc"
+	"Sgrid/src/rpc"
 	"Sgrid/src/storage"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
@@ -98,9 +97,9 @@ func getAssert(c *gin.Context) {
 func cronJob(ctx *handlers.SgridServerCtx) {
 	rds := pool.GRDB
 	rds_ctx := pool.RDBContext
-	clients := ctx.Context.Value(
-		public.GRPC_CLIENT_PROXYS{},
-	).([]*clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient])
+	packageServant := ctx.Context.Value(
+		PackageServantProxy{},
+	).(*rpc.SgridGrpcClient[protocol.FileTransferServiceClient])
 	var Job = func() {
 		t := time.Now()
 		fmt.Println("AssetsService.Job 开始加锁", t.Format(time.DateTime))
@@ -133,8 +132,8 @@ func cronJob(ctx *handlers.SgridServerCtx) {
 						Host:   v.Host,
 					})
 				}
-				for _, client := range clients {
-					client.GetClient().ShutdownGrid(ctx.Context, &protocol.ShutdownGridReq{
+				for _, client := range packageServant.GetClients() {
+					client.ShutdownGrid(ctx.Context, &protocol.ShutdownGridReq{
 						Req: Req,
 					})
 				}
@@ -162,8 +161,8 @@ func cronJob(ctx *handlers.SgridServerCtx) {
 						ServerProtocol: v.ServerProtocol,
 					})
 				}
-				for _, client := range clients {
-					client.GetClient().PatchServer(ctx.Context, &protocol.PatchServerReq{
+				for _, client := range packageServant.GetClients() {
+					client.PatchServer(ctx.Context, &protocol.PatchServerReq{
 						Req: Req,
 					})
 				}
