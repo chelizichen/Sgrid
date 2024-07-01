@@ -35,27 +35,12 @@ func InitService(ctx *handlers.SgridServerCtx) {
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		),
 		rpc.WithClientService[protocol.FileTransferServiceClient](protocol.NewFileTransferServiceClient),
+		rpc.WithRequestPrefix[protocol.FileTransferServiceClient]("/SgridProtocol.FileTransferService/"),
 	)
 	if err != nil {
 		fmt.Println("Error To NewSgridGrpcClient ", err.Error())
 	}
 	ctx.Context = context.WithValue(ctx.Context, PackageServantProxy{}, packageServant)
-
-	// clients := []*clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient]{}
-	// for _, v := range addresses {
-	// 	add := v
-	// 	conn, err := grpc.Dial(add, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	// 	if err != nil {
-	// 		log.Fatalf("无法连接: %v", err)
-	// 	}
-	// 	// defer conn.Close() // 移动到循环内部
-	// 	client := clientgrpc.NewSgridClient[protocol.FileTransferServiceClient](
-	// 		protocol.NewFileTransferServiceClient(conn),
-	// 		clientgrpc.WithSgridGrpcClientAddress[protocol.FileTransferServiceClient](add),
-	// 	)
-	// 	clients = append(clients, client)
-	// }
-	// ctx.Context = context.WithValue(ctx.Context, public.GRPC_CLIENT_PROXYS{}, clients)
 	ctx.RegistryHttpRouter(PackageService)
 	ctx.RegistryHttpRouter(Registry)
 	ctx.RegistryHttpRouter(DevopsService)

@@ -25,7 +25,6 @@ const SgridPackageServerHosts = "SgridPackageServerHosts"
 
 func PackageService(ctx *handlers.SgridServerCtx) {
 	router := ctx.Engine.Group(strings.ToLower(ctx.GetServerName()))
-	// clients := ctx.Context.Value(public.GRPC_CLIENT_PROXYS{}).([]*clientgrpc.SgridGrpcClient[protocol.FileTransferServiceClient])
 	packageServant := ctx.Context.Value(PackageServantProxy{}).(*rpc.SgridGrpcClient[protocol.FileTransferServiceClient])
 	clients := packageServant.GetClients()
 	router.POST("/upload/uploadServer", func(c *gin.Context) {

@@ -12,6 +12,7 @@ import (
 	"Sgrid/src/config"
 	"Sgrid/src/pool"
 	"Sgrid/src/public"
+	"Sgrid/src/rpc"
 	"Sgrid/src/storage"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
@@ -28,7 +29,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	clientgrpc "Sgrid/src/public/client_grpc"
 	pk "Sgrid/src/public/process"
 
 	"github.com/panjf2000/ants"
@@ -36,6 +36,7 @@ import (
 	p "github.com/shirou/gopsutil/process"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -182,8 +183,13 @@ func (s *SgridMonitor) Report() {
 				LogBytesLen:   int64(len(content)),
 				CreateTime:    public.GetCurrTime(),
 			}
-
-			NewSgridLogTraceServant.BalanceSendLog(logReq)
+			var rpl logProto.BasicResp
+			NewSgridLogTraceServant.Request(rpc.RequestPack{
+				Method: "LogTrace",
+				Body:   logReq,
+				Reply:  &rpl,
+			})
+			fmt.Println("rpl", rpl)
 		})
 	}
 	s.cronInstance.AddFunc("@every 30s", job)
@@ -236,7 +242,13 @@ func (s *SgridMonitor) PrintLogger() {
 					CreateTime:    public.GetCurrTime(),
 				}
 				fmt.Println("SgridPackageServer.read.data.content,", content)
-				NewSgridLogTraceServant.BalanceSendLog(logReq)
+				var rpl logProto.BasicResp
+				NewSgridLogTraceServant.Request(rpc.RequestPack{
+					Method: "LogTrace",
+					Body:   logReq,
+					Reply:  &rpl,
+				})
+				fmt.Println("rpl", rpl)
 			}
 
 		}
@@ -273,7 +285,13 @@ func (s *SgridMonitor) PrintLogger() {
 					CreateTime:    now,
 				}
 				fmt.Println("SgridPackageServer.read.error.content,", content)
-				NewSgridLogTraceServant.BalanceSendLog(logReq)
+				var rpl logProto.BasicResp
+				NewSgridLogTraceServant.Request(rpc.RequestPack{
+					Method: "LogTrace",
+					Body:   logReq,
+					Reply:  &rpl,
+				})
+				fmt.Println("rpl", rpl)
 			}
 		}
 	}()
@@ -841,40 +859,26 @@ func initDir() {
 	public.CheckDirectoryOrCreate(SgridPackageInstance.JoinPath(Servants))
 }
 
-type SgridLogTraceServant struct {
-	Conns   []*clientgrpc.SgridGrpcClient[logProto.SgridLogTraceServiceClient]
-	Current *atomic.Int64
-	Size    int
-	ctx     context.Context
-}
-
-// 负载均衡写入节点
-func (s *SgridLogTraceServant) BalanceSendLog(req *logProto.LogTraceReq) {
-	AntsPool.Submit(func() {
-		current := s.Current.Load()
-		ret, err := s.Conns[current].GetClient().LogTrace(s.ctx, req)
-		if err != nil {
-			fmt.Println("BalanceSendLog Error", err.Error())
-		}
-		fmt.Println("ret", ret.String())
-		new := s.Current.Add(1)
-		if int(new) >= s.Size-1 {
-			s.Current.Store(0)
-		}
-	})
-}
-
-var NewSgridLogTraceServant = new(SgridLogTraceServant)
+var NewSgridLogTraceServant *rpc.SgridGrpcClient[logProto.SgridLogTraceServiceClient]
 
 func initClient() {
-	var resp = clientgrpc.NewSgridGrpcProxyConn[logProto.SgridLogTraceServiceClient](
-		SgridLogTraceServerHosts,
-		logProto.NewSgridLogTraceServiceClient,
+	gn := storage.QueryPropertiesByKey(SgridLogTraceServerHosts)
+	addresses := []string{}
+	for _, v := range gn {
+		addresses = append(addresses, v.Value)
+	}
+	packageServant, err := rpc.NewSgridGrpcClient[logProto.SgridLogTraceServiceClient](
+		addresses,
+		rpc.WithDiaoptions[logProto.SgridLogTraceServiceClient](
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+		),
+		rpc.WithClientService[logProto.SgridLogTraceServiceClient](logProto.NewSgridLogTraceServiceClient),
+		rpc.WithRequestPrefix[logProto.SgridLogTraceServiceClient]("/SgridLogTrace.SgridLogTraceService/"),
 	)
-	NewSgridLogTraceServant.Conns = resp
-	NewSgridLogTraceServant.Current = &atomic.Int64{}
-	NewSgridLogTraceServant.Size = len(resp)
-	NewSgridLogTraceServant.ctx = context.Background()
+	if err != nil {
+		fmt.Println("Error To NewSgridGrpcClient ", err.Error())
+	}
+	NewSgridLogTraceServant = packageServant
 }
 
 type SgridPackage struct{}
