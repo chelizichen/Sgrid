@@ -5,16 +5,9 @@ export default {
 </script>
 <script lang="ts" setup>
 import type { Item } from "@/dto/dto";
-import { useRouter } from "vue-router";
 const props = defineProps<{
   serverList: any[];
 }>();
-const router = useRouter();
-function toDashboard() {
-  router.push({
-    path: "/server/dashboard",
-  });
-}
 const emits = defineEmits(["handleOpen"]);
 function handleOpen(item: Partial<Item>) {
   emits("handleOpen", item);

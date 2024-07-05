@@ -218,7 +218,7 @@ async function releaseServer() {
   state.releaseVisible = true;
   releaseList.value = data.data;
 }
-async function handleRelease(id) {
+async function handleRelease(id: number) {
   const releaseItem = releaseList.value.find((v) => v.id == id);
   const servantBaseInfo = props.gridsList[0];
   console.log("selectionGrid", selectionGrid);

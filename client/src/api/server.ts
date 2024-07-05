@@ -55,14 +55,14 @@ const api = {
       url: '/statlog/getlist',
       method: 'get',
       params
-    })
+    }) as unknown as BasicResp<any>
   },
   getLogFileList: function (params: any) {
     return HttpReq({
       url: '/statlog/getLogFileList',
       method: 'get',
       params
-    })
+    }) as unknown as BasicResp<any>
   },
   getLog: function (data: any) {
     return HttpReq({
