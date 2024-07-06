@@ -11,27 +11,29 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-const packageServer = "server.SgridPackageServer@grpc -h 127.0.0.1 -p 14938"
+const errorStringPackageServer1 = "server.SgridPackageServer@grpc      -h  127.0.0.1-p 14938"
+const successStringPacakgeServer2 = "server.SgridPackageServer@grpc -h  127.0.0.1  -p 14938"
+const successStringPacakgeServer3 = "server.SgridPackageServer@grpc  -h  127.0.0.1   -p 14938"
 
 func TestStringToProxy(t *testing.T) {
-	sgsc, _ := rpc.StringToProxy(packageServer)
-	fmt.Println(sgsc.Host)
-	fmt.Println(sgsc.ServiceName)
-	fmt.Println(sgsc.ServantName)
-	fmt.Println(sgsc.Port)
-	fmt.Println(sgsc.Protocol)
+	_, err := rpc.StringToProxy(successStringPacakgeServer2)
+	assert.Nil(t, err)
+	_, err = rpc.StringToProxy(successStringPacakgeServer3)
+	assert.Nil(t, err)
+	_, err = rpc.StringToProxy(errorStringPackageServer1)
+	assert.NotNil(t, err)
 }
 
 func TestConnTrace(t *testing.T) {
 	proxys := make([]string, 0)
-	proxys = append(proxys, packageServer)
+	proxys = append(proxys, successStringPacakgeServer2)
 	_, err := rpc.NewSgridGrpcClient[any](proxys, rpc.WithDiaoptions[any](grpc.WithTransportCredentials(insecure.NewCredentials())))
 	assert.NoError(t, err)
 }
 
 func TestInvoke(t *testing.T) {
 	proxys := make([]string, 0)
-	proxys = append(proxys, packageServer)
+	proxys = append(proxys, successStringPacakgeServer2)
 	prx, err := rpc.NewSgridGrpcClient[protocol.FileTransferServiceClient](proxys,
 		rpc.WithRequestPrefix[protocol.FileTransferServiceClient]("/SgridProtocol.FileTransferService/"),
 		rpc.WithDiaoptions[protocol.FileTransferServiceClient](
@@ -61,7 +63,7 @@ func TestInvoke(t *testing.T) {
 // s._targets [127.0.0.1:14938]
 func TestSet(t *testing.T) {
 	proxys := make([]string, 0)
-	proxys = append(proxys, packageServer, packageServer)
+	proxys = append(proxys, successStringPacakgeServer2, successStringPacakgeServer2)
 	_, err := rpc.NewSgridGrpcClient[protocol.FileTransferServiceClient](proxys,
 		rpc.WithRequestPrefix[protocol.FileTransferServiceClient]("/SgridProtocol.FileTransferService/"),
 		rpc.WithDiaoptions[protocol.FileTransferServiceClient](

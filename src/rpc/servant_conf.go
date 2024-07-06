@@ -29,7 +29,7 @@ type RequestPack struct {
 
 // server.SgridSubServer @grpc -h 127.0.0.1 -p 15996
 func StringToProxy(str string) (*SgridGrpcServantConfig, error) {
-	re := regexp.MustCompile(`(?P<ServiceName>\w+)\.(?P<ServantName>\w+)\w+@(?P<Protocol>\w+) -h (?P<Host>\d+\.\d+\.\d+\.\d+) -p (?P<Port>\d+)`)
+	re := regexp.MustCompile(`(?P<ServiceName>\w+)\.(?P<ServantName>\w+)\w+@(?P<Protocol>\w+)\s+-h\s+(?P<Host>\d+\.\d+\.\d+\.\d+)\s+-p\s+(?P<Port>\d+)`)
 	matches := re.FindStringSubmatch(str)
 
 	if matches == nil {
