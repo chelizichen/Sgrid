@@ -34,6 +34,7 @@ type Servant struct {
 	UpStreamName   string     // 转发名称
 	Location       string     // 路径
 	Protocol       string     // 协议
+	Preview        string     // 预览地址
 	ExecPath       string     // 可执行路径
 	ServantGroupId int        `gorm:"foreignKey:ServantGroupId"` // 服务组ID
 	Stat           int        // 状态

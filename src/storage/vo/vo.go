@@ -55,6 +55,7 @@ type VoServantObj struct {
 	ExecPath       string     `json:"execPath,omitempty"`       // 可执行路径
 	ServantGroupId int        `json:"servantGroupId,omitempty"` // 服务组ID
 	Stat           int        `json:"stat,omitempty"`           // 服务组ID
+	Preview        string     `json:"preview,omitempty"`        // 预览地址
 }
 
 type ServantPackageVo struct {
@@ -86,6 +87,7 @@ type GridServant struct {
 	ServantCreateTime *time.Time `gorm:"column:gs_create_time" json:"servantCreateTime,omitempty"`
 	ExecPath          string     `gorm:"column:gs_exec_path" json:"execPath,omitempty"`
 	Protocol          string     `gorm:"column:gs_protocol" json:"protocol,omitempty"`
+	Preview           string     `gorm:"column:gs_preview" json:"preview,omitempty"`
 }
 
 type GridNode struct {

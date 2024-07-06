@@ -64,6 +64,7 @@ func QueryGrid(req *dto.PageBasicReq) (resp []vo.Grid) {
 	gs.create_time as gs_create_time,
 	gs.exec_path as gs_exec_path,
 	gs.protocol as gs_protocol,
+	gs.preview as gs_preview,
 	gn.id as gn_id,
 	gn.ip as gn_ip,
 	gn.main as gn_main,

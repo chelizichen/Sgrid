@@ -15,6 +15,7 @@
       <el-table-column prop="execPath" label="execPath"></el-table-column>
       <el-table-column prop="language" label="language"></el-table-column>
       <el-table-column prop="protocol" label="protocol"></el-table-column>
+      <el-table-column prop="preview" label="preview"></el-table-column>
       <el-table-column label="操作" align="center">
         <template #default="scoped">
           <el-button type="primary" @click="setCronTask(scoped.row)">
@@ -55,6 +56,9 @@
       </el-form-item>
       <el-form-item label="执行路径">
         <el-input v-model="servant.execPath"></el-input>
+      </el-form-item>
+      <el-form-item label="预览地址">
+        <el-input v-model="servant.preview"></el-input>
       </el-form-item>
       <el-form-item label="服务组">
         <el-skeleton style="width: 100%" :loading="editLoading" animated>
@@ -154,6 +158,7 @@ const servantDemo = {
   protocol: "grpc",
   execPath: "service_go",
   servantGroupId: 1,
+  preview: "",
 };
 type T_Servant = typeof servantDemo;
 const groupList = ref<Array<{ tagEnglishName: string; tagName: string; id: number }>>([]);

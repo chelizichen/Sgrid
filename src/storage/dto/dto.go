@@ -41,6 +41,7 @@ type SaveServantDto struct {
 	ExecPath       string `json:"execPath,omitempty"`       // 可执行路径
 	ServantGroupId int    `json:"servantGroupId,omitempty"` // 服务组ID
 	UserId         int    `json:"userId,omitempty"`         // 用户ID
+	Preview        string `json:"preview,omitempty"`        // 预览地址
 }
 
 type GridDTO struct {

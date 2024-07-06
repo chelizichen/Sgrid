@@ -150,6 +150,7 @@ func updateServant(c *gin.Context) {
 		ServantGroupId: req.ServantGroupId,
 		ExecPath:       req.ExecPath,
 		Id:             req.Id,
+		Preview:        req.Preview,
 	}
 	vsg := storage.UpdateServant(record)
 	handlers.AbortWithSucc(c, vsg)

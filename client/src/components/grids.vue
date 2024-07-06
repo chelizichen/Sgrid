@@ -63,6 +63,19 @@ export default {
         </template>
       </el-table-column>
       <el-table-column prop="gridServant.serverName" label="serverName">
+        <template #default="scoped">
+          <template v-if="scoped.row.gridServant.preview">
+            <el-button
+              type="text"
+              @click="toPreview(scoped.row.gridServant.preview)"
+              style="color: #4a4aca"
+              >{{ scoped.row.gridServant.serverName }}</el-button
+            >
+          </template>
+          <template v-else>
+            <span>{{ scoped.row.gridServant.serverName }}</span>
+          </template>
+        </template>
       </el-table-column>
       <el-table-column label="Status">
         <template #default="scoped">
@@ -326,6 +339,10 @@ function toLog(row) {
     },
   });
   window.open(text.href, "_blank");
+}
+
+function toPreview(path: string) {
+  window.open(path, "_blank");
 }
 
 function checkStat(list) {
