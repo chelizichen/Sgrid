@@ -23,7 +23,7 @@ type SgridGrpcClient[T any] struct {
 	_service        string              // 服务名
 	_conns          []*grpc.ClientConn  // grpc 客户端链接
 	_total          uint8               // 总共
-	_curr           atomic.Uint32       // 负载均衡
+	_curr           *atomic.Uint32      // 负载均衡
 	_prefix         string              // 服务前缀
 	_ctx            context.Context     // 上下文
 	_client_service NewClientService[T] // 客户端接口
@@ -54,12 +54,13 @@ func (s *SgridGrpcClient[T]) getFullRequestName(name string) string {
 
 // balance request
 func (s *SgridGrpcClient[T]) Request(pack RequestPack) error {
+	fmt.Println("SgridGrpcClient.Request |", s)
 	u := s._curr.Add(1)
-	if u >= uint32(s._total) {
+	if u >= 1024 {
 		s._curr.Store(0)
 	}
-	curr := s._curr.Load()
-	err := s._conns[curr].Invoke(
+	current := u % uint32(s._total)
+	err := s._conns[current].Invoke(
 		s._ctx,
 		s.getFullRequestName(pack.Method),
 		pack.Body,
@@ -142,5 +143,6 @@ func NewSgridGrpcClient[T any](clients []string, opts ...sgridOptCb[T]) (*SgridG
 	c._servant = confs[0].ServantName
 	c._service = confs[0].ServiceName
 	c._ctx = context.Background()
+	c._curr = &atomic.Uint32{}
 	return c, nil
 }

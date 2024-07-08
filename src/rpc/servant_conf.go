@@ -29,6 +29,7 @@ type RequestPack struct {
 
 // server.SgridSubServer @grpc -h 127.0.0.1 -p 15996
 func StringToProxy(str string) (*SgridGrpcServantConfig, error) {
+	fmt.Println("StringToProxy.args", str)
 	re := regexp.MustCompile(`(?P<ServiceName>\w+)\.(?P<ServantName>\w+)\w+@(?P<Protocol>\w+)\s+-h\s+(?P<Host>\d+\.\d+\.\d+\.\d+)\s+-p\s+(?P<Port>\d+)`)
 	matches := re.FindStringSubmatch(str)
 

@@ -867,6 +867,7 @@ func initClient() {
 	for _, v := range gn {
 		addresses = append(addresses, v.Value)
 	}
+	fmt.Println("SgridPackageServer.initClient.address", addresses)
 	packageServant, err := rpc.NewSgridGrpcClient[logProto.SgridLogTraceServiceClient](
 		addresses,
 		rpc.WithDiaoptions[logProto.SgridLogTraceServiceClient](
