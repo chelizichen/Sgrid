@@ -153,7 +153,7 @@ func PushErr(d *pojo.SystemErr) {
 
 func UpdateConf(d *pojo.ServantConf) {
 	if d.Id == 0 {
-		CreateConf(d)
+		pool.GORM.Debug().Create(d)
 		return
 	}
 	pool.GORM.
@@ -162,10 +162,6 @@ func UpdateConf(d *pojo.ServantConf) {
 			ServantId: d.ServantId,
 		}).
 		Updates(d)
-}
-
-func CreateConf(d *pojo.ServantConf) {
-	pool.GORM.Debug().Create(d)
 }
 
 func SaveLog(d *protocol.LogTraceReq) error {

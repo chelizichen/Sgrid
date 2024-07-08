@@ -1,6 +1,7 @@
 package service
 
 import (
+	"Sgrid/src/config"
 	handlers "Sgrid/src/http"
 	sgridError "Sgrid/src/public/error"
 	"Sgrid/src/storage"
@@ -14,6 +15,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"gopkg.in/yaml.v3"
 )
 
 func DevopsService(ctx *handlers.SgridServerCtx) {
@@ -134,6 +136,27 @@ func saveServant(c *gin.Context) {
 		UserId:         req.UserId,
 	}
 	vsg := storage.SaveServant(record)
+
+	servantConf := &config.SgridConf{
+		Conf: make(map[string]interface{}),
+	}
+	servantConf.Server.Host = " nil "
+	servantConf.Server.Language = record.Language
+	servantConf.Server.Name = record.ServerName
+	servantConf.Server.Protocol = record.Protocol
+	servantConf.Conf["foo"] = "bar"
+
+	conf2String, err := yaml.Marshal(servantConf)
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	dbConf := &pojo.ServantConf{
+		ServantId: &record.Id,
+		Conf:      string(conf2String),
+	}
+	storage.UpdateConf(dbConf)
+
 	handlers.AbortWithSucc(c, vsg)
 }
 
