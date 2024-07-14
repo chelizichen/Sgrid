@@ -1,5 +1,5 @@
-syntax = "proto3";  
-  
+syntax = "proto3";
+
 package SgridProtocol;
 
 option go_package = ".;protocol";
@@ -7,13 +7,6 @@ option go_package = ".;protocol";
 message queryIdReq {
     int32 id = 1;
 }
-
-message deletePackageReq{
-    string serverName = 1;
-    string filePath = 2;
-}
-
-
 
 message releaseTarget{
     int32 port = 1;
@@ -53,10 +46,10 @@ message basicResp {
     string message = 2;
 }
 
-// 文件块消息定义  
-message FileChunk {  
-    bytes data = 1; // 文件内容块  
-    int64 offset = 2; // 该块在文件中的偏移量  
+// 文件块消息定义
+message FileChunk {
+    bytes data = 1; // 文件内容块
+    int64 offset = 2; // 该块在文件中的偏移量
     string serverName = 3;
     string fileHash = 4;
     int32 index = 5;
@@ -137,14 +130,17 @@ message GetPidInfoResp{
     repeated HostPidInfo data = 1;
 }
 
-// 文件传输服务定义  
-service FileTransferService {  
-    // 双向流式 RPC 用于文件传输  
-    rpc StreamFile(stream FileChunk) returns (stream FileResp) {}  
-    
-    // 删除包
-    rpc DeletePackage(deletePackageReq)returns(basicResp){}
-    
+message DeletePackageReq{
+    int32 id = 1;
+    string serverName = 2;
+    string filePath = 3;
+}
+
+// 文件传输服务定义
+service FileTransferService {
+    // 双向流式 RPC 用于文件传输
+    rpc StreamFile(stream FileChunk) returns (stream FileResp) {}
+
     // 发布服务
     rpc ReleaseServerByPackage(releaseServerReq)returns(basicResp){}
 
@@ -162,4 +158,7 @@ service FileTransferService {
 
     // 获取Pid信息 checkAlive
     rpc GetPidInfo(GetPidInfoReq)returns(GetPidInfoResp){}
-}  
+
+    // 删除服务包
+    rpc DeletePacakge(DeletePackageReq)returns(basicResp){}
+}

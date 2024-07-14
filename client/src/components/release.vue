@@ -22,10 +22,22 @@ export default {
         :key="item.id"
         :label="item.filePath"
         :value="item.id"
+        :disabled="item.status == -1"
       >
         <span style="float: left">{{ item.filePath }}</span>
+        <span
+          style="
+            float: right;
+            color: red;
+            font-size: 13px;
+            display: block;
+            margin-left: 20px;
+          "
+          @click="handleRemovePackage(item)"
+          >删除</span
+        >
         <span style="float: right; color: var(--el-text-color-secondary); font-size: 13px"
-          >ID: {{ item.id }}   @ Tag : {{ item.version || '--' }}</span
+          >ID: {{ item.id }} @ Tag : {{ item.version || "--" }}</span
         >
       </el-option>
     </el-select>
@@ -61,8 +73,9 @@ export default {
 
 <script lang="ts" setup>
 import api from "@/api/server";
-import { ElNotification } from "element-plus";
+import { ElMessage, ElMessageBox, ElNotification } from "element-plus";
 import { defineEmits, ref, useAttrs, watch } from "vue";
+import _ from "lodash";
 
 const attrs = useAttrs();
 const selectValue = ref();
@@ -76,16 +89,39 @@ watch(selectValue, function (newVal) {
 });
 defineEmits(["CLOSE_RELEASE_DIALOG", "RELEASE_SERVER_BY_ID"]);
 
-async function addTag(){
-  const id = Number(selectValue.value)
-  const version = selectVersion.value
-
+async function addTag() {
+  const id = Number(selectValue.value);
+  const version = selectVersion.value;
   const body = {
-    id,version
+    id,
+    version,
+  };
+  await api.updatePackageVersion(body);
+  ElNotification.success(" Update Tag Success");
+}
+
+async function handleRemovePackage(item) {
+  console.log("item", item);
+  if (item.status == "-1") {
+    return false;
   }
-
-  await api.updatePackageVersion(body)
-
-  ElNotification.success(" Update Tag Success")
+  item.serverName = attrs.serverName;
+  const body = _.pick(item, ["id", "serverName"]);
+  ElMessageBox.prompt("确认删除该服务包？删除后不可恢复!", "Confirm", {
+    confirmButtonText: "OK",
+    cancelButtonText: "Cancel",
+    inputPlaceholder: "input password",
+  }).then(async ({ value: password }) => {
+    console.log("password", password);
+    if (password != item.serverName) {
+      return ElMessage.error(`password error`);
+    }
+    console.log("body", body);
+    const data = await api.delPackage(body);
+    if (data.code) {
+      return ElMessage.error(`delete error:${data.message}`);
+    }
+    return ElMessage.success("delete success");
+  });
 }
 </script>

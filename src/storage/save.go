@@ -96,14 +96,14 @@ func DeleteGrid(id int) {
 		})
 }
 
-func DeletePackage(id int) {
-	pool.GORM.Debug().
+func DeletePackage(id int) error {
+	return pool.GORM.Debug().
 		Model(&pojo.ServantPackage{}).
 		Select("status").
 		Where("id = ?", id).
 		Updates(&pojo.Grid{
 			Status: -1,
-		})
+		}).Error
 }
 
 // 判断服务组下有无存在的服务，如果没有，则删除服务组

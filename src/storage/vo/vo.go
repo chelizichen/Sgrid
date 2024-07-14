@@ -112,6 +112,7 @@ type VoServantPackage struct {
 	Content      string     `gorm:"content" json:"content,omitempty"`
 	CreateTime   *time.Time `gorm:"create_time" json:"createTime,omitempty"`
 	Version      string     `gorm:"version" json:"version,omitempty"`
+	Status       string     `gorm:"status" json:"status,omitempty"`
 	GSServerName string     `gorm:"gs_server_name" json:"serverName,omitempty"`
 	GSCreateTime *time.Time `gorm:"gs_create_time" json:"serverCreateTime,omitempty"`
 	GSLanguage   string     `gorm:"gs_language" json:"language,omitempty"`

@@ -156,8 +156,10 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 	router.GET("/upload/removePackage", func(c *gin.Context) {
 		id, err := strconv.Atoi(c.DefaultQuery("id", "0"))
 		serverName := c.DefaultQuery("serverName", "")
+		fmt.Println("id", id)
+		fmt.Println("serverName", serverName)
 		if err != nil || id == 0 || len(serverName) == 0 {
-			c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "params error ! [id] or [serverName]", nil))
+			handlers.AbortWithError(c, "params error ! [id] or [serverName]"+err.Error())
 			return
 		}
 		sp := storage.QueryPackageById(id)
@@ -165,15 +167,17 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 		for _, client := range clients {
 			wg.Add(1)
 			go func(clt protocol.FileTransferServiceClient) {
-				clt.DeletePackage(&gin.Context{}, &protocol.DeletePackageReq{
-					FilePath: sp.FilePath,
+				clt.DeletePacakge(&gin.Context{}, &protocol.DeletePackageReq{
+					FilePath:   sp.FilePath,
+					ServerName: serverName,
+					Id:         int32(sp.Id),
 				})
 				wg.Done()
 			}(client)
 		}
 		wg.Wait()
 		storage.DeletePackage(id)
-		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "params error ! [id] or [serverName]", nil))
+		handlers.AbortWithSucc(c, nil)
 	})
 
 	router.POST("/restart/server", func(c *gin.Context) {

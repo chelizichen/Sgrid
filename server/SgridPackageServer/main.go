@@ -404,30 +404,6 @@ func (s *fileTransferServer) StreamFile(stream protocol.FileTransferService_Stre
 	return nil
 }
 
-func (s *fileTransferServer) DeletePackage(ctx context.Context, req *protocol.DeletePackageReq) (res *protocol.BasicResp, err error) {
-	if len(req.FilePath) == 0 || len(req.ServerName) == 0 {
-		fmt.Println("invoke Error", req)
-		return &protocol.BasicResp{
-			Code:    -1,
-			Message: "invoke Error ",
-		}, err
-	}
-	f := req.FilePath
-	svr := req.ServerName
-	t := public.Join(svr, f)
-	err = os.Remove(t)
-	if err != nil {
-		return &protocol.BasicResp{
-			Code:    -1,
-			Message: "error" + err.Error(),
-		}, err
-	}
-	return &protocol.BasicResp{
-		Code:    0,
-		Message: "ok",
-	}, nil
-}
-
 func (s *fileTransferServer) ShutdownGrid(ctx context.Context, req *protocol.ShutdownGridReq) (res *protocol.BasicResp, err error) {
 	for _, _grid := range req.GetReq() {
 		grid := _grid
@@ -847,6 +823,29 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 		}
 	}
 
+	return &protocol.BasicResp{
+		Code:    0,
+		Message: "ok",
+	}, nil
+}
+
+func (s *fileTransferServer) DeletePacakge(ctx context.Context, req *protocol.DeletePackageReq) (*protocol.BasicResp, error) {
+	packageFile := SgridPackageInstance.JoinPath(App, req.ServerName, req.FilePath) // 路径
+	fmt.Println("packageFile : ", packageFile)
+	err := os.Remove(packageFile)
+	if err != nil {
+		return &protocol.BasicResp{
+			Code:    -1,
+			Message: fmt.Sprintf("os.Remove.error %v", err.Error()),
+		}, nil
+	}
+	err = storage.DeletePackage(int(req.Id))
+	if err != nil {
+		return &protocol.BasicResp{
+			Code:    -2,
+			Message: fmt.Sprintf("db.delete.package.error %v", err.Error()),
+		}, nil
+	}
 	return &protocol.BasicResp{
 		Code:    0,
 		Message: "ok",

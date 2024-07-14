@@ -24,8 +24,6 @@ const _ = grpc.SupportPackageIsVersion7
 type FileTransferServiceClient interface {
 	// 双向流式 RPC 用于文件传输
 	StreamFile(ctx context.Context, opts ...grpc.CallOption) (FileTransferService_StreamFileClient, error)
-	// 删除包
-	DeletePackage(ctx context.Context, in *DeletePackageReq, opts ...grpc.CallOption) (*BasicResp, error)
 	// 发布服务
 	ReleaseServerByPackage(ctx context.Context, in *ReleaseServerReq, opts ...grpc.CallOption) (*BasicResp, error)
 	// 拉起服务
@@ -38,6 +36,8 @@ type FileTransferServiceClient interface {
 	GetLogByFile(ctx context.Context, in *GetLogByFileReq, opts ...grpc.CallOption) (*GetLogByFileResp, error)
 	// 获取Pid信息 checkAlive
 	GetPidInfo(ctx context.Context, in *GetPidInfoReq, opts ...grpc.CallOption) (*GetPidInfoResp, error)
+	// 删除服务包
+	DeletePacakge(ctx context.Context, in *DeletePackageReq, opts ...grpc.CallOption) (*BasicResp, error)
 }
 
 type fileTransferServiceClient struct {
@@ -77,15 +77,6 @@ func (x *fileTransferServiceStreamFileClient) Recv() (*FileResp, error) {
 		return nil, err
 	}
 	return m, nil
-}
-
-func (c *fileTransferServiceClient) DeletePackage(ctx context.Context, in *DeletePackageReq, opts ...grpc.CallOption) (*BasicResp, error) {
-	out := new(BasicResp)
-	err := c.cc.Invoke(ctx, "/SgridProtocol.FileTransferService/DeletePackage", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *fileTransferServiceClient) ReleaseServerByPackage(ctx context.Context, in *ReleaseServerReq, opts ...grpc.CallOption) (*BasicResp, error) {
@@ -142,14 +133,21 @@ func (c *fileTransferServiceClient) GetPidInfo(ctx context.Context, in *GetPidIn
 	return out, nil
 }
 
+func (c *fileTransferServiceClient) DeletePacakge(ctx context.Context, in *DeletePackageReq, opts ...grpc.CallOption) (*BasicResp, error) {
+	out := new(BasicResp)
+	err := c.cc.Invoke(ctx, "/SgridProtocol.FileTransferService/DeletePacakge", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FileTransferServiceServer is the server API for FileTransferService service.
 // All implementations must embed UnimplementedFileTransferServiceServer
 // for forward compatibility
 type FileTransferServiceServer interface {
 	// 双向流式 RPC 用于文件传输
 	StreamFile(FileTransferService_StreamFileServer) error
-	// 删除包
-	DeletePackage(context.Context, *DeletePackageReq) (*BasicResp, error)
 	// 发布服务
 	ReleaseServerByPackage(context.Context, *ReleaseServerReq) (*BasicResp, error)
 	// 拉起服务
@@ -162,6 +160,8 @@ type FileTransferServiceServer interface {
 	GetLogByFile(context.Context, *GetLogByFileReq) (*GetLogByFileResp, error)
 	// 获取Pid信息 checkAlive
 	GetPidInfo(context.Context, *GetPidInfoReq) (*GetPidInfoResp, error)
+	// 删除服务包
+	DeletePacakge(context.Context, *DeletePackageReq) (*BasicResp, error)
 	mustEmbedUnimplementedFileTransferServiceServer()
 }
 
@@ -171,9 +171,6 @@ type UnimplementedFileTransferServiceServer struct {
 
 func (UnimplementedFileTransferServiceServer) StreamFile(FileTransferService_StreamFileServer) error {
 	return status.Errorf(codes.Unimplemented, "method StreamFile not implemented")
-}
-func (UnimplementedFileTransferServiceServer) DeletePackage(context.Context, *DeletePackageReq) (*BasicResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeletePackage not implemented")
 }
 func (UnimplementedFileTransferServiceServer) ReleaseServerByPackage(context.Context, *ReleaseServerReq) (*BasicResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReleaseServerByPackage not implemented")
@@ -192,6 +189,9 @@ func (UnimplementedFileTransferServiceServer) GetLogByFile(context.Context, *Get
 }
 func (UnimplementedFileTransferServiceServer) GetPidInfo(context.Context, *GetPidInfoReq) (*GetPidInfoResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPidInfo not implemented")
+}
+func (UnimplementedFileTransferServiceServer) DeletePacakge(context.Context, *DeletePackageReq) (*BasicResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeletePacakge not implemented")
 }
 func (UnimplementedFileTransferServiceServer) mustEmbedUnimplementedFileTransferServiceServer() {}
 
@@ -230,24 +230,6 @@ func (x *fileTransferServiceStreamFileServer) Recv() (*FileChunk, error) {
 		return nil, err
 	}
 	return m, nil
-}
-
-func _FileTransferService_DeletePackage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeletePackageReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(FileTransferServiceServer).DeletePackage(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/SgridProtocol.FileTransferService/DeletePackage",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FileTransferServiceServer).DeletePackage(ctx, req.(*DeletePackageReq))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _FileTransferService_ReleaseServerByPackage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -358,6 +340,24 @@ func _FileTransferService_GetPidInfo_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FileTransferService_DeletePacakge_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeletePackageReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FileTransferServiceServer).DeletePacakge(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/SgridProtocol.FileTransferService/DeletePacakge",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FileTransferServiceServer).DeletePacakge(ctx, req.(*DeletePackageReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FileTransferService_ServiceDesc is the grpc.ServiceDesc for FileTransferService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -365,10 +365,6 @@ var FileTransferService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "SgridProtocol.FileTransferService",
 	HandlerType: (*FileTransferServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "DeletePackage",
-			Handler:    _FileTransferService_DeletePackage_Handler,
-		},
 		{
 			MethodName: "ReleaseServerByPackage",
 			Handler:    _FileTransferService_ReleaseServerByPackage_Handler,
@@ -392,6 +388,10 @@ var FileTransferService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPidInfo",
 			Handler:    _FileTransferService_GetPidInfo_Handler,
+		},
+		{
+			MethodName: "DeletePacakge",
+			Handler:    _FileTransferService_DeletePacakge_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

@@ -21,7 +21,7 @@ const api = {
       data
     }) as unknown as BasicResp<any>
   },
-  getServerList: function (id:number) {
+  getServerList: function (id: number) {
     return HttpReq({
       url: '/main/queryServantGroup',
       method: 'post',
@@ -84,25 +84,25 @@ const api = {
       data
     }) as unknown as BasicResp<any>
   },
-  LoginByCache:function(data:any){
+  LoginByCache: function (data: any) {
     return HttpReq({
-      url:'/loginByCache',
-      method:'post',
+      url: '/loginByCache',
+      method: 'post',
       data
     }) as unknown as Promise<BasicResp<any>>
   },
-  getUserMenusByUserId:function(id:number){
+  getUserMenusByUserId: function (id: number) {
     return HttpReq({
-      url:'/getUserMenusByUserId',
-      method:'get',
-      params:{id}
+      url: '/getUserMenusByUserId',
+      method: 'get',
+      params: { id }
     }) as unknown as Promise<BasicResp<any>>
   },
-  getGroup(id:number) {
+  getGroup(id: number) {
     return HttpReq({
       url: '/devops/getGroups',
       method: 'get',
-      params:{id}
+      params: { id }
     })
   },
   saveServant(data: any) {
@@ -118,11 +118,11 @@ const api = {
       method: 'get'
     })
   },
-  getServants(id:number) {
+  getServants(id: number) {
     return HttpReq({
       url: '/devops/getServants',
       method: 'get',
-      params:{id}
+      params: { id }
     })
   },
   saveGrid(data: any) {
@@ -153,59 +153,66 @@ const api = {
       data
     }) as unknown as BasicResp<any>
   },
-  updatePackageVersion(params:any){
+  updatePackageVersion(params: any) {
     return HttpReq({
       url: '/release/updatePackageVersion',
       method: 'get',
       params
     }) as unknown as BasicResp<any>
   },
-  getPropertys(data:any){
+  getPropertys(data: any) {
     return HttpReq({
       url: '/devops/getPropertys',
       method: 'post',
       data
     }) as unknown as BasicResp<any>
   },
-  setProperty(data:any){
+  setProperty(data: any) {
     return HttpReq({
       url: '/devops/setProperty',
       method: 'post',
       data
     }) as unknown as BasicResp<any>
   },
-  delProperty(id:number){
+  delProperty(id: number) {
     return HttpReq({
       url: '/devops/delProperty',
       method: 'get',
-      params:{id}
+      params: { id }
     }) as unknown as BasicResp<any>
   },
-  delServant(id:number,stat:number){
+  delServant(id: number, stat: number) {
     return HttpReq({
       url: '/devops/delServant',
       method: 'post',
-      params:{id,stat}
+      params: { id, stat }
     }) as unknown as BasicResp<any>
   },
-  deleteGroup(id:number){
+  deleteGroup(id: number) {
     return HttpReq({
       url: '/devops/delGroup',
       method: 'post',
-      params:{id}
+      params: { id }
     }) as unknown as BasicResp<any>
   },
-  getRandomPort(){
+  getRandomPort() {
     return HttpReq({
       url: '/main/port/random',
-      method: 'get',
+      method: 'get'
     }) as unknown as BasicResp<any>
   },
-  updateServant(data:any){
+  updateServant(data: any) {
     return HttpReq({
       url: '/devops/updateServant',
       method: 'post',
       data
+    }) as unknown as BasicResp<any>
+  },
+  delPackage(params: any) {
+    return HttpReq({
+      url: '/upload/removePackage',
+      method: 'get',
+      params
     }) as unknown as BasicResp<any>
   }
 }
