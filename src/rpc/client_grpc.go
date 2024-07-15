@@ -101,7 +101,7 @@ func WithClientService[T any](fn NewClientService[T]) sgridOptCb[T] {
 
 func WithTargets[T any](targets []string) sgridOptCb[T] {
 	return func(s *SgridGrpcClient[T]) {
-		sets := make(set.SgridSet[string])
+		sets := set.NewSgridSet[string]()
 		// fmt.Println("targets", targets)
 		for _, v := range targets {
 			sets.Add(v)
