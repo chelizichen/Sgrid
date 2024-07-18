@@ -52,7 +52,7 @@ const configStatisticsGetServerPackage = reactive({
 });
 
 const configStatisticsGetLatestLog = reactive({
-  header: ["序号", "服务名", "发布总次数"],
+  header: ["序号", "服务名", "日志"],
   data: [],
   columnWidth: [100, 200],
 });
@@ -62,9 +62,11 @@ const configStatisticsGetServerType = reactive({
 });
 async function init() {
   const data1 = await getStatisticsByType(Req_TYPE.StatisticsGetServerPackage);
-  configStatisticsGetServerPackage.data = data1.data.map((v) => {
-    return [v.id, v.label, v.value + " (次)"];
-  });
+  configStatisticsGetServerPackage.data = data1.data
+    .sort((a, b) => b.value - a.value)
+    .map((v) => {
+      return [v.id, v.label, v.value + " (次)"];
+    });
   const data2 = await getStatisticsByType(Req_TYPE.StatisticsGetLatestLog);
   configStatisticsGetLatestLog.data = data2.data.map((v) => {
     return [v.id, v.label, v.value];
