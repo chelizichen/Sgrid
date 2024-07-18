@@ -118,7 +118,7 @@ const api = {
       method: 'get'
     })
   },
-  getServants(id: number) {
+  getServants(id?: number) {
     return HttpReq({
       url: '/devops/getServants',
       method: 'get',

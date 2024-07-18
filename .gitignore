@@ -12,3 +12,5 @@ test
 sgrid_app
 
 dist
+
+*.rdb

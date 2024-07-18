@@ -15,6 +15,7 @@
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
     "@highlightjs/vue-plugin": "^2.1.0",
+    "@kjgl77/datav-vue3": "^1.7.3",
     "@types/echarts": "^4.9.22",
     "@types/moment": "^2.13.0",
     "@types/nprogress": "^0.2.3",

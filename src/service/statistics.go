@@ -2,6 +2,7 @@ package service
 
 import (
 	h "Sgrid/src/http"
+	"Sgrid/src/storage"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -13,6 +14,7 @@ func SystemStatisticsRegisty(ctx *h.SgridServerCtx) {
 	GROUP := ctx.Engine.Group(strings.ToLower(ctx.GetServerName()))
 	GROUP.GET("/system/statistics/getCpuInfo", getCpuInfo)
 	GROUP.GET("/system/statistics/getMemoryInfo", getMemoryInfo)
+	GROUP.GET("/server/statistics/getByType", getByType)
 }
 
 // cpu info
@@ -44,4 +46,19 @@ func getCpuInfo(c *gin.Context) {
 func getMemoryInfo(c *gin.Context) {
 	memInfo, _ := mem.VirtualMemory()
 	h.AbortWithSucc(c, memInfo.String())
+}
+
+func getByType(c *gin.Context) {
+	t := c.Query("TYPE")
+	f := storage.StatisticsMap[t]
+	if f == nil {
+		h.AbortWithError(c, "ERROR! 未找到该分类")
+	}
+	rsp, err := f()
+	if err != nil {
+		h.AbortWithError(c, "ERROR! "+err.Error())
+		return
+	}
+	h.AbortWithSucc(c, rsp)
+
 }
