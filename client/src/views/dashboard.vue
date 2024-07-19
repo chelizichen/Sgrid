@@ -12,7 +12,7 @@ export default {
     <dv-decoration-10 :reverse="true" class="right-line" />
     <!-- 中间文字 -->
     <dv-decoration-11 class="center-text">
-      <div>云智慧监控系统</div>
+      <div>智慧监控系统</div>
     </dv-decoration-11>
     <!-- 右边雷达图 -->
     <dv-decoration-12 class="right-radar" />
@@ -27,9 +27,14 @@ export default {
     <dv-border-box12 class="box2">
       <dv-scroll-board :config="configStatisticsGetLatestLog" class="table2" />
     </dv-border-box12>
+
     <!-- 服务类型 -->
     <dv-border-box12 class="box3">
       <dv-scroll-ranking-board :config="configStatisticsGetServerType" class="table3" />
+    </dv-border-box12>
+
+    <dv-border-box12 class="box4">
+      <dv-scroll-board :config="configStatisticsGetStatus" class="table4" />
     </dv-border-box12>
   </div>
 </template>
@@ -56,6 +61,11 @@ const configStatisticsGetLatestLog = reactive({
   data: [],
   columnWidth: [100, 200],
 });
+const configStatisticsGetStatus = reactive({
+  header: ["序号", "服务(PID)", "状态"],
+  data: [],
+  columnWidth: [100, 200],
+});
 const configStatisticsGetServerType = reactive({
   data: [],
   unit: "个",
@@ -72,7 +82,9 @@ async function init() {
     return [v.id, v.label, v.value];
   });
   const data3 = await getStatisticsByType(Req_TYPE.StatisticsGetStatus);
-
+  configStatisticsGetStatus.data = data3.data.map((v) => {
+    return [v.id, v.label, v.value];
+  });
   const data4 = await getStatisticsByType(Req_TYPE.StatisticsGetServerType);
   configStatisticsGetServerType.data = data4.data.map((v) => {
     return {
@@ -167,7 +179,7 @@ onMounted(() => {
   .box2 {
     position: absolute;
     top: 50vh;
-    width: 100vw;
+    width: 50vw;
     height: 40vh;
     box-sizing: border-box;
     .table2 {
@@ -191,6 +203,21 @@ onMounted(() => {
       position: absolute;
       top: 2%;
       left: 2%;
+    }
+  }
+  .box4 {
+    position: absolute;
+    top: 50vh;
+    width: 25vw;
+    height: 40vh;
+    right: 0;
+    box-sizing: border-box;
+    .table4 {
+      width: 98%;
+      height: 92%;
+      position: absolute;
+      top: 4%;
+      left: 1%;
     }
   }
   .pond {

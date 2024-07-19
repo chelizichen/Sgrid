@@ -61,7 +61,10 @@ func StatisticsGetStatus() (rsp []KVI, err error) {
 	var sql = `
 	SELECT
 		CONCAT(gs.server_name,"(",gg.pid ,")") as label,
-		gs.stat as value,
+		CASE gs.stat
+		when 0 then '停止'
+		when 1 then '运行'
+		END as 'value',
 		gg.id
 from
 		grid_grid gg
