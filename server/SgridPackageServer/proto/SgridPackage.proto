@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package SgridProtocol;
 
+import "google/protobuf/empty.proto";
+
 option go_package = ".;protocol";
 
 message queryIdReq {
@@ -116,14 +118,14 @@ message HostPids{
 }
 
 message HostPidInfo{
-    int32 pid = 1;
-    string stat = 2;
-    float cpu = 3;
-    int64 threads = 4;
-    string name = 5;
-    string isRuning = 6;
-    uint64 memoryStack = 7;
-    uint64 memoryData = 8;
+    int32 pid           = 1;
+    string stat         = 2;
+    float cpu           = 3;
+    int64 threads       = 4;
+    string name         = 5;
+    string isRuning     = 6;
+    uint64 memoryStack  = 7;
+    uint64 memoryData   = 8;
 }
 
 message GetPidInfoResp{
@@ -131,9 +133,24 @@ message GetPidInfoResp{
 }
 
 message DeletePackageReq{
-    int32 id = 1;
-    string serverName = 2;
-    string filePath = 3;
+    int32   id              = 1;
+    string  serverName      = 2;
+    string  filePath        = 3;
+}
+
+message GetSystemInfoResp{
+    SystemInfo data        = 1;
+    int64      code        = 2;
+    string     message     = 3;
+}
+
+message SystemInfo{
+    string host             = 1;    // host
+    string cpuPercent       = 2;    // cpu使用率
+    string memoryPercent    = 3;    // 内存使用率
+    string nodes            = 4;    // 服务总数
+    string cpuLength        = 5;    // cpu数量核数
+    string memorySize       = 6;    // 内存大小
 }
 
 // 文件传输服务定义
@@ -161,4 +178,7 @@ service FileTransferService {
 
     // 删除服务包
     rpc DeletePacakge(DeletePackageReq)returns(basicResp){}
+
+    // 获取服务信息
+    rpc GetSystemInfo(google.protobuf.Empty)returns(GetSystemInfoResp){}
 }

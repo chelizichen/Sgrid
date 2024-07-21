@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/c4milo/unpackit"
+	"github.com/shirou/gopsutil/cpu"
 	"gopkg.in/yaml.v2"
 )
 
@@ -76,6 +77,16 @@ func GetWd() string {
 	} else {
 		return s
 	}
+}
+
+func GetCpuPercent() string {
+	cpuPercentage, err := cpu.Percent(time.Second, false)
+	if err != nil {
+		fmt.Println("Error getting CPU usage:", err)
+		return "0.00%"
+	}
+	percent := fmt.Sprintf("%.2f", cpuPercentage[0])
+	return percent
 }
 
 func Join(args ...string) string {

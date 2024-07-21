@@ -8,3 +8,10 @@ export function getStatisticsByType(TYPE: string) {
     params: { TYPE }
   }) as unknown as BasicResp<any>
 }
+
+export function getNodesInfo() {
+  return request({
+    url: '/server/statistics/getNodes',
+    method: 'get'
+  }) as unknown as BasicResp<any>
+}

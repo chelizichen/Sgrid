@@ -32,7 +32,7 @@ type LogTraceReq struct {
 	LogType       string `protobuf:"bytes,4,opt,name=logType,proto3" json:"logType,omitempty"`             // 日志类型
 	LogContent    string `protobuf:"bytes,5,opt,name=logContent,proto3" json:"logContent,omitempty"`       // 日志内容
 	CreateTime    string `protobuf:"bytes,6,opt,name=createTime,proto3" json:"createTime,omitempty"`       // 日志创建时间
-	LogBytesLen   int64  `protobuf:"varint,7,opt,name=logBytesLen,proto3" json:"logBytesLen,omitempty"`
+	LogBytesLen   int64  `protobuf:"varint,7,opt,name=logBytesLen,proto3" json:"logBytesLen,omitempty"`    // 日志字节长度
 }
 
 func (x *LogTraceReq) Reset() {

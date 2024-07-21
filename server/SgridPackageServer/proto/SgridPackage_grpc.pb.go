@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -38,6 +39,8 @@ type FileTransferServiceClient interface {
 	GetPidInfo(ctx context.Context, in *GetPidInfoReq, opts ...grpc.CallOption) (*GetPidInfoResp, error)
 	// 删除服务包
 	DeletePacakge(ctx context.Context, in *DeletePackageReq, opts ...grpc.CallOption) (*BasicResp, error)
+	// 获取服务信息
+	GetSystemInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetSystemInfoResp, error)
 }
 
 type fileTransferServiceClient struct {
@@ -142,6 +145,15 @@ func (c *fileTransferServiceClient) DeletePacakge(ctx context.Context, in *Delet
 	return out, nil
 }
 
+func (c *fileTransferServiceClient) GetSystemInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetSystemInfoResp, error) {
+	out := new(GetSystemInfoResp)
+	err := c.cc.Invoke(ctx, "/SgridProtocol.FileTransferService/GetSystemInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FileTransferServiceServer is the server API for FileTransferService service.
 // All implementations must embed UnimplementedFileTransferServiceServer
 // for forward compatibility
@@ -162,6 +174,8 @@ type FileTransferServiceServer interface {
 	GetPidInfo(context.Context, *GetPidInfoReq) (*GetPidInfoResp, error)
 	// 删除服务包
 	DeletePacakge(context.Context, *DeletePackageReq) (*BasicResp, error)
+	// 获取服务信息
+	GetSystemInfo(context.Context, *emptypb.Empty) (*GetSystemInfoResp, error)
 	mustEmbedUnimplementedFileTransferServiceServer()
 }
 
@@ -192,6 +206,9 @@ func (UnimplementedFileTransferServiceServer) GetPidInfo(context.Context, *GetPi
 }
 func (UnimplementedFileTransferServiceServer) DeletePacakge(context.Context, *DeletePackageReq) (*BasicResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeletePacakge not implemented")
+}
+func (UnimplementedFileTransferServiceServer) GetSystemInfo(context.Context, *emptypb.Empty) (*GetSystemInfoResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSystemInfo not implemented")
 }
 func (UnimplementedFileTransferServiceServer) mustEmbedUnimplementedFileTransferServiceServer() {}
 
@@ -358,6 +375,24 @@ func _FileTransferService_DeletePacakge_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FileTransferService_GetSystemInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FileTransferServiceServer).GetSystemInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/SgridProtocol.FileTransferService/GetSystemInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FileTransferServiceServer).GetSystemInfo(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FileTransferService_ServiceDesc is the grpc.ServiceDesc for FileTransferService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -392,6 +427,10 @@ var FileTransferService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeletePacakge",
 			Handler:    _FileTransferService_DeletePacakge_Handler,
+		},
+		{
+			MethodName: "GetSystemInfo",
+			Handler:    _FileTransferService_GetSystemInfo_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

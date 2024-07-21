@@ -33,11 +33,14 @@ import (
 
 	"github.com/panjf2000/ants"
 	"github.com/robfig/cron"
+	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/mem"
 	p "github.com/shirou/gopsutil/process"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 const (
@@ -849,6 +852,25 @@ func (s *fileTransferServer) DeletePacakge(ctx context.Context, req *protocol.De
 	return &protocol.BasicResp{
 		Code:    0,
 		Message: "ok",
+	}, nil
+}
+
+func (s *fileTransferServer) GetSystemInfo(ctx context.Context, req *emptypb.Empty) (*protocol.GetSystemInfoResp, error) {
+	cpuPercent := public.GetCpuPercent()
+	memInfo, _ := mem.VirtualMemory()
+	cores, _ := cpu.Counts(false)
+
+	rsp := &protocol.SystemInfo{}
+	rsp.CpuLength = fmt.Sprintf("%v", cores)
+	rsp.CpuPercent = cpuPercent
+	rsp.MemoryPercent = fmt.Sprintf("%.2f", memInfo.UsedPercent)
+	rsp.Host = config.GlobalConf.Server.Host
+	rsp.MemorySize = fmt.Sprintf("%v", memInfo.Total/1024/1024/1024)
+	rsp.Nodes = ""
+	return &protocol.GetSystemInfoResp{
+		Code:    0,
+		Message: "ok",
+		Data:    rsp,
 	}, nil
 }
 

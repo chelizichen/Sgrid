@@ -18,6 +18,7 @@ func init() {
 	StatisticsMap["3"] = StatisticsGetStatus
 	StatisticsMap["4"] = StatisticsGetServerType
 	StatisticsMap["5"] = StatisticsGetServants
+	StatisticsMap["6"] = StatisticsGetNodes
 }
 
 // 实时统计发包次数
@@ -62,8 +63,8 @@ func StatisticsGetStatus() (rsp []KVI, err error) {
 	SELECT
 		CONCAT(gs.server_name,"(",gg.pid ,")") as label,
 		CASE gs.stat
-		when 0 then '停止'
-		when 1 then '运行'
+		when 0 then '<span style="color:red">停止</span>'
+		when 1 then '<span style="color:green">正常</span>'
 		END as 'value',
 		gg.id
 from
@@ -98,6 +99,24 @@ from
 		grid_servant gs
 where
 		gs.stat != -1
+	`
+	err = pool.GORM.Raw(sql).Scan(&rsp).Error
+	return rsp, err
+}
+
+// 节点统计
+func StatisticsGetNodes() (rsp []KVI, err error) {
+	var sql = `
+select
+	count(gg.node_id) as value,
+	CONCAT(gn.plat_form,"(",gn.ip,")") as label,
+	gn.ip as id 
+from
+	grid_node gn
+left join grid_grid gg on
+	gn.id = gg.node_id
+GROUP BY
+	gg.node_id,gn.ip,gn.plat_form 
 	`
 	err = pool.GORM.Raw(sql).Scan(&rsp).Error
 	return rsp, err
