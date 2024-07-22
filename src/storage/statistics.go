@@ -62,7 +62,7 @@ func StatisticsGetStatus() (rsp []KVI, err error) {
 	var sql = `
 	SELECT
 		CONCAT(gs.server_name,"(",gg.pid ,")") as label,
-		CASE gs.stat
+		CASE gg.status 
 		when 0 then '<span style="color:red">停止</span>'
 		when 1 then '<span style="color:green">正常</span>'
 		END as 'value',
