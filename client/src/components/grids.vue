@@ -359,17 +359,26 @@ function checkStat(list) {
 }
 
 async function deleteGridById(row) {
-  if (row.status) {
-    return ElNotification.error("error/client :: this grid still alive");
-  }
-  const data = await api.deleteGrid({
-    id: row.id,
+  ElMessageBox.prompt("确认删除该节点？删除后不可恢复!", "Confirm", {
+    confirmButtonText: "OK",
+    cancelButtonText: "Cancel",
+    inputPlaceholder: "input password",
+  }).then(async ({ value: password }) => {
+    if (password != props.serverName) {
+      return ElMessage.error(`password error`);
+    }
+    if (row.status) {
+      return ElNotification.error("error/client :: this grid still alive");
+    }
+    const data = await api.deleteGrid({
+      id: row.id,
+    });
+    if (data.code) {
+      return ElNotification.error(data.message);
+    }
+    ElNotification.success("delete success");
+    emits("checkStatus");
   });
-  if (data.code) {
-    return ElNotification.error(data.message);
-  }
-  ElNotification.success("delete success");
-  emits("checkStatus");
 }
 
 const showConfigurationVisible = ref(false);
