@@ -229,6 +229,18 @@ func IsExist(filePath string) bool {
 	}
 }
 
+func IsDir(filePath string) bool {
+	info, err := os.Stat(filePath)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+	if info.IsDir() {
+		return true
+	}
+	return false
+}
+
 // 暂时不可用
 func ThreadLock() bool {
 	if len(os.Getenv(ENV_PRODUCTION)) > 0 {

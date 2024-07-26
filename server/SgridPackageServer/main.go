@@ -17,7 +17,6 @@ import (
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -192,7 +191,6 @@ func (s *SgridMonitor) Report() {
 				Body:   logReq,
 				Reply:  &rpl,
 			})
-			fmt.Println("rpl", rpl)
 		})
 	}
 	s.cronInstance.AddFunc("@every 30s", job)
@@ -251,7 +249,6 @@ func (s *SgridMonitor) PrintLogger() {
 					Body:   logReq,
 					Reply:  &rpl,
 				})
-				fmt.Println("rpl", rpl)
 			}
 
 		}
@@ -440,13 +437,12 @@ func (s *fileTransferServer) ShutdownGrid(ctx context.Context, req *protocol.Shu
 // 发布 -> 上报给主控
 func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *protocol.ReleaseServerReq) (res *protocol.BasicResp, err error) {
 	if len(req.ServantGrids) == 0 {
-		return
+		return &protocol.BasicResp{
+			Code:    -2,
+			Message: "req.ServantGrids is empty",
+		}, err
 	}
-	ReleaseServerByPackageReq, err := json.Marshal(req)
-	if err != nil {
-		fmt.Println("error", err.Error())
-	}
-	fmt.Println("ReleaseServerByPackage Req ||", string(ReleaseServerByPackageReq))
+	fmt.Println("ReleaseServerByPackage Req ||", string(req.String()))      // 日志打印
 	filePath := req.FilePath                                                // 服务路径
 	serverLanguage := req.ServerLanguage                                    // 服务语言
 	serverName := req.ServerName                                            // 服务名称
@@ -455,9 +451,15 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 	startDir := SgridPackageInstance.JoinPath(Servants, serverName)         // 解压目录
 	packageFile := SgridPackageInstance.JoinPath(App, serverName, filePath) // 路径
 	servantId := req.ServantId                                              // 服务ID
-	public.Tar2Dest(packageFile, startDir)                                  // 解压
-	servantGrid := req.ServantGrids                                         // 服务列表  通过Host过滤拿到IP，然后进行服务启动
-	var startFile string                                                    // 启动文件
+	err = public.Tar2Dest(packageFile, startDir)                            // 解压
+	if err != nil {
+		return &protocol.BasicResp{
+			Code:    -1,
+			Message: fmt.Sprintf("ReleaseServerByPackage.Tar2Dest.error %v", err.Error()),
+		}, err
+	}
+	servantGrid := req.ServantGrids // 服务列表  通过Host过滤拿到IP，然后进行服务启动
+	var startFile string            // 启动文件
 	servantConf := storage.GetServantConfById(int(servantId)).Conf
 	for processIndex, grid := range servantGrid { // 通过Host过滤拿到IP，然后进行服务启动
 		ProcessIndex := processIndex
@@ -718,7 +720,7 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 			fmt.Println("servantId", servantId)
 			if confs[servantId] == nil {
 				storage.PushErr(&pojo.SystemErr{
-					Type: "system/error/SgridPackageServer.PactchServer.confs[servantId] == nilb",
+					Type: "system/error/SgridPackageServer.PactchServer.confs[servantId] == nil",
 					Info: "confs[servantId] is nil , please check configuration",
 				})
 				continue
@@ -726,7 +728,7 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 			servantConf := confs[servantId].Conf
 			if servantConf == "" {
 				storage.PushErr(&pojo.SystemErr{
-					Type: "system/error/SgridPackageServer.PactchServer.confs[servantId] == nilb",
+					Type: "system/error/SgridPackageServer.PactchServer.confs[servantId] == nil",
 					Info: "conf is nil , please check configuration",
 				})
 				continue
@@ -736,7 +738,15 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 			serverLanguage := req.ServerLanguage                            // 服务语言
 			serverName := req.ServerName                                    // 服务名称
 			serverProtocol := req.ServerProtocol                            // 服务协议
-			startDir := SgridPackageInstance.JoinPath(Servants, serverName) // 解压目录
+			startDir := SgridPackageInstance.JoinPath(Servants, serverName) // 工作目录
+			isDir := public.IsDir(startDir)
+			if !isDir {
+				storage.PushErr(&pojo.SystemErr{
+					Type: "system/error/SgridPackageServer.PactchServer.startDir == nil",
+					Info: fmt.Sprintf("[%v] is empty or not a dir , please check startDir", startDir),
+				})
+				continue
+			}
 			host := req.Host
 			fmt.Println("servantConf", servantConf)
 			fmt.Println("serverProtocol", serverProtocol)
