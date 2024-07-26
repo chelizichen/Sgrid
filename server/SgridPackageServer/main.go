@@ -58,6 +58,7 @@ const (
 
 const CONSTANT_MONITOR_INTERVAL = 30
 const SgridLogTraceServerHosts = "SgridLogTraceServerHosts"
+const layout = "2006-01-02T15:04:05Z"
 
 var globalConf *config.SgridConf
 var AntsPool *ants.Pool
@@ -139,7 +140,7 @@ func (s *SgridMonitor) Report() {
 			}
 			status, _ := statInfo.Status()
 			var gridStat int = 0
-			if status == "Z" { // down 了 进行物理kill
+			if status == "Z" { // state is down , need kill
 				s.kill()
 				gridStat = 0
 			} else {
@@ -215,6 +216,9 @@ func (s *SgridMonitor) PrintLogger() {
 	go func() {
 		for {
 			if s.next.Load() {
+				defer func() {
+					op.Close()
+				}()
 				break
 			}
 			// 读取输出
@@ -256,6 +260,9 @@ func (s *SgridMonitor) PrintLogger() {
 	go func() {
 		for {
 			if s.next.Load() {
+				defer func() {
+					ep.Close()
+				}()
 				break
 			}
 			// 读取输出
@@ -291,13 +298,13 @@ func (s *SgridMonitor) PrintLogger() {
 					Body:   logReq,
 					Reply:  &rpl,
 				})
-				fmt.Println("rpl", rpl)
 			}
 		}
 	}()
 }
 
 func (s *SgridMonitor) kill() {
+	defer s.next.Store(true)
 	fmt.Println("system/log/server.kill |", s.serverName)
 	storage.SaveStatLog(&pojo.StatLog{
 		GridId: s.gridId,
@@ -308,7 +315,6 @@ func (s *SgridMonitor) kill() {
 	if err != nil {
 		fmt.Println("system/err/process.kill | ", err.Error())
 	}
-	s.next.Store(true)
 }
 
 func (s *SgridMonitor) getPid() int {
@@ -563,8 +569,6 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 		Message: "ok",
 	}, nil
 }
-
-const layout = "2006-01-02T15:04:05Z"
 
 func (s *fileTransferServer) GetLogFileByHost(ctx context.Context, in *protocol.GetLogFileByHostReq) (*protocol.GetLogFileByHostResp, error) {
 	files := storage.GetTraceLogFiles(int(in.GridId), in.ServerName)
