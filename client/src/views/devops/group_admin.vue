@@ -17,7 +17,7 @@
         </template>
       </el-table-column>
     </el-table>
-    <el-dialog v-model="editDialogVisible" title="编辑属性信息" width="50%">
+    <el-dialog v-model="editDialogVisible" title="编辑服务组信息" width="50%">
       <el-form :model="servant" label-width="100px">
         <el-form-item label="tagName">
           <el-input v-model="servant.tagName"></el-input>
@@ -25,8 +25,11 @@
         <el-form-item label="tagEnglishName">
           <el-input v-model="servant.tagEnglishName"></el-input>
         </el-form-item>
-        <el-form-item label="tagEnglishName">
+        <el-form-item label="userId">
           <el-input v-model="servant.userId" :disabled="true"></el-input>
+        </el-form-item>
+        <el-form-item label="creatTime">
+          <el-input v-model="servant.creatTime" :disabled="true"></el-input>
         </el-form-item>
         <el-form-item label="Operate">
           <el-button type="primary" @click="confirmUpdate">更新</el-button>
@@ -59,6 +62,7 @@ const servant = ref({
   tagName: "",
   tagEnglishName: "",
   userId: 0,
+  creatTime: "",
 });
 function updateGroup(row: any) {
   editDialogVisible.value = true;

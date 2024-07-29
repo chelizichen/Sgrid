@@ -6,12 +6,27 @@ import (
 
 // User Role Menu
 type User struct {
-	Id            int        `json:"id,omitempty"`        // id
-	UserName      string     `json:"userName,omitempty"`  // 用户名
-	Password      string     `json:"password,omitempty"`  // 密码
-	TurthName     string     `json:"turthName,omitempty"` // 真实姓名
-	CreateTime    *time.Time `gorm:"autoCreateTime" json:"createTime,omitempty"`
-	LastLoginTime *time.Time `json:"lastLoginTime,omitempty"` // 上次登陆时间
+	Id            int        `json:"id,omitempty"`                               // id
+	UserName      string     `json:"userName,omitempty"`                         // 用户名
+	Password      string     `json:"password,omitempty"`                         // 密码
+	TurthName     string     `json:"turthName,omitempty"`                        // 真实姓名
+	CreateTime    *time.Time `gorm:"autoCreateTime" json:"createTime,omitempty"` // 创建时间
+	LastLoginTime *time.Time `json:"lastLoginTime,omitempty"`                    // 上次登陆时间
+	UserGroupId   int        `json:"userGroupId"`                                // 用户组ID
+}
+
+// 用户组
+type UserGroup struct {
+	Id           int        // id
+	Name         string     // 组名
+	CreateUserId int        // 创建人
+	CreateTime   *time.Time `gorm:"autoCreateTime"` // 创建时间
+}
+
+// 映射
+type UserToUserGroup struct {
+	UserId      int // 用户ID
+	UserGroupId int // 用户群组ID
 }
 
 type UserToRole struct {

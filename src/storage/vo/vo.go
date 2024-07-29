@@ -28,7 +28,8 @@ type VoGroupObj struct {
 	TagName        string `gorm:"column:tag_name" json:"tagName,omitempty"`                // 服务标签
 	TagEnglishName string `gorm:"column:tag_english_name" json:"tagEnglishName,omitempty"` // 英文
 	CreateTime     string `gorm:"column:create_time" json:"creatTime,omitempty"`           // 创建时间
-	UserId         int    `gorm:"column:user_id"`
+	UserId         int    `gorm:"column:user_id" json:"userId,omitempty"`                  // 用户ID
+	UserGroupId    int    `gorm:"column:user_group_id" json:"user_group_id,omitempty"`     // 用户服务组ID
 }
 
 // 联表查用的
