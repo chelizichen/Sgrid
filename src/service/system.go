@@ -1,3 +1,4 @@
+// 系统RBAC角色权限模块
 package service
 
 import (
@@ -18,6 +19,8 @@ func SystemService(ctx *handlers.SgridServerCtx) {
 	GROUP.POST("/system/user/get", getUser)
 	GROUP.POST("/system/role/get", getRole)
 	GROUP.POST("/system/menu/get", getMenu)
+	GROUP.POST("/system/group/get", getUserGroup)
+	GROUP.POST("/system/group/getUsersByUserGroup", getUsersByUserGroup)
 	// save
 	GROUP.POST("/system/user/save", saveUser)
 	GROUP.POST("/system/role/save", saveRole)
@@ -53,6 +56,40 @@ func getRole(c *gin.Context) {
 
 func getMenu(c *gin.Context) {
 	u := storage.GetMenuList()
+	handlers.AbortWithSucc(c, u)
+}
+
+func getUserGroup(c *gin.Context) {
+	var req *dto.PageBasicReq
+	err := c.BindJSON(&req)
+	if err != nil {
+		fmt.Println("err", err.Error())
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	u, t, err := storage.GetUserGroupList(req)
+	if err != nil {
+		fmt.Println("err", err.Error())
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	handlers.AbortWithSuccList(c, u, *t)
+}
+
+func getUsersByUserGroup(c *gin.Context) {
+	var req *dto.PageBasicReq
+	err := c.BindJSON(&req)
+	if err != nil {
+		fmt.Println("err", err.Error())
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	u, err := storage.GetUsersByUserGroup(req)
+	if err != nil {
+		fmt.Println("err", err.Error())
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
 	handlers.AbortWithSucc(c, u)
 }
 

@@ -3,10 +3,67 @@ package storage
 import (
 	"Sgrid/src/pool"
 	"Sgrid/src/public"
+	"Sgrid/src/public/replace"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/rbac"
 	"fmt"
+	"strings"
 )
+
+func GetUserGroupList(req *dto.PageBasicReq) ([]rbac.UserGroupVo, *int64, error) {
+	var respList []rbac.UserGroupVo
+	var selects = `
+		gug.*,
+		count(gutug.user_id) as total
+	`
+	where := "where 1 = 1 "
+	args := make([]interface{}, 10)
+	if req.Keyword != "" {
+		where += " and gug.name like ? "
+		args = append(args, public.BuildKeyword(req.Keyword))
+	}
+	var sql = replace.BuildReplaceChain(`
+SELECT
+	${SELECTS}
+from
+	grid_user_group gug
+left join grid_user_to_user_group gutug on
+	gutug.user_group_id = gug.id
+	${WHERE}
+group by
+	gug.id
+	${PAGINATION}
+`)
+	querySql := sql.ReplaceSelects(selects).ReplaceWhere(where).ReplacePagination(req.Offset, req.Size)
+	err := pool.GORM.Debug().Raw(querySql.Get(), public.Removenullvalue(args)...).Scan(&respList).Error
+	countSql := sql.Reset().ReplaceAsCount().ReplaceWhere(where).ReplaceWithNoPagination()
+	pool.GORM.Debug().Raw(countSql.Get(), public.Removenullvalue(args)...).Scan(countSql.GetCountVo())
+	return respList, countSql.GetCountVo(), err
+}
+
+func GetUsersByUserGroup(req *dto.PageBasicReq) ([]rbac.UserToUserGroupVo, error) {
+	var respList []rbac.UserToUserGroupVo
+	where := " where 1 = 1 "
+	args := make([]interface{}, 10)
+	if req.Keyword != "" {
+		where += " and gutug.user_group_id  = ? "
+		args = append(args, req.Id)
+	}
+	var sql = `
+	select
+		gu.user_name,gug.name,gutug.user_id,gutug.user_group_id
+from
+		grid_user_to_user_group gutug
+left join grid_user gu on
+		gu.id = gutug.user_id
+left JOIN grid_user_group gug on
+		gug.id = gutug.user_group_id
+	${WHERE}
+`
+	querySql := strings.Replace(sql, "${WHERE}", where, 1)
+	err := pool.GORM.Debug().Raw(querySql, public.Removenullvalue(args)...).Scan(&respList).Error
+	return respList, err
+}
 
 func GetUserList(req *dto.PageBasicReq) ([]rbac.User, int64) {
 	var respList []rbac.User

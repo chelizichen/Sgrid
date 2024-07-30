@@ -258,3 +258,7 @@ func Removenullvalue(slice []interface{}) []interface{} {
 	}
 	return output //slice with no nil-values
 }
+
+func BuildKeyword(keyword string) string {
+	return "%" + keyword + "%"
+}
