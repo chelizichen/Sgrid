@@ -33,17 +33,25 @@
         </el-form-item>
       </el-form>
     </div>
-    <div
-      style="
-        background-color: black;
-        height: inherit;
-        padding: 5px 10px;
-        width: 100%;
-        overflow: scroll;
-      "
-    >
-      <div style="color: aliceblue; margin: 2px" v-for="item in logger" :key="item">
-        {{ item }}
+    <div style="width: 100%">
+      <div
+        style="
+          background-color: black;
+          height: 60vh;
+          padding: 5px 10px;
+          width: 100%;
+          overflow: scroll;
+        "
+      >
+        <div style="color: aliceblue; margin: 2px" v-for="item in logger" :key="item">
+          {{ item }}
+        </div>
+      </div>
+
+      <div
+        style="border-top: 5px solid #ddd; height: 37vh; width: 100%; overflow: scroll"
+      >
+        <iframe :src="SHELL_PATH" style="width: inherit; height: inherit"></iframe>
       </div>
     </div>
   </div>
@@ -69,6 +77,8 @@ const selectFile = computed(() => {
   return logFileList.value[state.logFile];
 });
 
+const SHELL_PATH = ref("");
+
 const body = computed(() => {
   return Object.assign(
     {},
@@ -88,6 +98,11 @@ async function init() {
     gridId: query.value.gridId,
   });
   logFileList.value = data.data;
+  const webConsole = await API.getPropertyByKey(`WebConsole@${query.value.host}`);
+  if (!webConsole.code) {
+    SHELL_PATH.value = webConsole.data[0].value;
+  }
+  console.log("webConsole", webConsole);
 }
 async function getLog() {
   const res = await API.getLog(body.value);

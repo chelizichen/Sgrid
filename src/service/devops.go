@@ -45,6 +45,7 @@ func DevopsService(ctx *handlers.SgridServerCtx) {
 	GROUP.POST("/devops/updateConfig", updateConfig)
 
 	// 属性配置中心
+	GROUP.POST("/devops/getPropertyByKey", getPropertyByKey)
 	GROUP.POST("/devops/getPropertys", getPropertys)
 	GROUP.POST("/devops/setProperty", setProperty)
 	GROUP.GET("/devops/delProperty", delProperty)
@@ -291,12 +292,21 @@ func updateConfig(c *gin.Context) {
 // ** property **
 
 func getPropertys(c *gin.Context) {
-	// var req *pojo.Properties
-	// if err := c.BindJSON(&req); err != nil {
-	// 	fmt.Println("err", err.Error())
-	// 	handlers.AbortWithError(c, err.Error())
-	// }
 	p := storage.QueryProperties()
+	handlers.AbortWithSucc(c, p)
+}
+
+func getPropertyByKey(c *gin.Context) {
+	key := c.Query("key")
+	if key == "" {
+		handlers.AbortWithError(c, "key is empty")
+		return
+	}
+	p := storage.QueryPropertiesByKey(key)
+	if len(p) == 0 {
+		handlers.AbortWithError(c, "property not found")
+		return
+	}
 	handlers.AbortWithSucc(c, p)
 }
 

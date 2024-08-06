@@ -167,6 +167,15 @@ const api = {
       data
     }) as unknown as BasicResp<any>
   },
+  getPropertyByKey(key: string) {
+    return HttpReq({
+      url: '/devops/getPropertyByKey',
+      method: 'post',
+      params: {
+        key
+      }
+    }) as unknown as BasicResp<any>
+  },
   setProperty(data: any) {
     return HttpReq({
       url: '/devops/setProperty',

@@ -23,6 +23,7 @@ type ServantGroup struct {
 	TagEnglishName string     // 英文
 	CreateTime     *time.Time `gorm:"autoCreateTime"` // 创建时间
 	UserId         int        // 用户id
+	UserGroupId    int        // 用户组id
 }
 
 // 服务
