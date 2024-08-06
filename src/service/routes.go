@@ -49,11 +49,12 @@ func login(c *gin.Context) {
 		return
 	}
 	rsp := vo.VoUser{
-		UserName:   v.UserName,
-		Password:   v.Password,
-		CreateTime: v.CreateTime,
-		Id:         v.Id,
-		Token:      token,
+		UserName:    v.UserName,
+		Password:    v.Password,
+		CreateTime:  v.CreateTime,
+		Id:          v.Id,
+		Token:       token,
+		UserGroupId: v.UserGroupId,
 	}
 	setTokenError := jwt.RdsToken.SetToken(token, expireTime, rsp)
 	if err != nil {

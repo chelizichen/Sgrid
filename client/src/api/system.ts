@@ -25,6 +25,14 @@ export function getMenu(data: any) {
   }) as unknown as BasicResp<any>
 }
 
+export function getGroup(data: any) {
+  return request({
+    url: '/system/group/get',
+    method: 'post',
+    data
+  }) as unknown as BasicResp<any>
+}
+
 export function saveUser(data: any) {
   return request({
     url: '/system/user/save',

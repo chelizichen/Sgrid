@@ -25,6 +25,7 @@ func SystemService(ctx *handlers.SgridServerCtx) {
 	GROUP.POST("/system/user/save", saveUser)
 	GROUP.POST("/system/role/save", saveRole)
 	GROUP.POST("/system/menu/save", saveMenu)
+	GROUP.POST("/system/group/save", saveUserGroup)
 
 	// del
 	GROUP.GET("/system/menu/del", delMenu)
@@ -101,6 +102,17 @@ func saveUser(c *gin.Context) {
 		return
 	}
 	storage.CreateUser(req)
+	handlers.AbortWithSucc(c, nil)
+}
+
+func saveUserGroup(c *gin.Context) {
+	var req *rbac.UserGroup
+	err := c.BindJSON(&req)
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	storage.CreateGroup(req)
 	handlers.AbortWithSucc(c, nil)
 }
 

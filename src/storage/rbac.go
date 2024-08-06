@@ -184,6 +184,18 @@ func CreateUser(user *rbac.User) {
 			})
 	}
 }
+func CreateGroup(g *rbac.UserGroup) {
+	if g.Id == 0 {
+		pool.GORM.Create(g)
+	} else {
+		pool.GORM.Model(&rbac.UserGroup{}).
+			Where("id = ?", g.Id).
+			Updates(&rbac.UserGroup{
+				Name:         g.Name,
+				CreateUserId: g.CreateUserId,
+			})
+	}
+}
 
 func CreateMenu(menu *rbac.RoleMenu) {
 	if menu.Id == 0 {

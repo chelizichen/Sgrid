@@ -28,8 +28,17 @@
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item>
+        <el-form-item label="Operate">
           <el-button @click="getLog">Search</el-button>
+        </el-form-item>
+        <el-form-item label="Pagination">
+          <el-pagination
+            layout="prev, pager, next"
+            :total="total"
+            size="small"
+            :page-size="state.size"
+            @current-change="handleCurrentChange"
+          />
         </el-form-item>
       </el-form>
     </div>
@@ -91,6 +100,7 @@ const body = computed(() => {
   );
 });
 const logger = ref([]);
+const total = ref(0);
 async function init() {
   const data = await API.getLogFileList({
     host: query.value.host,
@@ -110,6 +120,13 @@ async function getLog() {
     return ElNotification.error(`error:${res.message}`);
   }
   logger.value = res.data;
+  total.value = res.total;
+}
+
+async function handleCurrentChange(curr: number) {
+  console.log("curr", curr);
+  state.offset = (curr - 1) * 10;
+  await getLog();
 }
 onMounted(() => {
   init();

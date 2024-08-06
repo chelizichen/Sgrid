@@ -79,7 +79,7 @@ export default {
             <el-form-item label="Protocol">
               <el-input v-model="servantItem.protocol"></el-input>
             </el-form-item>
-            <el-form-item label="可执行路径">
+            <el-form-item label="ExecPath">
               <el-input v-model="servantItem.execPath"></el-input>
             </el-form-item>
             <el-form-item label="Operate">

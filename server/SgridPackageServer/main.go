@@ -592,6 +592,7 @@ func (s *fileTransferServer) GetLogByFile(ctx context.Context, in *protocol.GetL
 		Keyword:    in.Pattern,
 		Size:       int(in.Size),
 		SearchTime: in.DateTime,
+		Offset:     int(in.Offset),
 		TraceLog: pojo.TraceLog{
 			LogHost:       in.Host,
 			LogServerName: in.ServerName,

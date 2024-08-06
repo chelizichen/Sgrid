@@ -258,7 +258,8 @@ func GetServantConfById(ServantId int) (resp *pojo.ServantConf) {
 func GetTraceLog(req *dto.TraceLogDto) ([]string, int64, error) {
 	var resp []*pojo.TraceLog
 	var total int64
-	err := pool.GORM.Model(&pojo.TraceLog{}).
+	fmt.Println("req", req.Offset)
+	err := pool.GORM.Debug().Model(&pojo.TraceLog{}).
 		Where("log_content like ?", "%"+req.Keyword+"%").
 		Where("log_grid_id = ?", req.LogGridId).
 		Where("date(create_time) = ?", req.SearchTime).

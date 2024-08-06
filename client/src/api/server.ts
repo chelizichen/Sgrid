@@ -69,7 +69,7 @@ const api = {
       url: '/statlog/getLog',
       method: 'post',
       data
-    })
+    }) as unknown as BasicResp<any>
   },
   checkStat: function (data: any) {
     return HttpReq({

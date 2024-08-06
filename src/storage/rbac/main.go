@@ -17,19 +17,23 @@ type User struct {
 
 // 用户组
 type UserGroup struct {
-	Id           int        // id
-	Name         string     // 组名
-	CreateUserId int        // 创建人
-	CreateTime   *time.Time `gorm:"autoCreateTime"` // 创建时间
+	Id           int        `json:"id,omitempty"`            // id
+	Name         string     `json:"name,omitempty"`          // 组名
+	Description  string     `json:"description,omitempty"`   // 描述
+	CreateUserId int        `json:"createUser_id,omitempty"` // 创建人
+	Status       int        `json:"status,omitempty"`
+	CreateTime   *time.Time `gorm:"autoCreateTime" json:"createTime,omitempty"` // 创建时间
 }
 
 // 用户组
 type UserGroupVo struct {
 	Id           int        `json:"id"`           // id
 	Name         string     `json:"name"`         // 组名
+	Description  string     `json:"description"`  // 描述
 	CreateUserId int        `json:"createUserId"` // 创建人
 	CreateTime   *time.Time `json:"createTime"`   // 创建时间
 	Total        string     `json:"total"`        // 创建时间
+	Status       int        `json:"status"`
 }
 
 type UserToUserGroupVo struct {

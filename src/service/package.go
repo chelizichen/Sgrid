@@ -320,10 +320,11 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 			go func(clt protocol.FileTransferServiceClient) {
 				u, err := packageServant.ParseHost(idx, "grpc")
 				if err != nil {
-					fmt.Println("err", err.Error())
+					handlers.AbortWithError(c, err.Error())
+					wg.Done()
+					return
 				}
 				if u.Hostname() == req.Host {
-					fmt.Println("req", req)
 					r, err := clt.GetLogByFile(&gin.Context{}, &protocol.GetLogByFileReq{
 						Host:       u.Host,
 						ServerName: req.ServerName,
@@ -336,7 +337,7 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 					})
 					if err != nil {
 						fmt.Println("error", err.Error())
-						c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "err"+err.Error(), nil))
+						handlers.AbortWithError(c, err.Error())
 						wg.Done()
 						return
 					}
@@ -349,7 +350,7 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 			}(client)
 		}
 		wg.Wait()
-		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", resp.Data))
+		handlers.AbortWithSuccList(c, resp.Data, resp.Total)
 	})
 
 	router.POST("/statlog/check", func(c *gin.Context) {
