@@ -30,12 +30,15 @@ func SystemService(ctx *handlers.SgridServerCtx) {
 	// del
 	GROUP.GET("/system/menu/del", delMenu)
 	GROUP.GET("/system/role/del", delRole)
+	GROUP.GET("/system/group/del", delUserGroup)
 
 	// relation
 	GROUP.POST("/system/setUserToRole", setUserToRole)
 	GROUP.POST("/system/setRoleToMenu", setRoleToMenu)
 	GROUP.GET("/system/getUserToRoleRelation", getUserToRoleRelation)
 	GROUP.GET("/system/getMenuListByRoleId", getMenuListByRoleId)
+	GROUP.POST("/system/setUserToGroup", setUserToGroup)
+
 }
 
 func getUser(c *gin.Context) {
@@ -171,6 +174,22 @@ func setRoleToMenu(c *gin.Context) {
 	handlers.AbortWithSucc(c, nil)
 }
 
+type setUserToGroupDto struct {
+	UserId  int   `json:"userId"`
+	RoleIds []int `json:"roleIds"`
+}
+
+func setUserToGroup(c *gin.Context) {
+	var req *setUserToGroupDto
+	err := c.BindJSON(&req)
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	storage.SetRoleToMenu(req.UserId, req.RoleIds)
+	handlers.AbortWithSucc(c, nil)
+}
+
 func getUserToRoleRelation(c *gin.Context) {
 	s, _ := strconv.Atoi(c.Query("id"))
 	rutr := storage.GetUserToRoleRelation(s)
@@ -192,5 +211,11 @@ func delMenu(c *gin.Context) {
 func delRole(c *gin.Context) {
 	s, _ := strconv.Atoi(c.Query("id"))
 	storage.DeleteRole(s)
+	handlers.AbortWithSucc(c, nil)
+}
+
+func delUserGroup(c *gin.Context) {
+	s, _ := strconv.Atoi(c.Query("id"))
+	storage.DeleteUserGroup(s)
 	handlers.AbortWithSucc(c, nil)
 }

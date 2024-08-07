@@ -132,6 +132,15 @@ func DeleteRole(id int) {
 	})
 }
 
+func DeleteUserGroup(id int) {
+	pool.GORM.Model(&rbac.UserGroup{}).Delete(&rbac.UserGroup{
+		Id: id,
+	})
+	pool.GORM.Model(&rbac.UserToUserGroup{}).Delete(&rbac.UserToUserGroup{
+		UserGroupId: id,
+	})
+}
+
 func SetUserToRole(userId int, roleIds []int) {
 	pool.GORM.Delete(&rbac.UserToRole{}, "user_id = ?", userId)
 	var userToRoles []*rbac.UserToRole
@@ -145,6 +154,18 @@ func SetUserToRole(userId int, roleIds []int) {
 }
 
 func SetRoleToMenu(roleId int, menuIds []int) {
+	pool.GORM.Delete(&rbac.RoleToMenu{}, "role_id = ?", roleId)
+	var userToRoles []*rbac.RoleToMenu
+	for _, v := range menuIds {
+		userToRoles = append(userToRoles, &rbac.RoleToMenu{
+			RoleId: roleId,
+			MenuId: v,
+		})
+	}
+	pool.GORM.Create(userToRoles)
+}
+
+func SetUserwToGroup(roleId int, menuIds []int) {
 	pool.GORM.Delete(&rbac.RoleToMenu{}, "role_id = ?", roleId)
 	var userToRoles []*rbac.RoleToMenu
 	for _, v := range menuIds {
