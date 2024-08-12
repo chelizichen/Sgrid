@@ -88,13 +88,13 @@ func getUsersByUserGroup(c *gin.Context) {
 		handlers.AbortWithError(c, err.Error())
 		return
 	}
-	u, err := storage.GetUsersByUserGroup(req)
+	u, t, err := storage.GetUsersByUserGroup(req)
 	if err != nil {
 		fmt.Println("err", err.Error())
 		handlers.AbortWithError(c, err.Error())
 		return
 	}
-	handlers.AbortWithSucc(c, u)
+	handlers.AbortWithSuccList(c, u, *t)
 }
 
 func saveUser(c *gin.Context) {
