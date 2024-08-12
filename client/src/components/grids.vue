@@ -175,7 +175,7 @@ import releaseComponent from "./release.vue";
 import servantConf from "./servantConf.vue";
 import moment from "moment";
 import api from "@/api/server";
-import { ElNotification } from "element-plus";
+import { ElNotification, ElMessageBox, ElMessage } from "element-plus";
 import { useRouter } from "vue-router";
 
 const props = defineProps<{
