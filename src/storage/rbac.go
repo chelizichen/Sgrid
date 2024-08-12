@@ -7,7 +7,6 @@ import (
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/rbac"
 	"fmt"
-	"strings"
 )
 
 func GetUserGroupList(req *dto.PageBasicReq) ([]rbac.UserGroupVo, *int64, error) {
@@ -22,7 +21,7 @@ func GetUserGroupList(req *dto.PageBasicReq) ([]rbac.UserGroupVo, *int64, error)
 		where += " and gug.name like ? "
 		args = append(args, public.BuildKeyword(req.Keyword))
 	}
-	var sql = replace.BuildReplaceChain(`
+	var sql, err = replace.BuildReplaceChain(`
 SELECT
 	${SELECTS}
 from
@@ -35,23 +34,26 @@ group by
 	${PAGINATION}
 `)
 	querySql := sql.ReplaceSelects(selects).ReplaceWhere(where).ReplacePagination(req.Offset, req.Size)
-	err := pool.GORM.Debug().Raw(querySql.Get(), public.Removenullvalue(args)...).Scan(&respList).Error
+	err = pool.GORM.Debug().Raw(querySql.Get(), public.Removenullvalue(args)...).Scan(&respList).Error
 	countSql := sql.Reset().ReplaceAsCount().ReplaceWhere(where).ReplaceWithNoPagination()
 	pool.GORM.Debug().Raw(countSql.Get(), public.Removenullvalue(args)...).Scan(countSql.GetCountVo())
 	return respList, countSql.GetCountVo(), err
 }
 
-func GetUsersByUserGroup(req *dto.PageBasicReq) ([]rbac.UserToUserGroupVo, error) {
+func GetUsersByUserGroup(req *dto.PageBasicReq) ([]rbac.UserToUserGroupVo, *int64, error) {
 	var respList []rbac.UserToUserGroupVo
 	where := " where 1 = 1 "
 	args := make([]interface{}, 10)
+	var selects = `
+		gu.user_name,gug.name,gutug.user_id,gutug.user_group_id
+	`
 	if req.Keyword != "" {
 		where += " and gutug.user_group_id  = ? "
 		args = append(args, req.Id)
 	}
-	var sql = `
-	select
-		gu.user_name,gug.name,gutug.user_id,gutug.user_group_id
+	var sql, _ = replace.BuildReplaceChain(`
+SELECT
+	${SELECTS}
 from
 		grid_user_to_user_group gutug
 left join grid_user gu on
@@ -59,10 +61,13 @@ left join grid_user gu on
 left JOIN grid_user_group gug on
 		gug.id = gutug.user_group_id
 	${WHERE}
-`
-	querySql := strings.Replace(sql, "${WHERE}", where, 1)
-	err := pool.GORM.Debug().Raw(querySql, public.Removenullvalue(args)...).Scan(&respList).Error
-	return respList, err
+	${PAGINATION}
+`)
+	querySql := sql.ReplaceSelects(selects).ReplaceWhere(where).ReplacePagination(req.Offset, req.Size)
+	err := pool.GORM.Debug().Raw(querySql.Get(), public.Removenullvalue(args)...).Scan(&respList).Error
+	countSql := sql.Reset().ReplaceAsCount().ReplaceWhere(where).ReplaceWithNoPagination()
+	pool.GORM.Debug().Raw(countSql.Get(), public.Removenullvalue(args)...).Scan(countSql.GetCountVo())
+	return respList, countSql.GetCountVo(), err
 }
 
 func GetUserList(req *dto.PageBasicReq) ([]rbac.User, int64) {

@@ -153,6 +153,12 @@ message SystemInfo{
     string memorySize       = 6;    // 内存大小
 }
 
+message NotifyReq{
+    int64 gridId             = 1;    // 节点ID gridId
+    string info              = 2;    // 告警信息 info
+    string serverName        = 3;    // 服务名
+}
+
 // 文件传输服务定义
 service FileTransferService {
     // 双向流式 RPC 用于文件传输
@@ -181,4 +187,7 @@ service FileTransferService {
 
     // 获取服务信息
     rpc GetSystemInfo(google.protobuf.Empty)returns(GetSystemInfoResp){}
+
+    // 服务告警
+    rpc Notify(NotifyReq)returns(basicResp){}
 }

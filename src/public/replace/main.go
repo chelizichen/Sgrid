@@ -2,6 +2,7 @@
 package replace
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -19,13 +20,16 @@ type ReplaceChain struct {
 	count         *int64
 }
 
-func BuildReplaceChain(origin string) *ReplaceChain {
+func BuildReplaceChain(origin string) (*ReplaceChain, error) {
+	if origin == "" {
+		return nil, errors.New("text string")
+	}
 	return &ReplaceChain{
 		originString:  origin,
 		currentString: origin,
 		isDebug:       false,
 		count:         new(int64),
-	}
+	}, nil
 }
 
 func (r *ReplaceChain) GetOriginString() string {
@@ -34,6 +38,9 @@ func (r *ReplaceChain) GetOriginString() string {
 
 func (r *ReplaceChain) Debug() *ReplaceChain {
 	r.isDebug = true
+	if r.isDebug {
+		fmt.Println("debug.origin", r.originString)
+	}
 	return r
 }
 

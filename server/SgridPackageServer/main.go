@@ -49,11 +49,12 @@ const (
 )
 
 const (
-	BEHAVIOR_PULL  = "pull"
-	BEHAVIOR_KILL  = "kill"
-	BEHAVIOR_DOWN  = "down"
-	BEHAVIOR_ALIVE = "alive"
-	BEHAVIOR_CHECK = "check"
+	BEHAVIOR_PULL           = "pull"
+	BEHAVIOR_KILL           = "kill"
+	BEHAVIOR_DOWN           = "down"
+	BEHAVIOR_ALIVE          = "alive"
+	BEHAVIOR_CHECK          = "check"
+	BEHAVIOR_SERVANT_REPORT = "servant-report"
 )
 
 const CONSTANT_MONITOR_INTERVAL = 30
@@ -805,10 +806,11 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 			}
 			fmt.Println("cmd.Env", cmd)
 			cmd.Env = append(cmd.Env,
-				fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, req.Port),       // 指定端口
-				fmt.Sprintf("%v=%v", public.ENV_PRODUCTION, startDir),        // 开启目录
-				fmt.Sprintf("%v=%v", public.SGRID_CONFIG, servantConf),       // 配置
-				fmt.Sprintf("%v=%v", public.ENV_PROCESS_INDEX, processIndex), // 服务运行索引
+				fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, req.Port),          // 指定端口
+				fmt.Sprintf("%v=%v", public.ENV_PRODUCTION, startDir),           // 开启目录
+				fmt.Sprintf("%v=%v", public.SGRID_CONFIG, servantConf),          // 配置
+				fmt.Sprintf("%v=%v", public.ENV_PROCESS_INDEX, processIndex),    // 服务运行索引
+				fmt.Sprintf("%v=%v", public.ENV_SGRID_SERVANT_NAME, serverName), // 服务名
 			)
 			cmd.Dir = startDir // 指定工作目录
 			fmt.Println("startFile", startFile)
@@ -887,6 +889,21 @@ func (s *fileTransferServer) GetSystemInfo(ctx context.Context, req *emptypb.Emp
 		Message: "ok",
 		Data:    rsp,
 	}, nil
+}
+
+func (c *fileTransferServer) Notify(ctx context.Context, in *protocol.NotifyReq) (*protocol.BasicResp, error) {
+	storage.SaveStatLog(&pojo.StatLog{
+		GridId:      int(in.GetGridId()),
+		Stat:        BEHAVIOR_SERVANT_REPORT,
+		Pid:         0,
+		CPU:         0,
+		Threads:     0,
+		Name:        in.GetServerName(),
+		IsRunning:   in.GetInfo(),
+		MemoryStack: 0,
+		MemoryData:  0,
+	})
+	return nil, nil
 }
 
 func initDir() {

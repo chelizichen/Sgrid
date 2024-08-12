@@ -370,6 +370,26 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 			}(client)
 		}
 		wg.Wait()
-		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", resp))
+		handlers.AbortWithSucc(c, resp)
+	})
+
+	router.POST("/notify", func(c *gin.Context) {
+		var rpl protocol.BasicResp
+		var req *protocol.NotifyReq
+		err := c.BindJSON(&req)
+		if err != nil {
+			handlers.AbortWithError(c, err.Error())
+			return
+		}
+		if req.GridId == 0 || req.ServerName == "" {
+			handlers.AbortWithError(c, "input error ")
+			return
+		}
+		packageServant.Request(rpc.RequestPack{
+			Method: "NotifyReq",
+			Body:   req,
+			Reply:  &rpl,
+		})
+		handlers.AbortWithSucc(c, nil)
 	})
 }

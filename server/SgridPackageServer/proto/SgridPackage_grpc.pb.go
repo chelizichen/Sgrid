@@ -41,6 +41,8 @@ type FileTransferServiceClient interface {
 	DeletePacakge(ctx context.Context, in *DeletePackageReq, opts ...grpc.CallOption) (*BasicResp, error)
 	// 获取服务信息
 	GetSystemInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetSystemInfoResp, error)
+	// 服务告警
+	Notify(ctx context.Context, in *NotifyReq, opts ...grpc.CallOption) (*BasicResp, error)
 }
 
 type fileTransferServiceClient struct {
@@ -154,6 +156,15 @@ func (c *fileTransferServiceClient) GetSystemInfo(ctx context.Context, in *empty
 	return out, nil
 }
 
+func (c *fileTransferServiceClient) Notify(ctx context.Context, in *NotifyReq, opts ...grpc.CallOption) (*BasicResp, error) {
+	out := new(BasicResp)
+	err := c.cc.Invoke(ctx, "/SgridProtocol.FileTransferService/Notify", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FileTransferServiceServer is the server API for FileTransferService service.
 // All implementations must embed UnimplementedFileTransferServiceServer
 // for forward compatibility
@@ -176,6 +187,8 @@ type FileTransferServiceServer interface {
 	DeletePacakge(context.Context, *DeletePackageReq) (*BasicResp, error)
 	// 获取服务信息
 	GetSystemInfo(context.Context, *emptypb.Empty) (*GetSystemInfoResp, error)
+	// 服务告警
+	Notify(context.Context, *NotifyReq) (*BasicResp, error)
 	mustEmbedUnimplementedFileTransferServiceServer()
 }
 
@@ -209,6 +222,9 @@ func (UnimplementedFileTransferServiceServer) DeletePacakge(context.Context, *De
 }
 func (UnimplementedFileTransferServiceServer) GetSystemInfo(context.Context, *emptypb.Empty) (*GetSystemInfoResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSystemInfo not implemented")
+}
+func (UnimplementedFileTransferServiceServer) Notify(context.Context, *NotifyReq) (*BasicResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Notify not implemented")
 }
 func (UnimplementedFileTransferServiceServer) mustEmbedUnimplementedFileTransferServiceServer() {}
 
@@ -393,6 +409,24 @@ func _FileTransferService_GetSystemInfo_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FileTransferService_Notify_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NotifyReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FileTransferServiceServer).Notify(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/SgridProtocol.FileTransferService/Notify",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FileTransferServiceServer).Notify(ctx, req.(*NotifyReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FileTransferService_ServiceDesc is the grpc.ServiceDesc for FileTransferService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -431,6 +465,10 @@ var FileTransferService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetSystemInfo",
 			Handler:    _FileTransferService_GetSystemInfo_Handler,
+		},
+		{
+			MethodName: "Notify",
+			Handler:    _FileTransferService_Notify_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
