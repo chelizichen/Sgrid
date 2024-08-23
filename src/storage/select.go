@@ -288,7 +288,7 @@ func GetTraceLogFiles(gridId int, log_server_name string) []TraceLogFileVo {
 		where += " AND gtl.log_server_name = ?"
 		params = append(params, log_server_name)
 	}
-	if gridId == 0 {
+	if gridId != 0 {
 		where += " AND gtl.log_grid_id = ?"
 		params = append(params, gridId)
 	}
