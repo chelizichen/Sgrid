@@ -49,6 +49,18 @@ type UserToUserGroup struct {
 	UserGroupId int // 用户群组ID
 }
 
+type UserGroupToServantGroupVo struct {
+	UserGroupId      int    `json:"userGroupId,omitempty"`      // 用户组ID
+	ServantGroupId   int    `json:"servantGroupId,omitempty"`   // 服务组ID
+	UserGroupName    string `json:"userGroupName,omitempty"`    // 团队名称
+	ServantGroupName string `json:"servantGroupName,omitempty"` // 服务组名称
+}
+
+type UserGroupToServantGroup struct {
+	UserGroupId    int // 用户组ID
+	ServantGroupId int // 服务组ID
+}
+
 type UserToRole struct {
 	UserId int
 	RoleId int

@@ -89,6 +89,7 @@ func initDB(ctx *config.SgridConf) error {
 		db.Debug().AutoMigrate(&rbac.VersionUpdateLine{})
 		db.Debug().AutoMigrate(&rbac.UserGroup{})
 		db.Debug().AutoMigrate(&rbac.UserToUserGroup{})
+		db.Debug().AutoMigrate(&rbac.UserGroupToServantGroup{})
 	}
 	GORM = db
 	return nil

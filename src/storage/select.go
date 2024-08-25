@@ -3,6 +3,7 @@ package storage
 import (
 	"Sgrid/src/pool"
 	"Sgrid/src/public"
+	"Sgrid/src/public/replace"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
 	"Sgrid/src/storage/rbac"
@@ -405,4 +406,42 @@ func GetAllPort() []int {
 		Select("port").
 		Find(&PortList)
 	return PortList
+}
+
+// 根据用户ID返回服务列表
+func GetServantListByUserGroups(userId int) (resp []vo.VoServantGroup) {
+	where := " where 1 = 1 "
+	args := make([]interface{}, 10)
+
+	if userId > 1 {
+		where += " and user_id = ?"
+		args = append(args, userId)
+	}
+	c, err := replace.BuildReplaceChain(`
+	select
+		gsg.*,
+		gs.create_time AS gs_create_time,
+		gs.id AS gs_id,
+		gs.language gs_language,
+		gs.servant_group_id AS gs_servant_group_id,
+		gs.server_name AS gs_server_name,
+		gs.location AS gs_location,
+		gs.up_stream_name AS gs_up_stream_name,
+		gs.stat as gs_stat
+	from grid_servant_group gsg
+	LEFT JOIN grid_servant gs ON gs.servant_group_id = gsg.id
+	where gs.servant_group_id in (
+		select servant_group_id from grid_user_group_to_servant_group
+		where user_group_id in (
+			select user_group_id from grid_user_to_user_group
+			${WHERE}
+		) group by servant_group_id
+	)
+	`)
+	if err != nil {
+		return resp
+	}
+	c.ReplaceWhere(where)
+	pool.GORM.Debug().Raw(c.Get(), public.Removenullvalue(args)...).Scan(&resp)
+	return resp
 }

@@ -338,7 +338,7 @@ func queryServantGroup(c *gin.Context) {
 		fmt.Println("err", err.Error())
 		handlers.AbortWithError(c, err.Error())
 	}
-	gv := storage.QueryServantGroup(req)
+	gv := storage.GetServantListByUserGroups(req.Id)
 	vgbs := storage.ConvertToVoGroupByServant(gv)
 	c.JSON(200, handlers.Resp(0, "ok", vgbs))
 }

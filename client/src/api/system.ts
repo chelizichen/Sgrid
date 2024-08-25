@@ -57,6 +57,14 @@ export function saveMenu(data: any) {
   }) as unknown as BasicResp<any>
 }
 
+export function saveUserGroup(data:any){
+  return request({
+    url: '/system/group/save',
+    method: 'post',
+    data
+  }) as unknown as BasicResp<any>
+}
+
 export function delMenu(id: number) {
   return request({
     url: '/system/menu/del',
@@ -72,6 +80,15 @@ export function delRole(id: number) {
     params: { id }
   }) as unknown as BasicResp<any>
 }
+
+export function delUserGroup(id: number) {
+  return request({
+    url: '/system/group/del',
+    method: 'get',
+    params: { id }
+  }) as unknown as BasicResp<any>
+}
+
 
 export function setUserToRole(data: any) {
   return request({
@@ -102,5 +119,37 @@ export function getMenuListByRoleId(id: number) {
     url: '/system/getMenuListByRoleId',
     method: 'get',
     params: { id }
+  }) as unknown as BasicResp<any>
+}
+
+export function setUserToUserGroup(data: any) {
+  return request({
+    url: '/system/setUserToUserGroup',
+    method: 'post',
+    data
+  }) as unknown as BasicResp<any>
+}
+
+export function setUserGroupToServantGroup(data: any) {
+  return request({
+    url: '/system/setUserGroupToServantGroup',
+    method: 'post',
+    data
+  }) as unknown as BasicResp<any>
+}
+
+export function getServantGroupsByUserGroupId(data) {
+  return request({
+    url: '/system/spec/getServantGroupsByUserGroupId',
+    method: 'post',
+    data
+  }) as unknown as BasicResp<any>
+}
+
+export function getUsersByUserGroup(data) {
+  return request({
+    url: '/system/spec/getUsersByUserGroup',
+    method: 'post',
+    data
   }) as unknown as BasicResp<any>
 }

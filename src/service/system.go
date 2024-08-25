@@ -20,7 +20,6 @@ func SystemService(ctx *handlers.SgridServerCtx) {
 	GROUP.POST("/system/role/get", getRole)
 	GROUP.POST("/system/menu/get", getMenu)
 	GROUP.POST("/system/group/get", getUserGroup)
-	GROUP.POST("/system/group/getUsersByUserGroup", getUsersByUserGroup)
 	// save
 	GROUP.POST("/system/user/save", saveUser)
 	GROUP.POST("/system/role/save", saveRole)
@@ -37,7 +36,13 @@ func SystemService(ctx *handlers.SgridServerCtx) {
 	GROUP.POST("/system/setRoleToMenu", setRoleToMenu)
 	GROUP.GET("/system/getUserToRoleRelation", getUserToRoleRelation)
 	GROUP.GET("/system/getMenuListByRoleId", getMenuListByRoleId)
-	GROUP.POST("/system/setUserToGroup", setUserToGroup)
+
+	GROUP.POST("/system/setUserToUserGroup", setUserToGroup)                     // 将用户分配到团队
+	GROUP.POST("/system/setUserGroupToServantGroup", setUserGroupToServantGroup) // 为服务组分配团队
+
+	// SPEC
+	GROUP.POST("/system/spec/getServantGroupsByUserGroupId", getServantGroupsByUserGroupId)
+	GROUP.POST("/system/spec/getUsersByUserGroup", getUsersByUserGroup)
 
 }
 
@@ -89,6 +94,25 @@ func getUsersByUserGroup(c *gin.Context) {
 		return
 	}
 	u, t, err := storage.GetUsersByUserGroup(req)
+	if err != nil {
+		fmt.Println("err", err.Error())
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	handlers.AbortWithSuccList(c, u, *t)
+}
+
+// SPEC
+
+func getServantGroupsByUserGroupId(c *gin.Context) {
+	var req *dto.PageBasicReq
+	err := c.BindJSON(&req)
+	if err != nil {
+		fmt.Println("err", err.Error())
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	u, t, err := storage.GetServantGroupsByUserGroupId(req)
 	if err != nil {
 		fmt.Println("err", err.Error())
 		handlers.AbortWithError(c, err.Error())
@@ -174,9 +198,10 @@ func setRoleToMenu(c *gin.Context) {
 	handlers.AbortWithSucc(c, nil)
 }
 
+// table struct { 	user_id , user_group_id }
 type setUserToGroupDto struct {
-	UserId  int   `json:"userId"`
-	RoleIds []int `json:"roleIds"`
+	UserIds []int `json:"userIds"`
+	GroupId int   `json:"groupId"`
 }
 
 func setUserToGroup(c *gin.Context) {
@@ -186,7 +211,23 @@ func setUserToGroup(c *gin.Context) {
 		handlers.AbortWithError(c, err.Error())
 		return
 	}
-	storage.SetRoleToMenu(req.UserId, req.RoleIds)
+	storage.SetUserToGroup(req.GroupId, req.UserIds)
+	handlers.AbortWithSucc(c, nil)
+}
+
+type setUserGroupToServantGroupDto struct {
+	GroupId         int   `json:"groupId"`
+	ServantGroupIds []int `json:"servantGroupIds"`
+}
+
+func setUserGroupToServantGroup(c *gin.Context) {
+	var req *setUserGroupToServantGroupDto
+	err := c.BindJSON(&req)
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	storage.SetUserGroupToServantGroup(req.GroupId, req.ServantGroupIds)
 	handlers.AbortWithSucc(c, nil)
 }
 

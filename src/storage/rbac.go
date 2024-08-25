@@ -47,7 +47,7 @@ func GetUsersByUserGroup(req *dto.PageBasicReq) ([]rbac.UserToUserGroupVo, *int6
 	var selects = `
 		gu.user_name,gug.name,gutug.user_id,gutug.user_group_id
 	`
-	if req.Keyword != "" {
+	if req.Id != 0 {
 		where += " and gutug.user_group_id  = ? "
 		args = append(args, req.Id)
 	}
@@ -60,6 +60,36 @@ left join grid_user gu on
 		gu.id = gutug.user_id
 left JOIN grid_user_group gug on
 		gug.id = gutug.user_group_id
+	${WHERE}
+	${PAGINATION}
+`)
+	querySql := sql.ReplaceSelects(selects).ReplaceWhere(where).ReplacePagination(req.Offset, req.Size)
+	err := pool.GORM.Debug().Raw(querySql.Get(), public.Removenullvalue(args)...).Scan(&respList).Error
+	countSql := sql.Reset().ReplaceAsCount().ReplaceWhere(where).ReplaceWithNoPagination()
+	pool.GORM.Debug().Raw(countSql.Get(), public.Removenullvalue(args)...).Scan(countSql.GetCountVo())
+	return respList, countSql.GetCountVo(), err
+}
+
+func GetServantGroupsByUserGroupId(req *dto.PageBasicReq) ([]rbac.UserGroupToServantGroupVo, *int64, error) {
+	var respList []rbac.UserGroupToServantGroupVo
+	where := " where 1 = 1 "
+	args := make([]interface{}, 10)
+	var selects = `
+	gugtsg.user_group_id  		as user_group_id,
+	gugtsg.servant_group_id 	as servant_group_id,
+	gug.name 					as user_group_name,
+	gsg.tag_name  				as servant_group_name
+	`
+	if req.Id != 0 {
+		where += " and gugtsg.user_group_id  = ? "
+		args = append(args, req.Id)
+	}
+	var sql, _ = replace.BuildReplaceChain(`
+SELECT
+	${SELECTS}
+	from grid_user_group_to_servant_group gugtsg
+left join grid_servant_group gsg on gsg.id  = gugtsg.servant_group_id
+left join grid_user_group gug on gug.id  = gugtsg.user_group_id
 	${WHERE}
 	${PAGINATION}
 `)
@@ -170,16 +200,32 @@ func SetRoleToMenu(roleId int, menuIds []int) {
 	pool.GORM.Create(userToRoles)
 }
 
-func SetUserwToGroup(roleId int, menuIds []int) {
-	pool.GORM.Delete(&rbac.RoleToMenu{}, "role_id = ?", roleId)
-	var userToRoles []*rbac.RoleToMenu
-	for _, v := range menuIds {
-		userToRoles = append(userToRoles, &rbac.RoleToMenu{
-			RoleId: roleId,
-			MenuId: v,
+func SetUserToGroup(group_id int, user_ids []int) {
+	fmt.Println("group_id", group_id)
+	fmt.Println("user_ids", user_ids)
+	pool.GORM.Delete(&rbac.UserToUserGroup{}, "user_group_id = ?", group_id)
+	var userToGroupList []*rbac.UserToUserGroup
+	for _, v := range user_ids {
+		userToGroupList = append(userToGroupList, &rbac.UserToUserGroup{
+			UserId:      v,
+			UserGroupId: group_id,
 		})
 	}
-	pool.GORM.Create(userToRoles)
+	pool.GORM.Create(userToGroupList)
+}
+
+func SetUserGroupToServantGroup(user_group_id int, servant_group_ids []int) {
+	fmt.Println("user_group_id", user_group_id)
+	fmt.Println("servant_group_ids", servant_group_ids)
+	pool.GORM.Delete(&rbac.UserGroupToServantGroup{}, "user_group_id = ?", user_group_id)
+	var userToGroupList []*rbac.UserGroupToServantGroup
+	for _, v := range servant_group_ids {
+		userToGroupList = append(userToGroupList, &rbac.UserGroupToServantGroup{
+			UserGroupId:    user_group_id,
+			ServantGroupId: v,
+		})
+	}
+	pool.GORM.Create(userToGroupList)
 }
 
 func CreateRole(role *rbac.UserRole) {
@@ -218,6 +264,7 @@ func CreateGroup(g *rbac.UserGroup) {
 			Where("id = ?", g.Id).
 			Updates(&rbac.UserGroup{
 				Name:         g.Name,
+				Description:  g.Description,
 				CreateUserId: g.CreateUserId,
 			})
 	}
@@ -277,4 +324,18 @@ where
 	)
 	`, id).Scan(&findList)
 	return findList
+}
+
+// 根据用户查找所属服务组 ids
+func GetUserGroupsFromUserId(userId int) []int {
+	var ids []int
+	var sql = `
+	select servant_group_id from grid_user_group_to_servant_group
+	where user_group_id in (
+		select user_group_id from grid_user_to_user_group
+		where user_id = ?
+	)
+	`
+	pool.GORM.Raw(sql, userId).Scan(&ids)
+	return ids
 }
