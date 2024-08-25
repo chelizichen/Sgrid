@@ -120,7 +120,12 @@ export default {
         /></el-icon>
       </el-button>
     </el-divider>
-    <el-table :data="statLogList" style="width: 100%; margin-top: 20px" border>
+    <el-table
+      :data="statLogList"
+      style="width: 100%; margin-top: 20px"
+      border
+      height="450"
+    >
       <el-table-column prop="id" label="id" width="180" />
       <el-table-column prop="name" label="name" width="180">
         <template #default="scoped">

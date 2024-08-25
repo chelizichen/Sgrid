@@ -19,12 +19,26 @@
         <el-input v-model="servantItem.serverName"></el-input>
       </el-form-item>
       <el-form-item label="Language">
-        <el-input v-model="servantItem.language"></el-input>
+        <el-select v-model="servantItem.language">
+          <el-option
+            v-for="item in languages"
+            :label="item"
+            :key="item"
+            :value="item"
+          ></el-option>
+        </el-select>
       </el-form-item>
       <el-form-item label="Protocol">
-        <el-input v-model="servantItem.protocol"></el-input>
+        <el-select v-model="servantItem.protocol">
+          <el-option
+            v-for="item in protocols"
+            :label="item"
+            :key="item"
+            :value="item"
+          ></el-option>
+        </el-select>
       </el-form-item>
-      <el-form-item label="可执行路径">
+      <el-form-item label="ExecPath">
         <el-input v-model="servantItem.execPath"></el-input>
       </el-form-item>
       <el-form-item label="Operate">
@@ -43,6 +57,8 @@ import api from "@/api/server";
 import { ElNotification } from "element-plus";
 import { useUserStore } from "@/stores/counter";
 
+const languages = ["node", "java", "go"];
+const protocols = ["http", "grpc"];
 const selectOpt = () => {
   return `Group:ID :  ${groupId.value}
   | ServantName： ${servantItem.value.serverName}
@@ -55,8 +71,8 @@ const groupId = ref(0);
 const groups = ref<Array<{ tagEnglishName: string; tagName: string; id: number }>>([]);
 const servantItem = ref({
   serverName: "",
-  language: "",
-  protocol: "",
+  language: "node",
+  protocol: "http",
   execPath: "sgrid_app",
 });
 async function devopsAddServant() {
