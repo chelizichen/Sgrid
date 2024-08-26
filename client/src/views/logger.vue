@@ -125,7 +125,7 @@ async function getLog() {
 
 async function handleCurrentChange(curr: number) {
   console.log("curr", curr);
-  state.offset = (curr - 1) * 10;
+  state.offset = (curr - 1) * state.size;
   await getLog();
 }
 onMounted(() => {
