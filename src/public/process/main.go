@@ -1,6 +1,7 @@
 package pk
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/shirou/gopsutil/net"
@@ -12,7 +13,7 @@ var SgridProcessUtil = new(sgridProcessUtil)
 type sgridProcessUtil struct{}
 
 // findPidByPort finds the process ID (PID) using the specified port.
-func (s *sgridProcessUtil) findPidByPort(port string) (int32, error) {
+func (s *sgridProcessUtil) findPidByPort(port int) (int32, error) {
 	conns, err := net.Connections("tcp")
 	if err != nil {
 		return 0, err
@@ -23,13 +24,13 @@ func (s *sgridProcessUtil) findPidByPort(port string) (int32, error) {
 			return conn.Pid, nil
 		}
 	}
-	return 0, fmt.Errorf("no process found on port %s", port)
+	return 0, fmt.Errorf("no process found on port %v", s.portToUint32(port))
 }
 
 // portToUint32 converts a port string to uint32.
-func (s *sgridProcessUtil) portToUint32(port string) uint32 {
+func (s *sgridProcessUtil) portToUint32(port int) uint32 {
 	var p uint32
-	fmt.Sscan(port, &p)
+	p = uint32(port)
 	return p
 }
 
@@ -42,7 +43,7 @@ func (s *sgridProcessUtil) killProcess(pid int32) error {
 	return proc.Kill()
 }
 
-func (s *sgridProcessUtil) QueryProcessPidThenKill(port string) error {
+func (s *sgridProcessUtil) QueryProcessPidThenKill(port int) error {
 	pid, err := s.findPidByPort(port)
 	if err != nil {
 		fmt.Println("Error finding PID: ", err)
@@ -56,4 +57,16 @@ func (s *sgridProcessUtil) QueryProcessPidThenKill(port string) error {
 	}
 	fmt.Println("Successfully killed process with PID ", pid)
 	return err
+}
+
+func (s *sgridProcessUtil) ValidatePortToPid(port int, pid int) error {
+	_pid, err := s.findPidByPort(port)
+	if err != nil {
+		return err
+	}
+	fmt.Println("find port pid is ", _pid, " target port pid is ", pid)
+	if _pid == _pid {
+		return nil
+	}
+	return errors.New("Validation error: There is no mapping relationship between port and PID ")
 }

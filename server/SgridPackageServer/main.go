@@ -85,6 +85,7 @@ type SgridMonitor struct {
 	serverName   string
 	gridId       int
 	cronInstance *cron.Cron
+	port         int
 }
 
 func WithMonitorInterval(interval time.Duration) func(*SgridMonitor) {
@@ -102,9 +103,10 @@ func WithMonitorSetCmd(cmd *exec.Cmd) func(*SgridMonitor) {
 	}
 }
 
-func WithMonitorGridID(id int) func(*SgridMonitor) {
+func WithMonitorGridIDAndPort(id, port int) func(*SgridMonitor) {
 	return func(monitor *SgridMonitor) {
 		monitor.gridId = id
+		monitor.port = port
 	}
 }
 
@@ -133,7 +135,20 @@ func (s *SgridMonitor) Report() {
 			s.cronInstance = nil
 			return
 		}
+		var isNeedCheckPortToPid bool = true
 		AntsPool.Submit(func() {
+			if isNeedCheckPortToPid {
+				err := pk.SgridProcessUtil.ValidatePortToPid(s.port, s.getPid())
+				if err != nil {
+					storage.PushErr(&pojo.SystemErr{
+						Type: "system/error/SgridPackageServer/pk.SgridProcessUtil.ValidatePortToPid",
+						Info: err.Error(),
+					})
+					s.kill()
+					return
+				}
+				isNeedCheckPortToPid = false
+			}
 			id := s.getPid()
 			statInfo := getStat(id)
 			if statInfo == nil {
@@ -430,7 +445,7 @@ func (s *fileTransferServer) ShutdownGrid(ctx context.Context, req *protocol.Shu
 			delete(globalGrids, int(i))
 			continue
 		} else {
-			pk.SgridProcessUtil.QueryProcessPidThenKill(string(grid.GetPort())) // 有可能需要强制down
+			pk.SgridProcessUtil.QueryProcessPidThenKill(int(grid.GetPort())) // 有可能需要强制down
 			continue
 		}
 
@@ -536,7 +551,7 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 			WithMonitorInterval(time.Second*5),
 			WithMonitorSetCmd(cmd),
 			WithMonitorServerName(serverName),
-			WithMonitorGridID(int(id)),
+			WithMonitorGridIDAndPort(int(id), int(grid.Port)),
 		)
 
 		globalGrids[int(id)] = monitor
@@ -549,6 +564,7 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 				Type: "system/error/SgridPackageServer/cmd.Start()",
 				Info: err.Error(),
 			})
+			continue
 		}
 		storage.SaveStatLog(&pojo.StatLog{
 			GridId: int(id),
@@ -820,7 +836,7 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 				WithMonitorInterval(time.Second*5),
 				WithMonitorSetCmd(cmd),
 				WithMonitorServerName(serverName),
-				WithMonitorGridID(int(id)),
+				WithMonitorGridIDAndPort(int(id), int(req.Port)),
 			)
 			globalGrids[int(id)] = monitor
 			monitor.PrintLogger()
