@@ -24,9 +24,16 @@ const (
 )
 
 const (
-	RELEASE_GO   = "go"
-	RELEASE_NODE = "node"
-	RELEASE_JAVA = "java"
+	RELEASE_GO       = "go"
+	RELEASE_NODE     = "node"
+	RELEASE_JAVA     = "java"
+	RELEASE_EXE      = "exe"
+	RELEASE_JAVA_JAR = "java(jar)"
+)
+
+const (
+	EXEC_TYPE_EXE = "exe"
+	EXEC_TYPE_JAR = "jar"
 )
 
 const (

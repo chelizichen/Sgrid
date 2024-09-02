@@ -464,21 +464,23 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 			Message: "req.ServantGrids is empty",
 		}, err
 	}
-	fmt.Println("ReleaseServerByPackage Req ||", string(req.String()))      // 日志打印
-	filePath := req.FilePath                                                // 服务路径
-	serverLanguage := req.ServerLanguage                                    // 服务语言
-	serverName := req.ServerName                                            // 服务名称
-	serverProtocol := req.ServerProtocol                                    // 协议
-	execFilePath := req.ExecPath                                            // 执行路径
-	startDir := SgridPackageInstance.JoinPath(Servants, serverName)         // 解压目录
-	packageFile := SgridPackageInstance.JoinPath(App, serverName, filePath) // 路径
-	servantId := req.ServantId                                              // 服务ID
-	err = public.Tar2Dest(packageFile, startDir)                            // 解压
-	if err != nil {
-		return &protocol.BasicResp{
-			Code:    -1,
-			Message: fmt.Sprintf("ReleaseServerByPackage.Tar2Dest.error %v", err.Error()),
-		}, err
+	fmt.Println("ReleaseServerByPackage Req ||", string(req.String()))                             // 日志打印
+	filePath := req.FilePath                                                                       // 服务路径
+	serverLanguage := req.ServerLanguage                                                           // 服务语言
+	serverName := req.ServerName                                                                   // 服务名称
+	serverProtocol := req.ServerProtocol                                                           // 协议
+	execFilePath := req.ExecPath                                                                   // 执行路径
+	startDir := SgridPackageInstance.JoinPath(Servants, serverName)                                // 解压目录
+	packageFile := SgridPackageInstance.JoinPath(App, serverName, filePath)                        // 路径
+	servantId := req.ServantId                                                                     // 服务ID
+	if req.ServerLanguage != public.RELEASE_EXE && req.ServerLanguage != public.RELEASE_JAVA_JAR { // 是 jar 或者 exe 时，不用 解压包
+		err = public.Tar2Dest(packageFile, startDir) // 解压
+		if err != nil {
+			return &protocol.BasicResp{
+				Code:    -1,
+				Message: fmt.Sprintf("ReleaseServerByPackage.Tar2Dest.error %v", err.Error()),
+			}, err
+		}
 	}
 	servantGrid := req.ServantGrids // 服务列表  通过Host过滤拿到IP，然后进行服务启动
 	var startFile string            // 启动文件
@@ -505,36 +507,36 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 		}
 		var cmd *exec.Cmd
 		if serverProtocol == public.PROTOCOL_GRPC {
-			if serverLanguage == public.RELEASE_GO {
-				startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
-				cmd = exec.Command(startFile)
-			}
 			if serverLanguage == public.RELEASE_NODE {
 				startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 				cmd = exec.Command("node", startFile)
 			}
-			if serverLanguage == public.RELEASE_JAVA {
+			if serverLanguage == public.RELEASE_JAVA || serverLanguage == public.RELEASE_JAVA_JAR {
 				startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 				prodConf := path.Join(startDir, public.PROD_CONF_NAME)
 				cmd = exec.Command("java", "-jar", startFile, fmt.Sprintf("-Dspring.config.location=file:%v", prodConf))
 				cmd.Env = append(cmd.Env, fmt.Sprintf("SGRID_PROD_CONF_PATH=%v", prodConf))
+			}
+			if serverLanguage == public.RELEASE_GO || serverLanguage == public.RELEASE_EXE {
+				startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
+				cmd = exec.Command(startFile)
 			}
 		}
 
 		if serverProtocol == public.PROTOCOL_HTTP {
-			if serverLanguage == public.RELEASE_GO {
-				startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
-				cmd = exec.Command(startFile)
-			}
 			if serverLanguage == public.RELEASE_NODE {
 				startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 				cmd = exec.Command("node", startFile)
 			}
-			if serverLanguage == public.RELEASE_JAVA {
+			if serverLanguage == public.RELEASE_JAVA || serverLanguage == public.RELEASE_JAVA_JAR {
 				startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 				prodConf := path.Join(startDir, public.PROD_CONF_NAME)
 				cmd = exec.Command("java", "-jar", startFile, fmt.Sprintf("-Dspring.config.location=file:%v", prodConf))
 				cmd.Env = append(cmd.Env, fmt.Sprintf("SGRID_PROD_CONF_PATH=%v", prodConf))
+			}
+			if serverLanguage == public.RELEASE_GO || serverLanguage == public.RELEASE_EXE {
+				startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
+				cmd = exec.Command(startFile)
 			}
 		}
 		cmd.Env = append(cmd.Env,
@@ -788,36 +790,36 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 			var startFile string // 启动文件
 
 			if serverProtocol == public.PROTOCOL_GRPC {
-				if serverLanguage == public.RELEASE_GO {
-					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
-					cmd = exec.Command(startFile)
-				}
 				if serverLanguage == public.RELEASE_NODE {
 					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 					cmd = exec.Command("node", startFile)
 				}
-				if serverLanguage == public.RELEASE_JAVA {
+				if serverLanguage == public.RELEASE_JAVA || serverLanguage == public.RELEASE_JAVA_JAR {
 					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 					prodConf := path.Join(startDir, public.PROD_CONF_NAME)
 					cmd = exec.Command("java", "-jar", startFile, fmt.Sprintf("-Dspring.config.location=file:%v", prodConf))
 					cmd.Env = append(cmd.Env, fmt.Sprintf("SGRID_PROD_CONF_PATH=%v", prodConf))
+				}
+				if serverLanguage == public.RELEASE_GO || serverLanguage == public.RELEASE_EXE {
+					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
+					cmd = exec.Command(startFile)
 				}
 			}
 
 			if serverProtocol == public.PROTOCOL_HTTP {
-				if serverLanguage == public.RELEASE_GO {
-					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
-					cmd = exec.Command(startFile)
-				}
 				if serverLanguage == public.RELEASE_NODE {
 					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 					cmd = exec.Command("node", startFile)
 				}
-				if serverLanguage == public.RELEASE_JAVA {
+				if serverLanguage == public.RELEASE_JAVA || serverLanguage == public.RELEASE_JAVA_JAR {
 					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 					prodConf := path.Join(startDir, public.PROD_CONF_NAME)
 					cmd = exec.Command("java", "-jar", startFile, fmt.Sprintf("-Dspring.config.location=file:%v", prodConf))
 					cmd.Env = append(cmd.Env, fmt.Sprintf("SGRID_PROD_CONF_PATH=%v", prodConf))
+				}
+				if serverLanguage == public.RELEASE_GO || serverLanguage == public.RELEASE_EXE {
+					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
+					cmd = exec.Command(startFile)
 				}
 			}
 			fmt.Println("cmd.Env", cmd)
