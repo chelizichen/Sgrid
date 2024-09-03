@@ -34,6 +34,7 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 		servantId, _ := strconv.Atoi(c.PostForm("servantId"))
 		F, err := c.FormFile("file")
 		content := c.PostForm("content")
+		servantLanguage := c.PostForm("servantLanguage")
 		if err != nil {
 			handlers.AbortWithError(c, "file error"+string(err.Error()))
 			return
@@ -46,7 +47,12 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 		defer file.Close()
 		now := time.Now()
 		dateTime := strings.ReplaceAll(now.Format(time.DateTime), " ", "")
-		fileName := fmt.Sprintf("%v_%v_%v.tgz", serverName, dateTime, fileHash)
+		fileName := ""
+		if servantLanguage == public.RELEASE_JAVA_JAR || servantLanguage == public.RELEASE_EXE {
+			fileName = fmt.Sprintf("%v_%v_%v", serverName, dateTime, fileHash)
+		} else {
+			fileName = fmt.Sprintf("%v_%v_%v.tgz", serverName, dateTime, fileHash)
+		}
 		META := metadata.Pairs("filename", fileName, "serverName", serverName)
 		ctx := metadata.NewOutgoingContext(context.Background(), META)
 		var syncPackage sync.WaitGroup

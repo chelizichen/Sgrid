@@ -55,6 +55,7 @@ const props = defineProps<{
   uploadVisible: boolean;
   serverName:string;
   servantId:number;
+  servantLanguage:string;
 }>();
 
 const emits = defineEmits(["CLOSE_UPLOAD_DIALOG"]);
@@ -101,6 +102,7 @@ async function uploadFile(){
     formData.append('content', uploadForm.value.content)
     formData.append('servantId', String(props.servantId))
     formData.append('fileHash', String(state.hash))
+    formData.append('servantLanguage', String(props.servantLanguage))
     const data = await api.uploadSgridServer(formData)
     if (data.code) {
       ElNotification({

@@ -225,7 +225,7 @@ func CopyFile(src string, dst string) error {
 	if err != nil {
 		return err
 	}
-	return nil
+	return os.Chmod(dst, 0755)
 }
 
 func IsExist(filePath string) bool {

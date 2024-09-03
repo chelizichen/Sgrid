@@ -155,6 +155,7 @@ export default {
       :upload-visible="state.uploadVisible"
       :serverName="$props.serverName"
       :servantId="$props.servantId"
+      :servantLanguage="$props.servantLanguage"
       @CLOSE_UPLOAD_DIALOG="() => (state.uploadVisible = false)"
     ></uploadComponent>
     <releaseComponent
@@ -187,6 +188,7 @@ const props = defineProps<{
   gridsList: any[];
   serverName: string;
   servantId: number;
+  servantLanguage: string;
 }>();
 const emits = defineEmits(["checkStatus"]);
 async function getLogList(gridList) {

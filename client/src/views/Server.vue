@@ -19,6 +19,7 @@ export default {
             :grids-list="state.gridsList"
             :server-name="state.serverName"
             :servant-id="state.servantId"
+            :servantLanguage="state.servantLanguage"
             @check-status="handleOpen(currentItem)"
           ></gridsComponent>
         </el-card>
@@ -42,6 +43,7 @@ const state = reactive({
   serverList: [],
   gridsList: [],
   servantId: 0,
+  servantLanguage: "",
 });
 const currentItem = ref();
 async function handleOpen(item: Item) {
@@ -52,6 +54,7 @@ async function handleOpen(item: Item) {
   state.servantId = item.id;
   console.log("state.grids", state.gridsList);
   state.serverName = item.serverName;
+  state.servantLanguage = item.language;
 }
 
 async function fetchServerList() {
