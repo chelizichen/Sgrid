@@ -17,6 +17,7 @@ import (
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -521,20 +522,28 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 			if serverLanguage == public.RELEASE_NODE {
 				startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 				cmd = exec.Command("node", startFile)
-			}
-			if serverLanguage == public.RELEASE_JAVA || serverLanguage == public.RELEASE_JAVA_JAR {
+			} else if serverLanguage == public.RELEASE_JAVA || serverLanguage == public.RELEASE_JAVA_JAR {
 				startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 				prodConf := path.Join(startDir, public.PROD_CONF_NAME)
 				cmd = exec.Command("java", "-jar", startFile, fmt.Sprintf("-Dspring.config.location=file:%v", prodConf))
 				cmd.Env = append(cmd.Env, fmt.Sprintf("SGRID_PROD_CONF_PATH=%v", prodConf))
-			}
-			if serverLanguage == public.RELEASE_GO {
+			} else if serverLanguage == public.RELEASE_GO {
 				startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 				cmd = exec.Command(startFile)
-			}
-			if serverLanguage == public.RELEASE_EXE {
+			} else if serverLanguage == public.RELEASE_EXE {
 				startFile = filepath.Join(startDir, req.ExecPath) // 启动文件
 				cmd = exec.Command(startFile)
+			} else if serverLanguage == public.RELEASE_CUSTOM_COMMAND {
+				var parseExecArgs []string
+				err = json.Unmarshal([]byte(execFilePath), &parseExecArgs)
+				if err != nil {
+					return &protocol.BasicResp{
+						Code:    -1,
+						Message: fmt.Sprintf("ReleaseServerByPackage.json.Unmarshal([]byte(execFilePath), &parseExecArgs).error %v", err.Error()),
+					}, err
+				}
+				fmt.Println("parseExecArgs", parseExecArgs)
+				cmd = exec.Command(parseExecArgs[0], parseExecArgs[1:]...)
 			}
 		}
 
@@ -542,20 +551,28 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 			if serverLanguage == public.RELEASE_NODE {
 				startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 				cmd = exec.Command("node", startFile)
-			}
-			if serverLanguage == public.RELEASE_JAVA || serverLanguage == public.RELEASE_JAVA_JAR {
+			} else if serverLanguage == public.RELEASE_JAVA || serverLanguage == public.RELEASE_JAVA_JAR {
 				startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 				prodConf := path.Join(startDir, public.PROD_CONF_NAME)
 				cmd = exec.Command("java", "-jar", startFile, fmt.Sprintf("-Dspring.config.location=file:%v", prodConf))
 				cmd.Env = append(cmd.Env, fmt.Sprintf("SGRID_PROD_CONF_PATH=%v", prodConf))
-			}
-			if serverLanguage == public.RELEASE_GO {
+			} else if serverLanguage == public.RELEASE_GO {
 				startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 				cmd = exec.Command(startFile)
-			}
-			if serverLanguage == public.RELEASE_EXE {
+			} else if serverLanguage == public.RELEASE_EXE {
 				startFile = filepath.Join(startDir, req.ExecPath) // 启动文件
 				cmd = exec.Command(startFile)
+			} else if serverLanguage == public.RELEASE_CUSTOM_COMMAND {
+				var parseExecArgs []string
+				err = json.Unmarshal([]byte(execFilePath), &parseExecArgs)
+				if err != nil {
+					return &protocol.BasicResp{
+						Code:    -1,
+						Message: fmt.Sprintf("ReleaseServerByPackage.json.Unmarshal([]byte(execFilePath), &parseExecArgs).error %v", err.Error()),
+					}, err
+				}
+				fmt.Println("parseExecArgs", parseExecArgs)
+				cmd = exec.Command(parseExecArgs[0], parseExecArgs[1:]...)
 			}
 		}
 		cmd.Env = append(cmd.Env,
@@ -812,20 +829,28 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 				if serverLanguage == public.RELEASE_NODE {
 					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 					cmd = exec.Command("node", startFile)
-				}
-				if serverLanguage == public.RELEASE_JAVA || serverLanguage == public.RELEASE_JAVA_JAR {
+				} else if serverLanguage == public.RELEASE_JAVA || serverLanguage == public.RELEASE_JAVA_JAR {
 					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 					prodConf := path.Join(startDir, public.PROD_CONF_NAME)
 					cmd = exec.Command("java", "-jar", startFile, fmt.Sprintf("-Dspring.config.location=file:%v", prodConf))
 					cmd.Env = append(cmd.Env, fmt.Sprintf("SGRID_PROD_CONF_PATH=%v", prodConf))
-				}
-				if serverLanguage == public.RELEASE_GO {
+				} else if serverLanguage == public.RELEASE_GO {
 					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 					cmd = exec.Command(startFile)
-				}
-				if serverLanguage == public.RELEASE_EXE {
+				} else if serverLanguage == public.RELEASE_EXE {
 					startFile = filepath.Join(startDir, req.ExecPath) // 启动文件
 					cmd = exec.Command(startFile)
+				} else if serverLanguage == public.RELEASE_CUSTOM_COMMAND {
+					var parseExecArgs []string
+					err = json.Unmarshal([]byte(execFilePath), &parseExecArgs)
+					if err != nil {
+						return &protocol.BasicResp{
+							Code:    -1,
+							Message: fmt.Sprintf("ReleaseServerByPackage.json.Unmarshal([]byte(execFilePath), &parseExecArgs).error %v", err.Error()),
+						}, err
+					}
+					fmt.Println("parseExecArgs", parseExecArgs)
+					cmd = exec.Command(parseExecArgs[0], parseExecArgs[1:]...)
 				}
 			}
 
@@ -833,20 +858,28 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 				if serverLanguage == public.RELEASE_NODE {
 					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 					cmd = exec.Command("node", startFile)
-				}
-				if serverLanguage == public.RELEASE_JAVA || serverLanguage == public.RELEASE_JAVA_JAR {
+				} else if serverLanguage == public.RELEASE_JAVA || serverLanguage == public.RELEASE_JAVA_JAR {
 					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 					prodConf := path.Join(startDir, public.PROD_CONF_NAME)
 					cmd = exec.Command("java", "-jar", startFile, fmt.Sprintf("-Dspring.config.location=file:%v", prodConf))
 					cmd.Env = append(cmd.Env, fmt.Sprintf("SGRID_PROD_CONF_PATH=%v", prodConf))
-				}
-				if serverLanguage == public.RELEASE_GO {
+				} else if serverLanguage == public.RELEASE_GO {
 					startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 					cmd = exec.Command(startFile)
-				}
-				if serverLanguage == public.RELEASE_EXE {
+				} else if serverLanguage == public.RELEASE_EXE {
 					startFile = filepath.Join(startDir, req.ExecPath) // 启动文件
 					cmd = exec.Command(startFile)
+				} else if serverLanguage == public.RELEASE_CUSTOM_COMMAND {
+					var parseExecArgs []string
+					err = json.Unmarshal([]byte(execFilePath), &parseExecArgs)
+					if err != nil {
+						return &protocol.BasicResp{
+							Code:    -1,
+							Message: fmt.Sprintf("ReleaseServerByPackage.json.Unmarshal([]byte(execFilePath), &parseExecArgs).error %v", err.Error()),
+						}, err
+					}
+					fmt.Println("parseExecArgs", parseExecArgs)
+					cmd = exec.Command(parseExecArgs[0], parseExecArgs[1:]...)
 				}
 			}
 			fmt.Println("cmd.Env", cmd)

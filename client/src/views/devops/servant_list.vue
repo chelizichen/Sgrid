@@ -49,10 +49,24 @@
         <el-input v-model="servant.serverName"></el-input>
       </el-form-item>
       <el-form-item label="语言">
-        <el-input v-model="servant.language"></el-input>
+        <el-select v-model="servant.language">
+          <el-option
+            v-for="item in languages"
+            :label="item"
+            :key="item"
+            :value="item"
+          ></el-option>
+        </el-select>
       </el-form-item>
       <el-form-item label="协议">
-        <el-input v-model="servant.protocol"></el-input>
+        <el-select v-model="servant.protocol">
+          <el-option
+            v-for="item in protocols"
+            :label="item"
+            :key="item"
+            :value="item"
+          ></el-option>
+        </el-select>
       </el-form-item>
       <el-form-item label="执行路径">
         <el-input v-model="servant.execPath"></el-input>
@@ -149,6 +163,8 @@ import _ from "lodash";
 import moment from "moment";
 import { computed, onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
+const languages = ["node", "java", "java(jar)", "go", "exe", "custom command"];
+const protocols = ["http", "grpc"];
 
 const userStore = useUserStore();
 const servantDemo = {
