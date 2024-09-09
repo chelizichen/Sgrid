@@ -575,13 +575,14 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 				cmd = exec.Command(parseExecArgs[0], parseExecArgs[1:]...)
 			}
 		}
-		cmd.Env = append(cmd.Env,
+		env := append(os.Environ(),
 			fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, grid.Port),      // 指定端口
 			fmt.Sprintf("%v=%v", public.ENV_PRODUCTION, startDir),        // 开启目录
 			fmt.Sprintf("%v=%v", public.SGRID_CONFIG, servantConf),       // 配置
 			fmt.Sprintf("%v=%v", public.ENV_PROCESS_INDEX, ProcessIndex), // 服务运行索引
 		)
 		cmd.Dir = startDir // 指定工作目录
+		cmd.Env = env      // 指定环境变量
 		fmt.Println("startFile", startFile)
 		fmt.Println("cmd.Env", cmd.Env)
 
@@ -882,8 +883,8 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 					cmd = exec.Command(parseExecArgs[0], parseExecArgs[1:]...)
 				}
 			}
-			fmt.Println("cmd.Env", cmd)
-			cmd.Env = append(cmd.Env,
+			env := append(
+				os.Environ(),
 				fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, req.Port),          // 指定端口
 				fmt.Sprintf("%v=%v", public.ENV_PRODUCTION, startDir),           // 开启目录
 				fmt.Sprintf("%v=%v", public.SGRID_CONFIG, servantConf),          // 配置
@@ -891,6 +892,7 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 				fmt.Sprintf("%v=%v", public.ENV_SGRID_SERVANT_NAME, serverName), // 服务名
 			)
 			cmd.Dir = startDir // 指定工作目录
+			cmd.Env = env      // 指定环境变量
 			fmt.Println("startFile", startFile)
 			fmt.Println("cmd.Env", cmd.Env)
 
