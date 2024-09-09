@@ -48,10 +48,13 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 		now := time.Now()
 		dateTime := strings.ReplaceAll(now.Format(time.DateTime), " ", "")
 		fileName := ""
-		if servantLanguage == public.RELEASE_JAVA_JAR || servantLanguage == public.RELEASE_EXE {
+		if servantLanguage == public.RELEASE_EXE {
 			fileName = fmt.Sprintf("%v_%v_%v", serverName, dateTime, fileHash)
+		} else if servantLanguage == public.RELEASE_JAVA_JAR {
+			fileName = fmt.Sprintf("%v_%v_%v.jar", serverName, dateTime, fileHash)
 		} else {
 			fileName = fmt.Sprintf("%v_%v_%v.tgz", serverName, dateTime, fileHash)
+
 		}
 		META := metadata.Pairs("filename", fileName, "serverName", serverName)
 		ctx := metadata.NewOutgoingContext(context.Background(), META)

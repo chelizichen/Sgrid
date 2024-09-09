@@ -466,15 +466,22 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 			Message: "req.ServantGrids is empty",
 		}, err
 	}
-	fmt.Println("ReleaseServerByPackage Req ||", string(req.String()))                             // 日志打印
-	filePath := req.FilePath                                                                       // 服务路径
-	serverLanguage := req.ServerLanguage                                                           // 服务语言
-	serverName := req.ServerName                                                                   // 服务名称
-	serverProtocol := req.ServerProtocol                                                           // 协议
-	execFilePath := req.ExecPath                                                                   // 执行路径
-	startDir := SgridPackageInstance.JoinPath(Servants, serverName)                                // 解压目录
-	packageFile := SgridPackageInstance.JoinPath(App, serverName, filePath)                        // 路径
-	servantId := req.ServantId                                                                     // 服务ID
+	fmt.Println("ReleaseServerByPackage Req ||", string(req.String()))      // 日志打印
+	filePath := req.FilePath                                                // 服务路径
+	serverLanguage := req.ServerLanguage                                    // 服务语言
+	serverName := req.ServerName                                            // 服务名称
+	serverProtocol := req.ServerProtocol                                    // 协议
+	execFilePath := req.ExecPath                                            // 执行路径
+	startDir := SgridPackageInstance.JoinPath(Servants, serverName)         // 解压目录
+	packageFile := SgridPackageInstance.JoinPath(App, serverName, filePath) // 路径
+	servantId := req.ServantId                                              // 服务ID
+	err = public.CheckDirectoryOrCreate(startDir)                           // 检查并创建目录
+	if err != nil {
+		return &protocol.BasicResp{
+			Code:    -1,
+			Message: fmt.Sprintf("public.CheckDirectoryOrCreate.error %v", err.Error()),
+		}, err
+	}
 	if req.ServerLanguage != public.RELEASE_EXE && req.ServerLanguage != public.RELEASE_JAVA_JAR { // 是 jar 或者 exe 时，不用 解压包
 		err = public.Tar2Dest(packageFile, startDir) // 解压
 		if err != nil {
@@ -513,7 +520,6 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 			item.kill()
 			delete(globalGrids, int(id))
 		}
-		err = public.CheckDirectoryOrCreate(startDir)
 		if err != nil {
 			fmt.Println("error", err.Error())
 		}
