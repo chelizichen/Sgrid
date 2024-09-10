@@ -422,12 +422,12 @@ func GetServantListByUserGroups(userId int) (resp []vo.VoServantGroup) {
 		gsg.*,
 		gs.create_time AS gs_create_time,
 		gs.id AS gs_id,
-		gs.language gs_language,
+		gs.language AS gs_language,
 		gs.servant_group_id AS gs_servant_group_id,
 		gs.server_name AS gs_server_name,
 		gs.location AS gs_location,
 		gs.up_stream_name AS gs_up_stream_name,
-		gs.stat as gs_stat
+		gs.stat AS gs_stat
 	from grid_servant_group gsg
 	LEFT JOIN grid_servant gs ON gs.servant_group_id = gsg.id
 	where gs.servant_group_id in (
