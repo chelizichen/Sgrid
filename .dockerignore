@@ -1,0 +1,13 @@
+.vscode
+
+.idea
+
+./client
+
+./prod.sh
+
+./Sgrid.tar.gz
+
+./dump.rdb
+
+./dev.sh
