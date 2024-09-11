@@ -460,6 +460,16 @@ func (s *fileTransferServer) ShutdownGrid(ctx context.Context, req *protocol.Shu
 
 // 发布 -> 上报给主控
 func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *protocol.ReleaseServerReq) (res *protocol.BasicResp, err error) {
+	// 异常处理
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("Recovered from panic: %v", r)
+			storage.PushErr(&pojo.SystemErr{
+				Type: "system/error/SgridPackageServer.ReleaseServerByPackage.recover",
+				Info: "recover Error :" + err.Error(),
+			})
+		}
+	}()
 	if len(req.ServantGrids) == 0 {
 		return &protocol.BasicResp{
 			Code:    -2,
@@ -754,6 +764,15 @@ func (s *fileTransferServer) GetPidInfo(ctx context.Context, in *protocol.GetPid
 }
 
 func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.PatchServerReq) (*protocol.BasicResp, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err := fmt.Errorf("Recovered from panic: %v", r)
+			storage.PushErr(&pojo.SystemErr{
+				Type: "system/error/SgridPackageServer.PatchServer.recover",
+				Info: "recover Error :" + err.Error(),
+			})
+		}
+	}()
 	gridsInfo := in.Req
 	var servantIds = make(map[int]struct{})
 	for _, v := range gridsInfo {
