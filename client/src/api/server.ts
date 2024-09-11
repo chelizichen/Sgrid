@@ -223,6 +223,13 @@ const api = {
       method: 'get',
       params
     }) as unknown as BasicResp<any>
+  },
+  downLoadPackage(serverName: string, fileName: string) {
+    return HttpReq({
+      url: '/download/serverPackage',
+      method: 'get',
+      params: { serverName, fileName }
+    }) as unknown as BasicResp<any>
   }
 }
 

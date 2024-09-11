@@ -9,9 +9,12 @@ import (
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -400,5 +403,20 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 			Reply:  &rpl,
 		})
 		handlers.AbortWithSucc(c, nil)
+	})
+
+	router.GET("/download/serverPackage", func(ctx *gin.Context) {
+		fileName := ctx.Query("fileName")
+		serverName := ctx.Query("serverName")
+		if fileName == "" || serverName == "" {
+			handlers.AbortWithError(ctx, errors.New("fileName or serverName is empty").Error())
+			return
+		}
+		fmt.Println("fileName", fileName)
+		cwd, _ := os.Getwd()
+		targetFilePath := filepath.Join(cwd, "server", "SgridPackageServer", "application", serverName, fileName)
+		ctx.Header("Content-Type", "application/octet-stream")
+		ctx.Header("Content-Disposition", "attachment; filename="+fileName)
+		ctx.FileAttachment(targetFilePath, fileName)
 	})
 }
