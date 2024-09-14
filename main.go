@@ -7,6 +7,8 @@ import (
 	"Sgrid/src/public"
 	service "Sgrid/src/service"
 	"fmt"
+	"os"
+	"path/filepath"
 )
 
 // func init() {
@@ -25,6 +27,12 @@ import (
 // 		return
 // 	}
 // }
+
+func init() {
+	cwd, _ := os.Getwd()
+	public.CheckDirectoryOrCreate(filepath.Join(cwd, "server"))
+	public.CheckDirectoryOrCreate(filepath.Join(cwd, "server", "SgridPackageServer"))
+}
 
 func main() {
 	ctx := h.NewSgridServerCtx(
