@@ -1,42 +1,42 @@
 <script lang="ts">
 export default {
-  name: "login-component",
-};
+  name: 'login-component'
+}
 </script>
 <script lang="ts" setup>
-import API from "@/api/server";
-import LoginPage from "@/assets/login.jpg";
-import { ElNotification } from "element-plus";
-import { onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
-import { md5 } from "js-md5";
-import { constants, localGet, localSet } from "@/constant";
-import { useUserStore } from "@/stores/counter";
-const router = useRouter();
-const userStore = useUserStore();
-const username = ref("");
-const password = ref("");
+import API from '@/api/server'
+import LoginPage from '@/assets/login.jpg'
+import { ElNotification } from 'element-plus'
+import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { md5 } from 'js-md5'
+import { constants, localGet, localSet } from '@/constant'
+import { useUserStore } from '@/stores/counter'
+const router = useRouter()
+const userStore = useUserStore()
+const username = ref('')
+const password = ref('')
 
 async function login() {
-  const data = new FormData();
-  const tkn = md5(password.value);
-  data.append("password", tkn);
-  data.append("username", username.value);
-  const ret = await API.Login(data);
+  const data = new FormData()
+  const tkn = md5(password.value)
+  data.append('password', tkn)
+  data.append('username', username.value)
+  const ret = await API.Login(data)
   if (ret.code) {
-    ElNotification.error("账号或密码错误");
+    ElNotification.error('账号或密码错误')
   } else {
-    router.push("/server");
-    localSet(constants.TOKEN, ret.data.token);
+    router.push('/server')
+    localSet(constants.TOKEN, ret.data.token)
   }
 }
 
 onMounted(() => {
-  const token = localGet(constants.TOKEN);
+  const token = localGet(constants.TOKEN)
   if (token && userStore.userInfo.userName && userStore.userInfo.password) {
-    router.push("/dashboard");
+    router.push('/dashboard')
   }
-});
+})
 </script>
 <template>
   <div class="body">
@@ -46,11 +46,7 @@ onMounted(() => {
     <div>
       <div class="container">
         <div class="login-form">
-          <h2>
-            欢迎登录
-            <img src="@/assets/title.png" style="width: 120px; height: 60px" />
-            平台
-          </h2>
+          <h2>欢迎登录 SgridCloud 平台</h2>
           <div class="input-group">
             <label for="username">用户名</label>
             <input
@@ -110,6 +106,7 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
+    font-weight: 500;
   }
 }
 
@@ -140,7 +137,7 @@ onMounted(() => {
 .button {
   width: 100%;
   padding: 10px;
-  background-color: rgb(207, 90, 124);
+  background-color: var(--sgrid-primay-color);
   color: white;
   border: none;
   border-radius: 5px;
@@ -149,7 +146,7 @@ onMounted(() => {
 }
 
 .button:hover {
-  background-color: rgb(144, 90, 124);
+  background-color: var(--sgrid-primay-hover-color);
 }
 
 .license {
@@ -157,7 +154,7 @@ onMounted(() => {
   width: 100%;
   .title {
     text-align: center;
-    color: rgb(207, 90, 124);
+    color: var(--sgrid-primay-color);
     margin: 5px 0;
   }
   .h2 {
@@ -166,7 +163,7 @@ onMounted(() => {
   }
   .h4 {
     font-size: 14px;
-    color: #838383;
+    color: var(--sgrid-primay-hover-color);
     font-weight: 300;
   }
 }

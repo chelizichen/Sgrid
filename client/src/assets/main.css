@@ -5,22 +5,20 @@
 }
 
 :root {
-  --el-color-primary: rgb(207, 15, 124);
-  --el-button-hover-bg-color: rgb(207, 15, 124);
-  .el-button--primary {
-    --el-button-hover-bg-color: rgb(207, 90, 124);
-    --el-button-active-border-color: rgb(207, 90, 124);
-    --el-button-active-bg-color: rgb(207, 90, 124);
-    --el-button-outline-color: var(--el-color-primary);
-    --el-button-active-color: var(--el-color-primary);
-    --el-button-hover-text-color: white;
-    --el-button-hover-link-text-color: var(--el-color-primary);
-    --el-button-hover-border-color: var(--el-color-primary);
-    --el-button-active-bg-color: var(--el-color-primary);
-    --el-button-active-border-color: var(--el-color-primary);
+  --sgrid-primay-color: black;
+  --sgrid-primay-hover-color: #615e5e;
+  --sgrid-primary-choose-color: darkred;
+  --el-color-primary-light-3: var(--sgrid-primay-hover-color);
+  --el-color-primary: var(--sgrid-primay-color);
+  .el-checkbox {
+    --el-checkbox-checked-bg-color: var(--sgrid-primay-hover-color);
+    --el-checkbox-checked-input-border-color: var(--sgrid-primay-hover-color);
+  }
+  .el-button {
+    --el-button-hover-text-color: #ffffff;
+    --el-button-active-border-color: var(--sgrid-primay-hover-color) !important;
   }
 }
-
 
 #nprogress .bar {
   background: rgb(207, 15, 124) !important;

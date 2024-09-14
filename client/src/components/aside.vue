@@ -1,26 +1,22 @@
 <script lang="ts">
 export default {
-  name: "aside-component",
-};
+  name: 'aside-component'
+}
 </script>
 <script lang="ts" setup>
-import type { Item } from "@/dto/dto";
+import type { Item } from '@/dto/dto'
 const props = defineProps<{
-  serverList: any[];
-}>();
-const emits = defineEmits(["handleOpen"]);
+  serverList: any[]
+}>()
+const emits = defineEmits(['handleOpen'])
 function handleOpen(item: Partial<Item>) {
-  emits("handleOpen", item);
+  emits('handleOpen', item)
 }
 </script>
 
 <template>
   <div>
-    <el-menu
-      class="el-menu-vertical-demo"
-      active-text-color="rgb(207, 15, 124)"
-      style="border: none"
-    >
+    <el-menu active-text-color="var(--sgrid-primary-choose-color)" style="border: none">
       <template v-if="props.serverList && props.serverList.length">
         <template v-for="(parent, index) in props.serverList" :key="parent.id">
           <el-sub-menu :index="parent.id + '-' + index">

@@ -20,9 +20,9 @@
       <el-table-column prop="lastLoginTime" label="上次登陆时间"></el-table-column>
       <el-table-column label="操作">
         <template #default="scoped">
-          <el-button @click="handleEdit(scoped.row)">修改</el-button>
-          <el-button @click="handleDel(scoped.row)" type="danger">删除</el-button>
-          <el-button @click="handleSetRole(scoped.row)" type="info">设置权限</el-button>
+          <el-button @click="handleEdit(scoped.row)" type="text">修改</el-button>
+          <el-button @click="handleDel(scoped.row)" type="text">删除</el-button>
+          <el-button @click="handleSetRole(scoped.row)" type="text">设置权限</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -66,9 +66,7 @@
           </el-checkbox-group>
         </el-form-item>
         <el-form-item label="操作">
-          <el-button type="primary" @click="submitSetRole"
-            >Submit</el-button
-          ></el-form-item
+          <el-button type="primary" @click="submitSetRole">Submit</el-button></el-form-item
         >
       </el-form>
     </el-dialog>
@@ -76,109 +74,103 @@
 </template>
 
 <script setup lang="ts">
-import {
-  getRole,
-  getUser,
-  getUserToRoleRelation,
-  saveUser,
-  setUserToRole,
-} from "@/api/system";
-import { isEmptyObj } from "@/utils/obj";
-import { ElNotification } from "element-plus";
-import _ from "lodash";
-import { onMounted, ref } from "vue";
+import { getRole, getUser, getUserToRoleRelation, saveUser, setUserToRole } from '@/api/system'
+import { isEmptyObj } from '@/utils/obj'
+import { ElNotification } from 'element-plus'
+import _ from 'lodash'
+import { onMounted, ref } from 'vue'
 
 type UserVo = {
-  id: number;
-  password: string;
-  userName: string;
-  createTime: string;
-  lastLoginTime: string;
-  turthName: string;
-};
+  id: number
+  password: string
+  userName: string
+  createTime: string
+  lastLoginTime: string
+  turthName: string
+}
 const parmas = ref({
   offset: 0,
   size: 10,
-  keyword: "",
-});
-const userList = ref();
+  keyword: ''
+})
+const userList = ref()
 async function getServantList(init: boolean) {
   if (init) {
-    parmas.value.offset = 0;
-    parmas.value.size = 10;
+    parmas.value.offset = 0
+    parmas.value.size = 10
   }
-  const servantsResp = await getUser(parmas.value);
-  userList.value = servantsResp.data;
-  console.log("servantResp", servantsResp);
+  const servantsResp = await getUser(parmas.value)
+  userList.value = servantsResp.data
+  console.log('servantResp', servantsResp)
 }
 
-const editUservisible = ref(false);
+const editUservisible = ref(false)
 
 const editUserObj = ref<UserVo>({
-  password: "",
-  userName: "",
-  createTime: "",
-  lastLoginTime: "",
+  password: '',
+  userName: '',
+  createTime: '',
+  lastLoginTime: '',
   id: 0,
-  turthName: "",
-});
+  turthName: ''
+})
 function handleEdit(row: UserVo) {
-  editUserObj.value = _.cloneDeep(row);
-  editUservisible.value = true;
+  editUserObj.value = _.cloneDeep(row)
+  editUservisible.value = true
 }
 function createUser() {
-  editUservisible.value = true;
-  reset();
+  editUservisible.value = true
+  reset()
 }
 async function submitEdit() {
-  const submitBody = _.omit(editUserObj.value, ["createTime", "lastLoginTime"]);
-  const data = await saveUser(submitBody);
+  const submitBody = _.omit(editUserObj.value, ['createTime', 'lastLoginTime'])
+  const data = await saveUser(submitBody)
   if (data.code) {
-    return ElNotification.error(data.message);
+    return ElNotification.error(data.message)
   }
-  editUservisible.value = false;
-  getServantList(true);
-  return ElNotification.success("success");
+  editUservisible.value = false
+  getServantList(true)
+  return ElNotification.success('success')
 }
-const editSetRoleVisible = ref(false);
-const relList = ref([]);
-const roleList = ref([]);
-const userId = ref(0);
+const editSetRoleVisible = ref(false)
+const relList = ref([])
+const roleList = ref([])
+const userId = ref(0)
 async function handleSetRole(row: UserVo) {
-  editSetRoleVisible.value = true;
-  userId.value = row.id;
-  const rels = await getUserToRoleRelation(row.id);
-  const roles = await getRole(undefined);
-  roleList.value = roles.data;
-  relList.value = rels.data.filter((v: any) => !isEmptyObj(v)).map((v: any) => v.id);
+  editSetRoleVisible.value = true
+  userId.value = row.id
+  const rels = await getUserToRoleRelation(row.id)
+  const roles = await getRole(undefined)
+  roleList.value = roles.data
+  relList.value = rels.data.filter((v: any) => !isEmptyObj(v)).map((v: any) => v.id)
 }
 async function submitSetRole() {
   const body = {
     userId: userId.value,
-    roleIds: relList.value.filter((v) => v),
-  };
-  const ret = setUserToRole(body);
-  if (ret.code) {
-    return ElNotification.error(ret.message);
+    roleIds: relList.value.filter((v) => v)
   }
-  editSetRoleVisible.value = false;
-  return ElNotification.success("success");
+  const ret = setUserToRole(body)
+  if (ret.code) {
+    return ElNotification.error(ret.message)
+  }
+  editSetRoleVisible.value = false
+  return ElNotification.success('success')
 }
 
 function reset() {
-  editUserObj.value.createTime = "";
-  editUserObj.value.userName = "";
-  editUserObj.value.password = "";
-  editUserObj.value.lastLoginTime = "";
-  editUserObj.value.turthName = "";
-  editUserObj.value.id = 0;
+  editUserObj.value.createTime = ''
+  editUserObj.value.userName = ''
+  editUserObj.value.password = ''
+  editUserObj.value.lastLoginTime = ''
+  editUserObj.value.turthName = ''
+  editUserObj.value.id = 0
 }
 onMounted(async () => {
-  await getServantList(true);
-});
+  await getServantList(true)
+})
 
 function handleDel(row: UserVo) {
-  console.log("row", row);
+  console.log('row', row)
 }
 </script>
 

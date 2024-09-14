@@ -6,12 +6,7 @@
       </el-form-item>
     </el-form>
 
-    <el-table
-      :data="userList"
-      border
-      highlight-current-row
-      @current-change="handleCurrentChange"
-    >
+    <el-table :data="userList" border highlight-current-row @current-change="handleCurrentChange">
       <el-table-column type="index" label="序号" width="90"></el-table-column>
       <el-table-column prop="name" label="角色名"></el-table-column>
       <el-table-column prop="description" label="角色描述"></el-table-column>
@@ -19,8 +14,8 @@
       <el-table-column label="操作">
         <template #default="scoped">
           <div style="display: flex; flex-wrap: wrap">
-            <el-button @click="handleEdit(scoped.row)">修改</el-button>
-            <el-button @click="handleDel(scoped.row)" type="danger">删除</el-button>
+            <el-button @click="handleEdit(scoped.row)" type="text">修改</el-button>
+            <el-button @click="handleDel(scoped.row)" type="text">删除</el-button>
           </div>
         </template>
       </el-table-column>
@@ -44,85 +39,85 @@
 </template>
 
 <script setup lang="ts">
-import { delRole, getRole, saveRole } from "@/api/system";
-import { ElMessage, ElMessageBox, ElNotification } from "element-plus";
-import _ from "lodash";
-import { onMounted, ref } from "vue";
+import { delRole, getRole, saveRole } from '@/api/system'
+import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
+import _ from 'lodash'
+import { onMounted, ref } from 'vue'
 
 type RoleVo = {
-  id: number;
-  name: string;
-  createTime: string;
-  description: string;
-};
-
-const userList = ref();
-async function getRoleList() {
-  const servantsResp = await getRole(undefined);
-  userList.value = servantsResp.data;
-  console.log("servantResp", servantsResp);
+  id: number
+  name: string
+  createTime: string
+  description: string
 }
 
-const editUservisible = ref(false);
+const userList = ref()
+async function getRoleList() {
+  const servantsResp = await getRole(undefined)
+  userList.value = servantsResp.data
+  console.log('servantResp', servantsResp)
+}
+
+const editUservisible = ref(false)
 
 const editRoleObj = ref<Partial<RoleVo>>({
-  createTime: "",
+  createTime: '',
   id: 0,
-  name: "",
-  description: "",
-});
+  name: '',
+  description: ''
+})
 function handleEdit(row: RoleVo) {
-  editRoleObj.value = _.cloneDeep(row);
-  editUservisible.value = true;
+  editRoleObj.value = _.cloneDeep(row)
+  editUservisible.value = true
 }
 async function submitEdit() {
   if (!editRoleObj.value.id) {
-    editRoleObj.value.createTime = undefined;
+    editRoleObj.value.createTime = undefined
   }
-  const data = await saveRole(editRoleObj.value);
+  const data = await saveRole(editRoleObj.value)
   if (data.code) {
-    return ElNotification.error(data.message);
+    return ElNotification.error(data.message)
   }
-  editUservisible.value = false;
-  getRoleList();
-  return ElNotification.success("success");
+  editUservisible.value = false
+  getRoleList()
+  return ElNotification.success('success')
 }
 
 function reset() {
-  editRoleObj.value.createTime = "";
-  editRoleObj.value.id = 0;
-  editRoleObj.value.name = "";
+  editRoleObj.value.createTime = ''
+  editRoleObj.value.id = 0
+  editRoleObj.value.name = ''
 }
 onMounted(async () => {
-  await getRoleList();
-});
-const emits = defineEmits(["recvRole"]);
+  await getRoleList()
+})
+const emits = defineEmits(['recvRole'])
 function handleCurrentChange(row: RoleVo) {
   if (row) {
-    emits("recvRole", row.id);
+    emits('recvRole', row.id)
   }
 }
 
 async function handleDel(row: RoleVo) {
-  ElMessageBox.confirm("确认删除?", {
-    confirmButtonText: "确认",
-    cancelButtonText: "取消",
-    type: "warning",
+  ElMessageBox.confirm('确认删除?', {
+    confirmButtonText: '确认',
+    cancelButtonText: '取消',
+    type: 'warning'
   })
     .then(async () => {
-      await delRole(row.id);
-      await getRoleList();
+      await delRole(row.id)
+      await getRoleList()
       ElMessage({
-        type: "success",
-        message: "删除成功",
-      });
+        type: 'success',
+        message: '删除成功'
+      })
     })
     .catch(() => {
       ElMessage({
-        type: "info",
-        message: "取消删除",
-      });
-    });
+        type: 'info',
+        message: '取消删除'
+      })
+    })
 }
 </script>
 

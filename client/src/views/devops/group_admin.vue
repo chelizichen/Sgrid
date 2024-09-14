@@ -12,8 +12,13 @@
       <el-table-column prop="creatTime" label="creatTime"></el-table-column>
       <el-table-column label="操作">
         <template #default="scoped">
-          <el-button @click="updateGroup(scoped.row)">修改</el-button>
-          <el-button @click="deleteGroup(scoped.row)" type="danger">删除</el-button>
+          <el-button
+            @click="updateGroup(scoped.row)"
+            type="text"
+            style="color: var(--sgrid-primary-choose-color)"
+            >修改</el-button
+          >
+          <el-button @click="deleteGroup(scoped.row)" type="text">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -41,80 +46,80 @@
 </template>
 
 <script setup lang="ts">
-import api from "@/api/server";
-import { useUserStore } from "@/stores/counter";
-import { ElMessage, ElMessageBox } from "element-plus";
-import _ from "lodash";
-import { onMounted, ref } from "vue";
-const userStore = useUserStore();
-const servantList = ref<Array<any>>([]);
+import api from '@/api/server'
+import { useUserStore } from '@/stores/counter'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import _ from 'lodash'
+import { onMounted, ref } from 'vue'
+const userStore = useUserStore()
+const servantList = ref<Array<any>>([])
 async function getGroupList() {
-  const servantsResp = await api.getGroup(userStore.userInfo.id);
-  servantList.value = servantsResp.data;
-  console.log("servantResp", servantsResp);
+  const servantsResp = await api.getGroup(userStore.userInfo.id)
+  servantList.value = servantsResp.data
+  console.log('servantResp', servantsResp)
 }
 onMounted(async () => {
-  await getGroupList();
-});
-const editDialogVisible = ref(false);
+  await getGroupList()
+})
+const editDialogVisible = ref(false)
 const servant = ref({
   id: 0,
-  tagName: "",
-  tagEnglishName: "",
+  tagName: '',
+  tagEnglishName: '',
   userId: 0,
-  creatTime: "",
-});
+  creatTime: ''
+})
 function updateGroup(row: any) {
-  editDialogVisible.value = true;
-  servant.value = _.cloneDeep(row);
-  console.log("row", row);
+  editDialogVisible.value = true
+  servant.value = _.cloneDeep(row)
+  console.log('row', row)
 }
 
 function createGroup() {
-  reset();
-  editDialogVisible.value = true;
+  reset()
+  editDialogVisible.value = true
 }
 
 function reset() {
-  servant.value.id = 0;
-  servant.value.tagName = "";
-  servant.value.tagEnglishName = "";
-  servant.value.userId = 0;
+  servant.value.id = 0
+  servant.value.tagName = ''
+  servant.value.tagEnglishName = ''
+  servant.value.userId = 0
 }
 async function deleteGroup(row: typeof servant.value) {
-  ElMessageBox.confirm("确认删除?", {
-    confirmButtonText: "确认",
-    cancelButtonText: "取消",
-    type: "warning",
+  ElMessageBox.confirm('确认删除?', {
+    confirmButtonText: '确认',
+    cancelButtonText: '取消',
+    type: 'warning'
   })
     .then(async () => {
-      const resp = await api.deleteGroup(row.id);
-      await getGroupList();
+      const resp = await api.deleteGroup(row.id)
+      await getGroupList()
       if (resp.code) {
         return ElMessage.error({
-          type: "error",
-          message: resp.message,
-        });
+          type: 'error',
+          message: resp.message
+        })
       }
       ElMessage({
-        type: "success",
-        message: "删除成功",
-      });
+        type: 'success',
+        message: '删除成功'
+      })
     })
     .catch(() => {
       ElMessage({
-        type: "info",
-        message: "取消删除",
-      });
-    });
+        type: 'info',
+        message: '取消删除'
+      })
+    })
 
-  editDialogVisible.value = false;
+  editDialogVisible.value = false
 }
 
 async function confirmUpdate() {
-  await api.saveGroup(servant.value);
-  await getGroupList();
-  editDialogVisible.value = false;
+  await api.saveGroup(servant.value)
+  await getGroupList()
+  editDialogVisible.value = false
 }
 </script>
 
