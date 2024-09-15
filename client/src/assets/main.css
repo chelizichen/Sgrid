@@ -1,7 +1,19 @@
 * {
   margin: 0;
   padding: 0;
-  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Roboto',
+    'Oxygen',
+    'Ubuntu',
+    'Cantarell',
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    sans-serif;
 }
 
 :root {
@@ -10,6 +22,7 @@
   --sgrid-primary-choose-color: darkred;
   --el-color-primary-light-3: var(--sgrid-primay-hover-color);
   --el-color-primary: var(--sgrid-primay-color);
+  --el-text-color-secondary: var(--sgrid-primay-color);
   .el-checkbox {
     --el-checkbox-checked-bg-color: var(--sgrid-primay-hover-color);
     --el-checkbox-checked-input-border-color: var(--sgrid-primay-hover-color);
@@ -17,9 +30,18 @@
   .el-button {
     --el-button-hover-text-color: #ffffff;
     --el-button-active-border-color: var(--sgrid-primay-hover-color) !important;
+    --el-button-hover-border-color: var(--sgrid-primay-hover-color) !important;
+    --el-button-hover-bg-color: var(--sgrid-primay-hover-color) !important;
   }
+  /* .el-table {
+    --el-table-border-color: var(--sgrid-primay-color);
+  } */
+
+  /* .el-card {
+    --el-card-border-color: var(--sgrid-primay-color);
+  } */
 }
 
 #nprogress .bar {
-  background: rgb(207, 15, 124) !important;
+  background: var(--sgrid-primay-hover-color) !important;
 }

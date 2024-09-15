@@ -18,12 +18,11 @@ onMounted(() => {
           <img src="/icon_v2.png" class="logo" />
         </div>
         <div class="right">
-          <div @click="$router.push('/dashboard')">
-            <SvgDashboard class="icon" />
-          </div>
-          <div @click="$router.push('/devops')">
-            <SvgMenu class="icon" />
-          </div>
+          <el-menu class="el-menu-demo" mode="horizontal" :ellipsis="false">
+            <el-menu-item index="0" @click="$router.push('/server')">Control</el-menu-item>
+            <el-menu-item index="1" @click="$router.push('/dashboard')">Monitor</el-menu-item>
+            <el-menu-item index="2" @click="$router.push('/devops')">Devops</el-menu-item>
+          </el-menu>
         </div>
       </div>
     </el-header>

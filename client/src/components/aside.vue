@@ -16,7 +16,10 @@ function handleOpen(item: Partial<Item>) {
 
 <template>
   <div>
-    <el-menu active-text-color="var(--sgrid-primary-choose-color)" style="border: none">
+    <el-menu
+      active-text-color="var(--sgrid-primary-choose-color)"
+      style="min-height: 90vh; border: none"
+    >
       <template v-if="props.serverList && props.serverList.length">
         <template v-for="(parent, index) in props.serverList" :key="parent.id">
           <el-sub-menu :index="parent.id + '-' + index">

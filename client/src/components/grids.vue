@@ -51,11 +51,15 @@ export default {
       style="width: 100%"
       border
       @selection-change="handleSelectionChange"
+      stripe
     >
       <el-table-column type="selection" width="55" />
       <el-table-column label="Grid">
         <template #default="scoped">
-          <el-button type="text" @click="toLog(scoped.row)"
+          <el-button
+            type="text"
+            style="color: var(--sgrid-primary-choose-color)"
+            @click="toLog(scoped.row)"
             >{{ scoped.row.gridNode.ip }}:{{ scoped.row.port }}</el-button
           >
         </template>
@@ -77,32 +81,22 @@ export default {
       </el-table-column>
       <el-table-column label="Status">
         <template #default="scoped">
-          <div :class="gridStatus[scoped.row.status] || 'offline'" @click="$emit('checkStatus')">
-            {{ gridStatus[scoped.row.status] || 'offline' }}
+          <div :class="getGridStatus(scoped.row.status)" @click="$emit('checkStatus')">
+            <div :class="getGridStatusBall(scoped.row.status)"></div>
+            {{ getGridStatus(scoped.row.status) }}
+            ({{ scoped.row.pid }})
           </div>
         </template>
       </el-table-column>
-      <el-table-column prop="pid" label="PID"></el-table-column>
       <el-table-column label="Type">
         <template #default="scoped">
-          <div>{{ scoped.row.gridServant.language }}</div>
+          <div>{{ scoped.row.gridServant.language }}({{ scoped.row.gridServant.protocol }})</div>
         </template>
       </el-table-column>
-      <el-table-column label="Protocol">
-        <template #default="scoped">
-          <div>{{ scoped.row.gridServant.protocol }}</div>
-        </template>
-      </el-table-column>
-      <el-table-column label="Shutdown">
+      <el-table-column label="Operate">
         <template #default="scoped">
           <div>
             <div class="text" @click="shutDown(scoped.row)">Shutdown</div>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column label="Delete">
-        <template #default="scoped">
-          <div>
             <div class="danger" @click="deleteGridById(scoped.row)">Delete</div>
           </div>
         </template>
@@ -281,9 +275,14 @@ const selectionGrid = ref([])
 function handleSelectionChange(value) {
   selectionGrid.value = value
 }
-const gridStatus: any = {
-  '1': 'online',
-  '0': 'offline'
+
+function getGridStatus(status: number | undefined) {
+  const OFF = 'offline'
+  const ON = 'online'
+  return status == 1 ? ON : OFF
+}
+function getGridStatusBall(status: number | undefined) {
+  return getGridStatus(status) + '-ball'
 }
 
 async function batchShutdown() {
@@ -404,11 +403,28 @@ async function showConfiguration() {
   padding: 10px;
 }
 .online {
-  color: #55bd55;
+  color: #5add5a;
   cursor: pointer;
 }
+
 .offline {
   color: red;
   cursor: pointer;
+}
+
+.online-ball {
+  display: inline-block;
+  height: 10px;
+  width: 10px;
+  border-radius: 50%;
+  background-color: #5add5a;
+}
+
+.offline-ball {
+  display: inline-block;
+  height: 10px;
+  width: 10px;
+  border-radius: 50%;
+  background-color: red;
 }
 </style>

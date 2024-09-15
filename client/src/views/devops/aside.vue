@@ -6,14 +6,17 @@
 // 4.添加至服务网格
 // 5.选择端口
 export default {
-  name: "devops-component",
-};
+  name: 'devops-component'
+}
 </script>
 <template>
   <div>
     <el-container>
       <el-aside style="width: 200px; height: 100vh">
-        <el-menu class="el-menu-vertical-demo" active-text-color="rgb(207, 15, 124)">
+        <el-menu
+          class="el-menu-vertical-demo"
+          active-text-color="var(--sgrid-primary-choose-color)"
+        >
           <el-sub-menu v-for="(item, index) in menus" :index="String(index)" :key="index">
             <template #title>
               <el-icon><grid /></el-icon>
@@ -37,20 +40,20 @@ export default {
 </template>
 
 <script setup lang="ts">
-import { useUserStore } from "@/stores/counter";
-import { computed } from "vue";
-import { useRouter } from "vue-router";
-const router = useRouter();
-const userStore = useUserStore();
+import { useUserStore } from '@/stores/counter'
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+const router = useRouter()
+const userStore = useUserStore()
 const menus = computed(() => {
-  console.log("userStore.menus", userStore.menus);
-  return userStore.menus;
-});
-const base_path = "/devops/";
+  console.log('userStore.menus', userStore.menus)
+  return userStore.menus
+})
+const base_path = '/devops/'
 function push(item: any, s_item: any) {
-  const path = base_path + item.path + "/" + s_item.path;
-  router.push(path);
-  console.log(item, s_item);
+  const path = base_path + item.path + '/' + s_item.path
+  router.push(path)
+  console.log(item, s_item)
 }
 </script>
 
