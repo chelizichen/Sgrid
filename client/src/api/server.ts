@@ -230,7 +230,14 @@ const api = {
       method: 'get',
       params: { serverName, fileName }
     }) as unknown as BasicResp<any>
-  }
+  },
+  getMainLogger(data:any) {
+    return HttpReq({
+      url: '/main/logger/get',
+      method: 'post',
+      data
+    }) as unknown as BasicResp<any>
+  },
 }
 
 export default api

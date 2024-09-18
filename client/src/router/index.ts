@@ -6,6 +6,7 @@ import LogPage from '@/views/logger.vue'
 import Dashboard from '@/views/dashboard.vue'
 import Devops from '@/views/devops/aside.vue'
 import UserInfo from '@/views/userInfo.vue'
+import mainLog from '@/views/mainLog.vue'
 import { localGet, constants } from '@/constant'
 import { useUserStore } from '@/stores/counter'
 import api from '@/api/server'
@@ -160,6 +161,12 @@ const router = createRouter({
       path: '/userInfo',
       name: 'userInfo',
       component: UserInfo,
+      // children: adminMenu
+    },
+    {
+      path: '/mainLog',
+      name: 'mainLog',
+      component: mainLog,
       // children: adminMenu
     },
   ]

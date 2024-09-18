@@ -445,3 +445,15 @@ func GetServantListByUserGroups(userId int) (resp []vo.VoServantGroup) {
 	pool.GORM.Debug().Raw(c.Get(), public.Removenullvalue(args)...).Scan(&resp)
 	return resp
 }
+
+func GetSystemErrorLog(keyword string, offset int) (list []pojo.SystemErr, total int64) {
+	pool.GORM.Debug().
+		Model(&pojo.SystemErr{}).
+		Where("info like ?", "%"+keyword+"%").
+		Order("create_time desc").
+		Count(&total).
+		Offset(offset).
+		Limit(20).
+		Find(&list)
+	return
+}

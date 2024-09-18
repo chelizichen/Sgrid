@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
-import { useServersStore } from './stores/counter'
-import { onMounted } from 'vue'
-import SvgDashboard from './svg/dashboard.vue'
-import SvgMenu from './svg/menu.vue'
-const serverStore = useServersStore()
+import { RouterView } from "vue-router";
+import { useServersStore } from "./stores/counter";
+import { onMounted } from "vue";
+import SvgDashboard from "./svg/dashboard.vue";
+import SvgMenu from "./svg/menu.vue";
+const serverStore = useServersStore();
 
 onMounted(() => {
-  serverStore.refreshServants()
-})
+  serverStore.refreshServants();
+});
 </script>
 <template>
   <el-container>
@@ -19,9 +19,16 @@ onMounted(() => {
         </div>
         <div class="right">
           <el-menu class="el-menu-demo" mode="horizontal" :ellipsis="false">
-            <el-menu-item index="0" @click="$router.push('/server')">Control</el-menu-item>
-            <el-menu-item index="1" @click="$router.push('/dashboard')">Monitor</el-menu-item>
+            <el-menu-item index="0" @click="$router.push('/server')"
+              >Control</el-menu-item
+            >
+            <el-menu-item index="1" @click="$router.push('/dashboard')"
+              >Monitor</el-menu-item
+            >
             <el-menu-item index="2" @click="$router.push('/devops')">Devops</el-menu-item>
+            <el-menu-item index="3" @click="$router.push('/mainLog')"
+              >MainLog</el-menu-item
+            >
           </el-menu>
         </div>
       </div>

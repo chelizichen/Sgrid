@@ -16,4 +16,4 @@
     <line x1="4" x2="20" y1="18" y2="18" />
   </svg>
 </template>
-<script setup></script>
+<script setup lang="ts"></script>

@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  mysql-server:
+    image: daocloud.io/library/mysql:8.0.2
+    container_name: mysql-server
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: YOUR_PASSWORD
+    ports:
+      - "3306:3306"
+    volumes:
+      - /path/to/mysql/data:/var/lib/mysql
+      - /path/to/mysql/logs:/var/log/mysql
+
+  redis:
+    image: docker.io/library/redis:latest
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - /home/redis/data:/data
+      - /home/redis/conf/redis.conf:/etc/redis/redis.conf
+    command: redis-server /etc/redis/redis.conf
+
+  sgrid-cloud-server:
+    build: .
+    image: chelizichen/sgrid-release:0.20.0_x86
+    container_name: sgrid-cloud-server
+    restart: unless-stopped
+    network_mode: "host"  # 使用 network_mode 替换 net
+    volumes:
+      - /usr/app/sgrid.yml:/app/sgrid.yml
+      - /usr/app/server/SgridPackageServer:/app/server/SgridPackageServer
+    entrypoint: ["/bin/sh", "-c", "./main"]
+    depends_on:
+      - mysql-server
+      - redis

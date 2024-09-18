@@ -17,4 +17,4 @@
     <rect width="7" height="5" x="3" y="16" rx="1" />
   </svg>
 </template>
-<script setup></script>
+<script setup lang="ts"></script>

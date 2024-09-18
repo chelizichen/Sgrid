@@ -56,6 +56,9 @@ func DevopsService(ctx *handlers.SgridServerCtx) {
 	GROUP.GET("/main/queryNodes", mainQueryNodes)
 
 	GROUP.GET("/main/port/random", getRandomPort)
+
+	// 主控日志
+	GROUP.POST("/main/logger/get", getMainLogger)
 }
 
 func getGroups(c *gin.Context) {
@@ -370,4 +373,15 @@ func getRandomPort(c *gin.Context) {
 			}
 		}
 	}
+}
+
+func getMainLogger(c *gin.Context) {
+	var req *dto.PageBasicReq
+	err := c.BindJSON(&req)
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	list, total := storage.GetSystemErrorLog(req.Keyword, req.Offset)
+	handlers.AbortWithSuccList(c, list, total)
 }
