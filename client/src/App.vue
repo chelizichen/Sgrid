@@ -2,8 +2,6 @@
 import { RouterView } from "vue-router";
 import { useServersStore } from "./stores/counter";
 import { onMounted } from "vue";
-import SvgDashboard from "./svg/dashboard.vue";
-import SvgMenu from "./svg/menu.vue";
 const serverStore = useServersStore();
 
 onMounted(() => {
@@ -19,16 +17,27 @@ onMounted(() => {
         </div>
         <div class="right">
           <el-menu class="el-menu-demo" mode="horizontal" :ellipsis="false">
-            <el-menu-item index="0" @click="$router.push('/server')"
-              >Control</el-menu-item
-            >
-            <el-menu-item index="1" @click="$router.push('/dashboard')"
-              >Monitor</el-menu-item
-            >
-            <el-menu-item index="2" @click="$router.push('/devops')">Devops</el-menu-item>
-            <el-menu-item index="3" @click="$router.push('/mainLog')"
-              >MainLog</el-menu-item
-            >
+            <el-sub-menu index="1">
+              <template #title>
+                <el-icon><SwitchFilled /></el-icon> Workspace</template
+              >
+              <el-menu-item index="1-0" @click="$router.push('/server')">
+                <el-icon><Connection /></el-icon>
+                Control</el-menu-item
+              >
+              <el-menu-item index="1-1" @click="$router.push('/dashboard')">
+                <el-icon><DataAnalysis /></el-icon>
+                Monitor</el-menu-item
+              >
+              <el-menu-item index="1-2" @click="$router.push('/devops')">
+                <el-icon><Operation /></el-icon>
+                Devops</el-menu-item
+              >
+              <el-menu-item index="1-3" @click="$router.push('/mainLog')">
+                <el-icon><ChatLineSquare /></el-icon>
+                MainLog</el-menu-item
+              >
+            </el-sub-menu>
           </el-menu>
         </div>
       </div>
