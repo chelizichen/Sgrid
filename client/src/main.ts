@@ -1,5 +1,6 @@
-import 'element-plus/dist/index.css'
 import './assets/main.css'
+import './assets/tailwind.css' // 确保创建此文件
+import 'element-plus/dist/index.css'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'

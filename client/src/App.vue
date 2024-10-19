@@ -11,12 +11,17 @@ onMounted(() => {
 <template>
   <el-container>
     <el-header>
-      <div class="head">
-        <div @click="$router.push('/server')" class="left">
-          <img src="/icon_v2.png" class="logo" />
+      <div class="flex flex-row justify-between">
+        <div @click="$router.push('/server')" class="flex items-center">
+          <img src="/icon.png" class="w-8 h-8 mr-2" />
+          <div
+            class="text-xl font-serif tracking-wider text-indigo-600 font-bold transition-all hover:text-indigo-800"
+          >
+            Sgrid
+          </div>
         </div>
         <div class="right">
-          <el-menu class="el-menu-demo" mode="horizontal" :ellipsis="false">
+          <el-menu class="border-none" mode="horizontal" :ellipsis="false">
             <el-sub-menu index="1">
               <template #title>
                 <el-icon><SwitchFilled /></el-icon> Workspace</template
@@ -45,33 +50,3 @@ onMounted(() => {
     <RouterView />
   </el-container>
 </template>
-
-<style scoped lang="less">
-.head {
-  position: relative;
-  height: 100%;
-  border-bottom: 1px gainsboro;
-  border-bottom-style: dotted;
-  display: flex;
-  justify-content: space-between;
-  .left {
-    display: flex;
-    cursor: pointer;
-    .logo {
-      width: 120px;
-      height: 120px;
-      margin-top: -30px;
-    }
-  }
-  .right {
-    display: flex;
-    align-items: center;
-    .icon {
-      width: 32px;
-      height: 32px;
-      margin-right: 10px;
-      cursor: pointer;
-    }
-  }
-}
-</style>

@@ -231,10 +231,20 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 		var req *protocol.ReleaseServerReq
 		err := c.BindJSON(&req)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "err", err.Error()))
+			handlers.AbortWithError(c, err.Error())
+			return
 		}
 		var wg sync.WaitGroup
 		fmt.Println("req", req)
+		key := fmt.Sprintf("server.version.%d", req.ServantId)
+		err = storage.ResetProperty(&pojo.Properties{
+			Key:   key,
+			Value: req.FilePath,
+		})
+		if err != nil {
+			handlers.AbortWithError(c, err.Error())
+			return
+		}
 		for _, client := range clients {
 			wg.Add(1)
 			go func(clt protocol.FileTransferServiceClient) {
@@ -243,7 +253,7 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 			}(client)
 		}
 		wg.Wait()
-		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(0, "ok", nil))
+		handlers.AbortWithSucc(c, nil)
 	})
 
 	router.GET("/release/updatePackageVersion", func(c *gin.Context) {

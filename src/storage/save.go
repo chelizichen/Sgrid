@@ -186,17 +186,27 @@ func SaveLog(d *protocol.LogTraceReq) error {
 	return err
 }
 
-func UpsertProperty(p *pojo.Properties) {
+func UpsertProperty(p *pojo.Properties) error {
 	if p.Id == 0 {
-		pool.GORM.Model(&pojo.Properties{}).Create(p)
-		return
+		return pool.GORM.Model(&pojo.Properties{}).Create(p).Error
 	}
-	pool.GORM.Model(&pojo.Properties{}).
+	return pool.GORM.Model(&pojo.Properties{}).
 		Where("id = ?", p.Id).
 		Updates(&pojo.Properties{
 			Key:   p.Key,
 			Value: p.Value,
-		})
+		}).Error
+}
+
+func ResetProperty(p *pojo.Properties) error {
+	err := pool.GORM.Model(&pojo.Properties{}).Delete(&pojo.Properties{
+		Key: p.Key,
+	})
+	if err != nil {
+		return err.Error
+	}
+	return pool.GORM.Model(&pojo.Properties{}).Create(p).Error
+
 }
 
 func DelProperty(id int) {

@@ -17,12 +17,15 @@
 }
 
 :root {
-  --sgrid-primay-color: black;
-  --sgrid-primay-hover-color: #615e5e;
-  --sgrid-primary-choose-color: darkred;
+  --sgrid-primay-color: #6366f1;
+  --sgrid-primay-hover-color: #4f46e5;
+  --sgrid-primary-choose-color: #3730a3;
   --el-color-primary-light-3: var(--sgrid-primay-hover-color);
   --el-color-primary: var(--sgrid-primay-color);
   --el-text-color-secondary: var(--sgrid-primay-color);
+
+  --el-color-primary:#6366f1;
+
   .el-checkbox {
     --el-checkbox-checked-bg-color: var(--sgrid-primay-hover-color);
     --el-checkbox-checked-input-border-color: var(--sgrid-primay-hover-color);

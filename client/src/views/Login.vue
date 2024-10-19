@@ -1,55 +1,54 @@
 <script lang="ts">
 export default {
-  name: 'login-component'
-}
+  name: "login-component",
+};
 </script>
 <script lang="ts" setup>
-import API from '@/api/server'
-import LoginPage from '@/assets/login.jpg'
-import { ElNotification } from 'element-plus'
-import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { md5 } from 'js-md5'
-import { constants, localGet, localSet } from '@/constant'
-import { useUserStore } from '@/stores/counter'
-const router = useRouter()
-const userStore = useUserStore()
-const username = ref('')
-const password = ref('')
+import API from "@/api/server";
+import { ElNotification } from "element-plus";
+import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
+import { md5 } from "js-md5";
+import { constants, localGet, localSet } from "@/constant";
+import { useUserStore } from "@/stores/counter";
+const router = useRouter();
+const userStore = useUserStore();
+const username = ref("");
+const password = ref("");
 
 async function login() {
-  const data = new FormData()
-  const tkn = md5(password.value)
-  data.append('password', tkn)
-  data.append('username', username.value)
-  const ret = await API.Login(data)
+  const data = new FormData();
+  const tkn = md5(password.value);
+  data.append("password", tkn);
+  data.append("username", username.value);
+  const ret = await API.Login(data);
   if (ret.code) {
-    ElNotification.error('账号或密码错误')
+    ElNotification.error("账号或密码错误");
   } else {
-    router.push('/server')
-    localSet(constants.TOKEN, ret.data.token)
+    router.push("/server");
+    localSet(constants.TOKEN, ret.data.token);
   }
 }
 
 onMounted(() => {
-  const token = localGet(constants.TOKEN)
+  const token = localGet(constants.TOKEN);
   if (token && userStore.userInfo.userName && userStore.userInfo.password) {
-    router.push('/dashboard')
+    router.push("/dashboard");
   }
-})
+});
 </script>
 <template>
-  <div class="body">
-    <div class="pic">
-      <img :src="LoginPage" style="width: 70vw; height: 90vh" />
-    </div>
+  <div class="bg-slate-50 m-0 p-0 flex items-center justify-center min-h-screen">
     <div>
-      <div class="container">
-        <div class="login-form">
-          <h2>欢迎登录 SgridCloud 平台</h2>
-          <div class="input-group">
-            <label for="username">用户名</label>
+      <div class="bg-slate-150 rounded-sm p-10 shadow-2xl">
+        <div>
+          <div class="font-bold mb-8 text-black text-center text-lg">
+            欢迎登录 SgridCloud 平台
+          </div>
+          <div class="mb-5 flex items-end">
+            <label for="username" class="mb-3 text-gray-500 w-20">用户名</label>
             <input
+              class="w-full p-2 border border-gray-300 rounded-md"
               type="text"
               id="username"
               placeholder="请输入用户名"
@@ -57,9 +56,10 @@ onMounted(() => {
               v-model="username"
             />
           </div>
-          <div class="input-group">
-            <label for="password">密码</label>
+          <div class="mb-5 flex items-end">
+            <label for="password" class="mb-3 text-gray-500 w-20">密码</label>
             <input
+              class="w-full p-2 border border-gray-300 rounded-md"
               type="password"
               id="password"
               placeholder="请输入密码"
@@ -67,7 +67,12 @@ onMounted(() => {
               v-model="password"
             />
           </div>
-          <button @click="login" class="button">登录</button>
+          <button
+            @click="login"
+            class="w-full p-2.5 bg-indigo-500 text-white border-none rounded-md cursor-pointer hover:bg-indigo-600"
+          >
+            登录
+          </button>
         </div>
       </div>
       <div class="license">
@@ -79,76 +84,6 @@ onMounted(() => {
 </template>
 
 <style lang="less">
-.body {
-  font-family: Arial, sans-serif;
-  background-color: #f5f5f5;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 90vh;
-  .pic {
-    margin-right: 20px;
-  }
-}
-
-.container {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
-  padding: 40px;
-  width: 95%;
-}
-
-.login-form {
-  h2 {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 500;
-  }
-}
-
-.login-form h2 {
-  margin-bottom: 30px;
-  color: #333;
-}
-
-.input-group {
-  margin-bottom: 20px;
-  display: flex;
-  align-items: flex-end;
-}
-.input-group label {
-  display: block;
-  margin-bottom: 10px;
-  color: #666;
-  width: 100px;
-}
-
-.input-group input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-
-.button {
-  width: 100%;
-  padding: 10px;
-  background-color: var(--sgrid-primay-color);
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.button:hover {
-  background-color: var(--sgrid-primay-hover-color);
-}
-
 .license {
   margin-top: 100px;
   width: 100%;

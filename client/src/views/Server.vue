@@ -7,14 +7,14 @@ export default {
 <template>
   <div>
     <el-container>
-      <el-aside width="200px" class="aside">
+      <el-aside width="200px" class="py-2.5 h-full">
         <aside-component
           :server-list="state.serverList"
           @handle-open="handleOpen"
         ></aside-component>
       </el-aside>
       <el-main>
-        <el-card>
+        <div>
           <gridsComponent
             :grids-list="state.gridsList"
             :server-name="state.serverName"
@@ -22,7 +22,7 @@ export default {
             :servantLanguage="state.servantLanguage"
             @check-status="handleOpen(currentItem)"
           ></gridsComponent>
-        </el-card>
+        </div>
       </el-main>
       <router-view></router-view>
     </el-container>
@@ -66,27 +66,3 @@ onMounted(() => {
   fetchServerList();
 });
 </script>
-
-<style scoped>
-.el-container {
-  min-height: 100vh;
-}
-.aside >>> .el-card__body {
-  padding: 10px 0;
-  height: 100vh;
-}
-.title {
-  color: rgb(207, 15, 124);
-  text-align: center;
-  display: flex;
-  align-items: center;
-  font-size: 30px;
-  width: 200px;
-  justify-content: center;
-  cursor: pointer;
-}
-.title-pos {
-  position: absolute;
-  top: 10px;
-}
-</style>
