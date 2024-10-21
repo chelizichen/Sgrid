@@ -15,9 +15,15 @@ export default {
             @click="state.uploadVisible = true"
           >
             {{ props.serverName }}
+            <span
+              v-if="props.serverVersion"
+              class="font-medium text-red-700 cursor-pointer hover:text-red-900 hover:font-bold transition-all duration-300"
+            >
+              @{{ props.serverVersion }}
+            </span>
           </div>
         </div>
-        <div>
+        <div class="flex flex-col items-center">
           <el-button
             class="font-medium text-indigo-700 cursor-pointer hover:text-indigo-800 hover:font-bold transition-all duration-300 disabled:text-indigo-300"
             type="text"
@@ -198,6 +204,7 @@ const props = defineProps<{
   serverName: string;
   servantId: number;
   servantLanguage: string;
+  serverVersion: string;
 }>();
 const emits = defineEmits(["checkStatus"]);
 async function getLogList(gridList) {
@@ -268,7 +275,7 @@ async function handleRelease(id: number) {
 
   console.log("body", body);
 
-  const data = await api.releaseServer(body);
+  const data = await api.releaseServer(body, { releaseId: id });
   if (data.code) {
     return ElNotification.error(data.message);
   }

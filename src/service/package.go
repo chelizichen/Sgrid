@@ -234,12 +234,17 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 			handlers.AbortWithError(c, err.Error())
 			return
 		}
+		var releaseId string = c.Query("releaseId")
+		if releaseId == "" {
+			handlers.AbortWithError(c, "PARAMS ERROR >>> releaseId is empty")
+			return
+		}
 		var wg sync.WaitGroup
 		fmt.Println("req", req)
 		key := fmt.Sprintf("server.version.%d", req.ServantId)
 		err = storage.ResetProperty(&pojo.Properties{
 			Key:   key,
-			Value: req.FilePath,
+			Value: releaseId,
 		})
 		if err != nil {
 			handlers.AbortWithError(c, err.Error())

@@ -9,10 +9,11 @@ const api = {
       timeout: 10 * 60 * 1000
     }) as unknown as BasicResp<any>
   },
-  releaseServer: function (data: any) {
+  releaseServer: function (data: any, params: { releaseId: string }) {
     return HttpReq({
       url: '/release/server',
-      data
+      data,
+      params
     }) as unknown as BasicResp<any>
   },
   restartServer: function (data: any) {
@@ -231,13 +232,13 @@ const api = {
       params: { serverName, fileName }
     }) as unknown as BasicResp<any>
   },
-  getMainLogger(data:any) {
+  getMainLogger(data: any) {
     return HttpReq({
       url: '/main/logger/get',
       method: 'post',
       data
     }) as unknown as BasicResp<any>
-  },
+  }
 }
 
 export default api

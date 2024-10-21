@@ -199,14 +199,12 @@ func UpsertProperty(p *pojo.Properties) error {
 }
 
 func ResetProperty(p *pojo.Properties) error {
-	err := pool.GORM.Model(&pojo.Properties{}).Delete(&pojo.Properties{
-		Key: p.Key,
-	})
+	fmt.Printf("ResetProperty >>> %s >>> %s \n", p.Key, p.Value)
+	err := pool.GORM.Debug().Model(&pojo.Properties{}).Where(" `key` = ?", p.Key).Delete(&pojo.Properties{}).Error
 	if err != nil {
-		return err.Error
+		return err
 	}
 	return pool.GORM.Model(&pojo.Properties{}).Create(p).Error
-
 }
 
 func DelProperty(id int) {
