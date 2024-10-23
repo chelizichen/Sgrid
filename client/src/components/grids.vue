@@ -95,10 +95,14 @@ export default {
       </el-table-column>
       <el-table-column label="Status">
         <template #default="scoped">
-          <div :class="getGridStatus(scoped.row.status)" @click="$emit('checkStatus')">
-            <div :class="getGridStatusBall(scoped.row.status)"></div>
+          <div
+            @click="$emit('checkStatus')"
+            :class="getGridStatus(scoped.row.status)"
+            class="cursor-pointer"
+          >
+            <div :class="getGridStatus(scoped.row.status) + '-icon'"></div>
             {{ getGridStatus(scoped.row.status) }}
-            ({{ scoped.row.pid }})
+            {{ scoped.row.pid ? ` (${scoped.row.pid})` : "" }}
           </div>
         </template>
       </el-table-column>
@@ -314,9 +318,6 @@ function getGridStatus(status: number | undefined) {
   const OFF = "offline";
   const ON = "online";
   return status == 1 ? ON : OFF;
-}
-function getGridStatusBall(status: number | undefined) {
-  return getGridStatus(status) + "-ball";
 }
 
 async function batchShutdown() {

@@ -1,15 +1,16 @@
 <template>
-  <div class="container">
+  <div class="w-full p-6 border-solid border-gray-100 border-2">
     <el-form :inline="true" :model="pagination">
-      <el-form-item label="Keyword">
-        <el-input v-model="pagination.keyword" clearable />
+      <el-form-item>
+        <el-input v-model="pagination.keyword" clearable placeholder="search" />
       </el-form-item>
-      <el-form-item label="Operate">
+      <el-form-item>
         <el-button @click="getList">Select</el-button>
       </el-form-item>
     </el-form>
-    <el-table :data="tableData" style="width: 100%" border>
-      <el-table-column prop="type" label="type" width="500" />
+    <el-table :data="tableData" border>
+      <el-table-column prop="id" label="id" width="100" />
+      <el-table-column prop="type" label="type" />
       <el-table-column prop="info" label="info" />
       <el-table-column prop="createTime" label="createTime" width="180" />
     </el-table>
