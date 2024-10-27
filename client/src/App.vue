@@ -34,36 +34,36 @@ let open = ref(false);
             <div>
               <ul class="flex flex-col-reverse space-x-0 lg:space-x-6 lg:flex-row">
                 <li class="mt-8 mb-8 lg:mt-0 lg:mb-0">
-                  <a
+                  <div
                     @click="$router.push('/server')"
-                    class="text-gray-600 hover:text-indigo-600 cursor-pointer"
+                    class="cursor-pointer pb-2 px-4 hover:text-indigo-500 hover:border-b-2 hover:border-indigo-500 duration-200 ease-linear hover:font-semibold"
                   >
                     Controller
-                  </a>
+                  </div>
                 </li>
                 <li class="mt-8 mb-8 lg:mt-0 lg:mb-0">
-                  <a
+                  <div
                     @click="$router.push('/dashboard')"
-                    class="text-gray-600 hover:text-indigo-600 cursor-pointer"
+                    class="cursor-pointer pb-2 px-4 hover:text-indigo-500 hover:border-b-2 hover:border-indigo-500 duration-200 ease-linear hover:font-semibold"
                   >
-                    DashBoard
-                  </a>
+                    Monitor
+                  </div>
                 </li>
                 <li class="mt-4 lg:mt-0">
-                  <a
+                  <div
                     @click="$router.push('/mainLog')"
-                    class="py-3 px-4 text-center border cursor-pointer text-gray-600 hover:text-indigo-600 rounded-md block lg:inline lg:border-0"
+                    class="cursor-pointer pb-2 px-4 hover:text-indigo-500 hover:border-b-2 hover:border-indigo-500 duration-200 ease-linear hover:font-semibold"
                   >
-                    MainLog
-                  </a>
+                    Logger
+                  </div>
                 </li>
                 <li class="mt-8 lg:mt-0">
-                  <a
+                  <div
                     @click="$router.push('/devops')"
-                    class="py-3 px-4 text-center text-white cursor-pointer bg-indigo-600 hover:bg-indigo-700 rounded-md shadow block lg:inline"
+                    class="cursor-pointer pb-2 px-4 hover:text-indigo-500 hover:border-b-2 hover:border-indigo-500 duration-200 ease-linear hover:font-semibold"
                   >
                     Devops
-                  </a>
+                  </div>
                 </li>
               </ul>
             </div>
