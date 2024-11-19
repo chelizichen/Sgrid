@@ -1,72 +1,46 @@
 <template>
-  <div style="display: flex; height: 95vh">
-    <div style="width: 30%; padding: 0 20px 0 0">
+  <div class="flex w-full">
+    <div class="w-1/4 h-screen bg-slate-50">
       <el-form label-width="88px">
         <el-form-item label="logFile">
           <el-input v-model="state.logFile" :disabled="true"></el-input>
         </el-form-item>
         <el-form-item label="pattern">
-          <el-input v-model="state.pattern"></el-input
-        ></el-form-item>
+          <el-input v-model="state.pattern"></el-input></el-form-item>
         <el-form-item label="rows">
           <el-select v-model="state.size">
-            <el-option
-              v-for="item in rowSelect"
-              :label="item"
-              :value="item"
-              :key="item"
-            ></el-option>
+            <el-option v-for="item in rowSelect" :label="item" :value="item" :key="item"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="logList" :key="index">
+        <el-form-item label="logList">
           <el-select v-model="state.logFile">
-            <el-option
-              v-for="(item, index) in logFileList"
-              :label="item.logType + '_' + item.dateTime"
-              :value="index"
-              :key="item"
-            ></el-option>
+            <el-option v-for="(item, index) in logFileList" :label="item.logType + '_' + item.dateTime" :value="index"
+              :key="item"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="Operate">
           <el-button @click="getLog">Search</el-button>
         </el-form-item>
         <el-form-item label="Pagination">
-          <el-pagination
-            layout="prev, pager, next"
-            :total="total"
-            size="small"
-            :page-size="state.size"
-            @current-change="handleCurrentChange"
-          />
+          <el-pagination layout="prev, pager, next" :total="total" size="small" :page-size="state.size"
+            @current-change="handleCurrentChange" />
         </el-form-item>
       </el-form>
     </div>
-    <div style="width: 100%">
-      <div
-        style="
-          background-color: black;
-          height: 60vh;
-          padding: 5px 10px;
-          width: 100%;
-          overflow: scroll;
-        "
-      >
-        <div style="color: aliceblue; margin: 2px" v-for="item in logger" :key="item">
-          {{ item }}
+    <div class="w-3/4 h-screen">
+      <div class="bg-black px-4 pt-2 h-3/4 w-full">
+        <div v-for="item in logger" :key="item" class="break-all text-wrap text-white w-full">
+          <div v-html="item"></div>
         </div>
       </div>
-
-      <div
-        style="border-top: 5px solid #ddd; height: 37vh; width: 100%; overflow: scroll"
-      >
-        <iframe :src="SHELL_PATH" style="width: inherit; height: inherit"></iframe>
+      <div class="w-full h-1/4">
+        <iframe :src="SHELL_PATH" class="w-full h-1/4"></iframe>
       </div>
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" name="logger-page">
 import API from "@/api/server";
 import { ElNotification } from "element-plus";
 import { computed, onMounted, reactive, ref } from "vue";
@@ -119,7 +93,15 @@ async function getLog() {
   if (res.code) {
     return ElNotification.error(`error:${res.message}`);
   }
-  logger.value = res.data;
+  logger.value = res.data.map((v: string) => {
+    if (state.pattern) {
+      v = v.replaceAll(
+        state.pattern,
+        `<span class="text-red-500">${state.pattern}</span>`
+      );
+    }
+    return v;
+  });
   total.value = res.total;
 }
 
