@@ -7,9 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"net/http"
 	"os"
-	"path"
 	"reflect"
 	"strings"
 
@@ -49,7 +47,7 @@ func (c *SgridServerCtx) RegistrySubServer(registry rpc.SgridSubServer) {
 
 // 静态资源托管
 func (c *SgridServerCtx) Static(realPath string, filePath string) {
-	target := join(strings.ToLower(c.GetServerName()))(realPath)
+	target := public.Join(strings.ToLower(c.GetServerName()), realPath)
 	staticPath := public.Join(filePath)
 	c.Engine.Static(target, staticPath)
 }
@@ -72,12 +70,6 @@ func WithSgridController() NewSgrid {
 func WithSgridServerType(T string) NewSgrid {
 	return func(conf *sgridConf) {
 		conf.ServerType = T
-	}
-}
-
-func WithConfPath(P string) NewSgrid {
-	return func(conf *sgridConf) {
-		conf.SgridConfPath = P
 	}
 }
 
@@ -166,38 +158,5 @@ func withCORSMiddleware() gin.HandlerFunc {
 			return
 		}
 		c.Next()
-	}
-}
-
-var AbortWithError = func(c *gin.Context, err string) {
-	c.AbortWithStatusJSON(http.StatusOK, &gin.H{
-		"code":    -1,
-		"message": err,
-		"data":    nil,
-	})
-}
-
-// Done
-var AbortWithSucc = func(c *gin.Context, data interface{}) {
-	c.AbortWithStatusJSON(http.StatusOK, &gin.H{
-		"code":    0,
-		"message": "ok",
-		"data":    data,
-	})
-}
-
-// List
-var AbortWithSuccList = func(c *gin.Context, data interface{}, total int64) {
-	c.AbortWithStatusJSON(http.StatusOK, &gin.H{
-		"code":    0,
-		"message": "ok",
-		"data":    data,
-		"total":   total,
-	})
-}
-
-func join(pre string) func(t string) string {
-	return func(target string) string {
-		return path.Join(pre, target)
 	}
 }

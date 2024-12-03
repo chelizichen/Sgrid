@@ -43,6 +43,7 @@ type FileTransferServiceClient interface {
 	GetSystemInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetSystemInfoResp, error)
 	// 服务告警
 	Notify(ctx context.Context, in *NotifyReq, opts ...grpc.CallOption) (*BasicResp, error)
+	InvokeWithCmd(ctx context.Context, in *InvokeWithCmdReq, opts ...grpc.CallOption) (*InvokeWithCmdRsp, error)
 }
 
 type fileTransferServiceClient struct {
@@ -165,6 +166,15 @@ func (c *fileTransferServiceClient) Notify(ctx context.Context, in *NotifyReq, o
 	return out, nil
 }
 
+func (c *fileTransferServiceClient) InvokeWithCmd(ctx context.Context, in *InvokeWithCmdReq, opts ...grpc.CallOption) (*InvokeWithCmdRsp, error) {
+	out := new(InvokeWithCmdRsp)
+	err := c.cc.Invoke(ctx, "/SgridProtocol.FileTransferService/InvokeWithCmd", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FileTransferServiceServer is the server API for FileTransferService service.
 // All implementations must embed UnimplementedFileTransferServiceServer
 // for forward compatibility
@@ -189,6 +199,7 @@ type FileTransferServiceServer interface {
 	GetSystemInfo(context.Context, *emptypb.Empty) (*GetSystemInfoResp, error)
 	// 服务告警
 	Notify(context.Context, *NotifyReq) (*BasicResp, error)
+	InvokeWithCmd(context.Context, *InvokeWithCmdReq) (*InvokeWithCmdRsp, error)
 	mustEmbedUnimplementedFileTransferServiceServer()
 }
 
@@ -225,6 +236,9 @@ func (UnimplementedFileTransferServiceServer) GetSystemInfo(context.Context, *em
 }
 func (UnimplementedFileTransferServiceServer) Notify(context.Context, *NotifyReq) (*BasicResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Notify not implemented")
+}
+func (UnimplementedFileTransferServiceServer) InvokeWithCmd(context.Context, *InvokeWithCmdReq) (*InvokeWithCmdRsp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InvokeWithCmd not implemented")
 }
 func (UnimplementedFileTransferServiceServer) mustEmbedUnimplementedFileTransferServiceServer() {}
 
@@ -427,6 +441,24 @@ func _FileTransferService_Notify_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FileTransferService_InvokeWithCmd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(InvokeWithCmdReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FileTransferServiceServer).InvokeWithCmd(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/SgridProtocol.FileTransferService/InvokeWithCmd",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FileTransferServiceServer).InvokeWithCmd(ctx, req.(*InvokeWithCmdReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FileTransferService_ServiceDesc is the grpc.ServiceDesc for FileTransferService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -469,6 +501,10 @@ var FileTransferService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Notify",
 			Handler:    _FileTransferService_Notify_Handler,
+		},
+		{
+			MethodName: "InvokeWithCmd",
+			Handler:    _FileTransferService_InvokeWithCmd_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

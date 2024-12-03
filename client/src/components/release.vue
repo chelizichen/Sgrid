@@ -107,21 +107,21 @@ async function handleRemovePackage(item) {
   }
   item.serverName = attrs.serverName;
   const body = _.pick(item, ["id", "serverName"]);
-  ElMessageBox.prompt("确认删除该服务包？删除后不可恢复!", "Confirm", {
-    confirmButtonText: "OK",
-    cancelButtonText: "Cancel",
-    inputPlaceholder: "input password",
+  ElMessageBox.prompt("确认删除该服务包？删除后不可恢复!", "确认", {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    inputPlaceholder: "输入密码",
   }).then(async ({ value: password }) => {
     console.log("password", password);
     if (password != item.serverName) {
-      return ElMessage.error(`password error`);
+      return ElMessage.error(`密码错误`);
     }
     console.log("body", body);
     const data = await api.delPackage(body);
     if (data.code) {
-      return ElMessage.error(`delete error:${data.message}`);
+      return ElMessage.error(`删除失败:${data.message}`);
     }
-    return ElMessage.success("delete success");
+    return ElMessage.success("删除成功");
   });
 }
 </script>

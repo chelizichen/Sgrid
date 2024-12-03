@@ -159,6 +159,18 @@ message NotifyReq{
     string serverName        = 3;    // 服务名
 }
 
+message InvokeWithCmdReq{
+    string cmd              = 1; // 命令
+    int64 gridId            = 2; // 节点ID
+    string invokeId         = 3; // 任务标识
+}
+
+message InvokeWithCmdRsp{
+    string data             = 1; // 返回结果
+    int64 gridId            = 2; // 节点ID
+    string invokeId         = 3; // 任务标识
+}
+
 // 文件传输服务定义
 service FileTransferService {
     // 双向流式 RPC 用于文件传输
@@ -190,4 +202,6 @@ service FileTransferService {
 
     // 服务告警
     rpc Notify(NotifyReq)returns(basicResp){}
+
+    rpc InvokeWithCmd(InvokeWithCmdReq)returns(InvokeWithCmdRsp){}
 }

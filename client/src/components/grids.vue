@@ -58,6 +58,15 @@ export default {
             >BatchShutDown</el-button
           >
         </div>
+        <div>
+          <el-button
+            class="font-medium text-indigo-700 cursor-pointer hover:text-indigo-800 hover:font-bold transition-all duration-300 disabled:text-indigo-300"
+            type="text"
+            @click="openInvokeCmdDialog"
+            :disabled="selectionGrid.length == 0"
+            >InvokeCmd</el-button
+          >
+        </div>
       </div>
     </div>
     <el-table
@@ -191,6 +200,12 @@ export default {
       :dialogVisible="showConfigurationVisible"
       @CLOSE_RELEASE_DIALOG="() => (showConfigurationVisible = false)"
     ></servantConf>
+    <invokeCmd
+      :cmd-visible="cmdVisible"
+      :server-name="props.serverName"
+      :selection-grid="selectedGrid"
+      @CLOSE_CMD_DIALOG="cmdVisible = false"
+    />
   </div>
 </template>
 <script lang="ts" setup>
@@ -198,6 +213,7 @@ import { reactive, ref, watch } from "vue";
 import uploadComponent from "./upload.vue";
 import releaseComponent from "./release.vue";
 import servantConf from "./servantConf.vue";
+import invokeCmd from "./invokeCmd.vue";
 import moment from "moment";
 import api from "@/api/server";
 import { ElNotification, ElMessageBox, ElMessage } from "element-plus";
@@ -283,7 +299,7 @@ async function handleRelease(id: number) {
   if (data.code) {
     return ElNotification.error(data.message);
   }
-  ElNotification.success("success!");
+  ElNotification.success("发布成功");
   state.releaseVisible = false;
 }
 
@@ -415,5 +431,13 @@ const showConfigurationId = ref(0);
 async function showConfiguration() {
   showConfigurationVisible.value = true;
   showConfigurationId.value = props.servantId;
+}
+
+const cmdVisible = ref(false);
+const selectedGrid = ref([]);
+
+function openInvokeCmdDialog() {
+  cmdVisible.value = true;
+  selectedGrid.value = selectionGrid.value;
 }
 </script>

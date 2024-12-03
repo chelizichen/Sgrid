@@ -134,11 +134,6 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 			}(client)
 		}
 		syncPackage.Wait()
-		// 接收服务器的响应
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(-1, "server error"+string(err.Error()), nil))
-			return
-		}
 		storage.SaveHashPackage(pojo.ServantPackage{
 			ServantId:  servantId,
 			Hash:       fileHash,
@@ -433,5 +428,25 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 		ctx.Header("Content-Type", "application/octet-stream")
 		ctx.Header("Content-Disposition", "attachment; filename="+fileName)
 		ctx.FileAttachment(targetFilePath, fileName)
+	})
+
+	router.POST("/main/invokeWithCmd", func(c *gin.Context) {
+		var req *protocol.InvokeWithCmdReq
+		err := c.BindJSON(&req)
+		if err != nil {
+			handlers.AbortWithError(c, err.Error())
+			return
+		}
+		fmt.Println("debugger >> invokeWithCmd >> req", req)
+		var wg sync.WaitGroup
+		for _, client := range clients {
+			wg.Add(1)
+			go func(clt protocol.FileTransferServiceClient) {
+				clt.InvokeWithCmd(&gin.Context{}, req)
+				wg.Done()
+			}(client)
+		}
+		wg.Wait()
+		handlers.AbortWithSucc(c, nil)
 	})
 }

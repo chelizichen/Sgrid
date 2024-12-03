@@ -238,6 +238,13 @@ const api = {
       method: 'post',
       data
     }) as unknown as BasicResp<any>
+  },
+  invokeWithCmd(data: any) {
+    return HttpReq({
+      url: '/main/invokeWithCmd',
+      method: 'post',
+      data
+    }) as unknown as BasicResp<any>
   }
 }
 

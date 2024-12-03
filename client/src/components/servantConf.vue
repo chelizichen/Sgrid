@@ -42,7 +42,7 @@ const configForm = ref({
 });
 
 const props = defineProps<{
-  servantId: string;
+  servantId: number;
   dialogVisible: boolean;
 }>();
 

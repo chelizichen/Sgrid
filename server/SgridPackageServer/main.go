@@ -1,9 +1,3 @@
-// ************************ SgridCloud **********************
-// SgridPackageServer created at 2024.4.8
-// Author @chelizichen
-// Operations and Deployment Services
-// ************************ SgridCloud **********************
-
 package SgridPackageServer
 
 import (
@@ -44,25 +38,6 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-const (
-	App      = "application"
-	Servants = "servants"
-	Logger   = "logger"
-)
-
-const (
-	BEHAVIOR_PULL           = "pull"
-	BEHAVIOR_KILL           = "kill"
-	BEHAVIOR_DOWN           = "down"
-	BEHAVIOR_ALIVE          = "alive"
-	BEHAVIOR_CHECK          = "check"
-	BEHAVIOR_SERVANT_REPORT = "servant-report"
-)
-
-const CONSTANT_MONITOR_INTERVAL = 30
-const SgridLogTraceServerHosts = "SgridLogTraceServerHosts"
-const layout = "2006-01-02T15:04:05Z"
-
 var globalConf *config.SgridConf
 var AntsPool *ants.Pool
 var globalGrids map[int]*SgridMonitor = make(map[int]*SgridMonitor)
@@ -88,6 +63,7 @@ type SgridMonitor struct {
 	gridId       int
 	cronInstance *cron.Cron
 	port         int
+	stdin        io.WriteCloser // 添加stdin字段
 }
 
 func WithMonitorInterval(interval time.Duration) func(*SgridMonitor) {
@@ -125,6 +101,14 @@ func NewSgridMonitor(opt ...WithSgridMonitorConfFunc) *SgridMonitor {
 	for _, v := range opt {
 		fn := v
 		fn(monitor)
+	}
+	if monitor.cmd != nil {
+		stdin, err := monitor.cmd.StdinPipe()
+		if err != nil {
+			fmt.Println("Failed to get StdinPipe:", err)
+			return nil
+		}
+		monitor.stdin = stdin
 	}
 	return monitor
 }
@@ -646,7 +630,7 @@ func (s *fileTransferServer) GetLogFileByHost(ctx context.Context, in *protocol.
 	files := storage.GetTraceLogFiles(int(in.GridId), in.ServerName)
 	var respList []*protocol.GetLogFileByHostVo
 	for _, v := range files {
-		t, _ := time.Parse(layout, v.LogTime)
+		t, _ := time.Parse(Layout, v.LogTime)
 		respList = append(respList, &protocol.GetLogFileByHostVo{
 			LogType:  v.LogType,
 			DateTime: t.Format(time.DateOnly),
@@ -1009,6 +993,22 @@ func (c *fileTransferServer) Notify(ctx context.Context, in *protocol.NotifyReq)
 		MemoryData:  0,
 	})
 	return nil, nil
+}
+
+func (c *fileTransferServer) InvokeWithCmd(ctx context.Context, in *protocol.InvokeWithCmdReq) (*protocol.InvokeWithCmdRsp, error) {
+	grid := globalGrids[int(in.GetGridId())]
+	if grid == nil {
+		return nil, nil
+	}
+
+	cmd := in.GetCmd() + "\n"
+	_, err := grid.stdin.Write([]byte(cmd))
+	if err != nil {
+		fmt.Println("debug.InvokeWithCmd.Write.error", err.Error())
+		return nil, err
+	}
+
+	return &protocol.InvokeWithCmdRsp{}, nil
 }
 
 func initDir() {

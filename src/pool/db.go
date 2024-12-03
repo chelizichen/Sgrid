@@ -16,15 +16,6 @@ import (
 	"gorm.io/plugin/dbresolver"
 )
 
-const (
-	AUTO_MIGRATE = "db_migrate"
-	RDS_ADDR     = "redis_addr"
-	RDS_PASS     = "redis_pass"
-	DB_MASTER    = "db_master"
-	DB_SLAVE     = "db_slave"
-	DB_PREFIX    = "grid_"
-)
-
 var GORM *gorm.DB
 var RDBContext = context.Background()
 var GRDB *redis.Client
@@ -99,7 +90,7 @@ func initRds(ctx *config.SgridConf) error {
 	redis_addr := ctx.GetString(RDS_ADDR)
 	redis_pass := ctx.GetString(RDS_PASS)
 	if len(redis_addr) == 0 {
-		return sgridError.RDS_CONN_ERROR("len(redis_addr) == 0")
+		return sgridError.RDS_CONN_ERROR("redis_addr is empty")
 	}
 	GRDB = redis.NewClient(&redis.Options{
 		Addr:     redis_addr,
@@ -108,7 +99,7 @@ func initRds(ctx *config.SgridConf) error {
 	})
 	pong, err := GRDB.Ping(RDBContext).Result()
 	if err != nil {
-		return sgridError.RDS_CONN_ERROR("连接redis出错，错误信息：" + err.Error())
+		return sgridError.RDS_CONN_ERROR("connect to redis error" + err.Error())
 	}
 	fmt.Println("conn success! ", pong)
 	return nil
