@@ -1,0 +1,67 @@
+import { exit } from "std/env"
+
+fun build_to_client(){
+    echo "Building to client"
+    $ rm -rf ./dist $ failed {
+        echo "dist is not exist, ignore"
+    }
+    
+    cd "client"
+
+    $ npm run build $ failed {
+        echo "Failed to build client"
+        // exit(1)
+    }
+
+    $ mv ./dist ../ $ failed {
+        echo "Failed to move dist"
+        exit(1)
+    }
+    cd "../"
+}
+
+fun build_to_server(){
+    echo "Building to server"
+    $ rm -r ./app $ failed {
+        echo "app is not exist, ignore"
+    }
+    
+
+    $ GOOS=linux GOARCH=amd64  go build -o app $ failed {
+        echo "Failed to build server"
+        exit(1)
+    }
+}
+
+fun tar(){
+    echo "Tar to dist"
+    $ rm -r ./SgridCloudServer.tar.gz $ failed {
+        echo "SgridCloudServer.tar.gz is not exist, ignore"
+    }
+    $ tar -cvf SgridCloudServer.tar.gz ./sgrid.yml ./app dist $ failed {
+        echo "Failed to tar"
+        exit(1)
+    }
+    echo "Tar Success"
+}
+
+fun clean(){
+    echo "Clean"
+    $ rm -r ./app $ failed {
+        echo "app is not exist, ignore"
+    }
+
+    $ rm -r ./dist $ failed {
+        echo "dist is not exist, ignore"
+    }
+}
+
+build_to_client()
+
+build_to_server()
+
+tar()
+
+clean()
+
+echo "Done"

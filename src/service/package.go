@@ -395,6 +395,12 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 		handlers.AbortWithSucc(c, resp)
 	})
 
+	router.POST("/statlog/deleteByLogType", func(c *gin.Context) {
+		var req *dto.LogTypeDto
+		c.BindJSON(&req)
+		storage.DeleteLogByLogType(req.DateTime, req.LogType)
+		handlers.AbortWithSucc(c, nil)
+	})
 	router.POST("/notify", func(c *gin.Context) {
 		var rpl protocol.BasicResp
 		var req *protocol.NotifyReq

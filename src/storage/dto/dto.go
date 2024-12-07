@@ -86,3 +86,8 @@ func NewPageBaiscReq(ctx *gin.Context) *PageBasicReq {
 		Id:      id,
 	}
 }
+
+type LogTypeDto struct {
+	DateTime string `json:"dateTime,omitempty"`
+	LogType  string `json:"logType,omitempty"`
+}

@@ -6,39 +6,25 @@
           <el-input v-model="state.logFile" :disabled="true"></el-input>
         </el-form-item>
         <el-form-item label="pattern">
-          <el-input v-model="state.pattern"></el-input
-        ></el-form-item>
+          <el-input v-model="state.pattern"></el-input></el-form-item>
         <el-form-item label="rows">
           <el-select v-model="state.size">
-            <el-option
-              v-for="item in rowSelect"
-              :label="item"
-              :value="item"
-              :key="item"
-            ></el-option>
+            <el-option v-for="item in rowSelect" :label="item" :value="item" :key="item"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="logList">
           <el-select v-model="state.logFile">
-            <el-option
-              v-for="(item, index) in logFileList"
-              :label="item.logType + '_' + item.dateTime"
-              :value="index"
-              :key="item"
-            ></el-option>
+            <el-option v-for="(item, index) in logFileList" :label="item.logType + '_' + item.dateTime" :value="index"
+              :key="item"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="Operate">
           <el-button @click="getLog">Search</el-button>
+          <el-button @click="deleteLog" type="primary">Delete</el-button>
         </el-form-item>
         <el-form-item label="Pagination">
-          <el-pagination
-            layout="prev, pager, next"
-            :total="total"
-            size="small"
-            :page-size="state.size"
-            @current-change="handleCurrentChange"
-          />
+          <el-pagination layout="prev, pager, next" :total="total" size="small" :page-size="state.size"
+            @current-change="handleCurrentChange" />
         </el-form-item>
         <el-form-item label="Shell">
           <el-button @click="showShell">Shell</el-button>
@@ -47,21 +33,12 @@
     </div>
     <div class="w-3/4 h-screen">
       <div class="bg-black px-4 pt-2 h-full w-full overflow-scroll">
-        <div
-          v-for="item in logger"
-          :key="item"
-          class="break-all text-wrap text-white w-full"
-        >
+        <div v-for="item in logger" :key="item" class="break-all text-wrap text-white w-full">
           <div v-html="item"></div>
         </div>
       </div>
     </div>
-    <el-dialog
-      v-model="shellVisible"
-      class="w-3/4"
-      style="height: 800px"
-      title="SgridShell"
-    >
+    <el-dialog v-model="shellVisible" class="w-3/4" style="height: 800px" title="SgridShell">
       <div class="w-full h-full">
         <iframe :src="SHELL_PATH" class="w-full" style="height: 700px"></iframe>
       </div>
@@ -71,7 +48,7 @@
 
 <script setup lang="ts" name="logger-page">
 import API from "@/api/server";
-import { ElNotification } from "element-plus";
+import { ElNotification, ElMessageBox } from "element-plus";
 import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute } from "vue-router";
 const shellVisible = ref(false);
@@ -135,7 +112,19 @@ async function getLog() {
   });
   total.value = res.total;
 }
-
+async function deleteLog() {
+  ElMessageBox.confirm("确认删除该节点？删除后不可恢复!", "Confirm", {
+    confirmButtonText: "OK",
+    cancelButtonText: "Cancel",
+  }).then(async () => {
+    const res = await API.deleteByLogType(body.value);
+    if (res.code) {
+      return ElNotification.error(`删除失败:${res.message}`);
+    }
+    ElNotification.success("删除成功");
+    init();
+  });
+}
 async function handleCurrentChange(curr: number) {
   console.log("curr", curr);
   state.offset = (curr - 1) * state.size;

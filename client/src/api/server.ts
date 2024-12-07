@@ -245,6 +245,13 @@ const api = {
       method: 'post',
       data
     }) as unknown as BasicResp<any>
+  },
+  deleteByLogType(data: any) {
+    return HttpReq({
+      url: '/statlog/deleteByLogType',
+      method: 'post',
+      data
+    }) as unknown as BasicResp<any>
   }
 }
 

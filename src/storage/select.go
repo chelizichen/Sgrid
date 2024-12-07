@@ -457,3 +457,10 @@ func GetSystemErrorLog(keyword string, offset int) (list []pojo.SystemErr, total
 		Find(&list)
 	return
 }
+
+func DeleteLogByLogType(dateTime string, logType string) {
+	pool.GORM.Debug().
+	Model(&pojo.TraceLog{}).
+	Where("date(create_time) = ? and log_type = ?", dateTime, logType).
+	Delete(&pojo.TraceLog{})
+}
