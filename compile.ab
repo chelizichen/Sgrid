@@ -38,7 +38,7 @@ fun tar(){
     $ rm -r ./SgridCloudServer.tar.gz $ failed {
         echo "SgridCloudServer.tar.gz is not exist, ignore"
     }
-    $ tar -cvf SgridCloudServer.tar.gz ./sgrid.yml ./app dist $ failed {
+    $ tar -cvf SgridCloudServer.tar.gz ./app dist $ failed {
         echo "Failed to tar"
         exit(1)
     }

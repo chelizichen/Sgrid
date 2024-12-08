@@ -1,0 +1,54 @@
+import { download } from "std/http"
+import { dir_exist, make_executable, create_symbolic_link,create_dir,file_exist } from "std/fs"
+import { exit } from "std/env"
+
+let bool_true  = 1
+let bool_false = 0
+
+#[allow_generic_return]
+fun download_latest_package(target:Text){
+    echo "run download_latest_package"
+    download(target, "./SgridCloudServer.tar.gz")
+}
+
+fun remove_old(){
+    echo "Removing old"
+    $ rm -r ./app $ failed {
+        echo "app is not exist, ignore"
+    }
+    $ rm -rf ./dist $ failed {
+        echo "dist is not exist, ignore"
+    }
+}
+
+fun if_not_exist_then_create(path: Text): Num {
+    echo "Checking if {path} exists, if not, creating it..."
+    if not dir_exist(path) {
+        create_dir(path)
+        return bool_true
+    }
+    return bool_false
+}
+
+
+
+fun tar(){
+    $ tar -xvf ./SgridCloudServer.tar.gz $ failed {
+        echo "dist is not exist, ignore"
+    }
+    $ chmod +x ./app $ failed {
+        echo "add permission failed"
+    }
+}
+// http://124.220.19.199:17853/fm//sgrid/sgridcloud.tar.gz
+
+main(args){
+    let download_path = args[1]
+    if download_path == "" {
+        echo "error: miss download_path"
+        exit(1)
+    }
+    download_latest_package(download_path)
+    remove_old()
+    tar()   
+}

@@ -15,3 +15,7 @@ sgrid_app
 dist
 
 *.rdb
+
+sgrid.cluster.yml
+
+sgrid.main.yml
