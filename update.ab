@@ -40,7 +40,8 @@ fun tar(){
         echo "add permission failed"
     }
 }
-// http://124.220.19.199:17853/fm//sgrid/sgridcloud.tar.gz
+// how to run this script ?
+// ./update.sh http://124.220.19.199:17853/fm//sgrid/sgridcloud.tar.gz
 
 main(args){
     let download_path = args[1]

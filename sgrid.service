@@ -1,0 +1,9 @@
+[Unit]
+Description = sgridcloud,A cloud platform for grid computing
+
+[Service]
+Type = simple
+ExecStart = /usr/app/app
+Restart = no
+WorkingDirectory = /usr/app
+
