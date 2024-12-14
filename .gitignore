@@ -19,3 +19,5 @@ dist
 sgrid.cluster.yml
 
 sgrid.main.yml
+
+sgrid.docker.yml

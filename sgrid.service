@@ -4,6 +4,7 @@ Description = sgridcloud,A cloud platform for grid computing
 [Service]
 Type = simple
 ExecStart = /usr/app/app
+Environment=PATH=/usr/bin:/usr/local/bin
 Restart = no
 WorkingDirectory = /usr/app
 

@@ -5,10 +5,29 @@ import { exit } from "std/env"
 let bool_true  = 1
 let bool_false = 0
 
-#[allow_generic_return]
 fun download_latest_package(target:Text){
     echo "run download_latest_package"
-    download(target, "./SgridCloudServer.tar.gz")
+    let is_download_succ = download(target, "./SgridCloudServer.tar.gz")
+    if is_download_succ == bool_false {
+        echo "download failed"
+        exit(1)
+    }
+}
+
+fun linux_service_stop(){
+    echo "stop linux service"
+    $ systemctl stop sgrid $ failed {
+        echo "stop linux service failed"
+        exit(1)
+    }
+}
+
+fun linux_service_start(){
+    echo "start linux service"
+    $ systemctl start sgrid $ failed {
+        echo "start linux service failed"
+        exit(1)
+    }
 }
 
 fun remove_old(){
@@ -49,7 +68,13 @@ main(args){
         echo "error: miss download_path"
         exit(1)
     }
+    // DOWN
     download_latest_package(download_path)
+    linux_service_stop()
+    // REMOVE
     remove_old()
+    // TAR
     tar()   
+    // START
+    linux_service_start()
 }
