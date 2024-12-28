@@ -203,7 +203,7 @@ func (s *SgridMonitor) Report() {
 	s.cronInstance.Start()
 }
 
-func (s *SgridMonitor) PrintLogger() {
+func stdoutLog(s *SgridMonitor) {
 	op, err := s.cmd.StdoutPipe()
 	if err != nil {
 		storage.PushErr(&pojo.SystemErr{
@@ -211,6 +211,52 @@ func (s *SgridMonitor) PrintLogger() {
 			Info: err.Error(),
 		})
 	}
+	go func() {
+		fmt.Printf("Log.stdoutLog.op %+v", op)
+		for {
+			select {
+			case <-s.ctx.Done():
+				fmt.Printf("%s [%d] recieved done singal by ctx, return PrintLogger.Output \n", s.serverName, s.gridId)
+				return
+			default:
+				buf := make([]byte, 1024)
+				n, err := op.Read(buf)
+				if err != nil && !errors.Is(err, io.EOF) {
+					fmt.Println("system/error/SgridPackageServer/op.Read.error", err.Error())
+					storage.PushErr(&pojo.SystemErr{
+						Type: "system/error/SgridPackageServer/op.Read(buf)",
+						Info: err.Error(),
+					})
+					break
+				} else if errors.Is(err, io.EOF) {
+					break
+				} else {
+					// 打印输出
+					content := string(buf[:n])
+					var logReq = &logProto.LogTraceReq{
+						LogServerName: s.serverName,
+						LogHost:       globalConf.Server.Host,
+						LogGridId:     int64(s.gridId),
+						LogType:       public.LOG_TYPE_DATA,
+						LogContent:    content,
+						LogBytesLen:   int64(n),
+						CreateTime:    public.GetCurrTime(),
+					}
+					fmt.Println("SgridPackageServer.read.data.content,", content)
+					var rpl logProto.BasicResp
+					NewSgridLogTraceServant.Request(rpc.RequestPack{
+						Method: "LogTrace",
+						Body:   logReq,
+						Reply:  &rpl,
+					})
+				}
+			}
+		}
+	}()
+
+}
+
+func stderrLog(s *SgridMonitor) {
 	ep, err := s.cmd.StderrPipe()
 	if err != nil {
 		storage.PushErr(&pojo.SystemErr{
@@ -218,81 +264,56 @@ func (s *SgridMonitor) PrintLogger() {
 			Info: err.Error(),
 		})
 	}
+
 	go func() {
-		select {
-		case <-s.ctx.Done():
-			fmt.Printf("%s [%d] recieved done singal by ctx, return PrintLogger.Output \n", s.serverName, s.gridId)
-			return
-		default:
-			buf := make([]byte, 1024)
-			n, err := op.Read(buf)
-			if err != nil && !errors.Is(err, io.EOF) {
-				fmt.Println("system/error/SgridPackageServer/op.Read.error", err.Error())
-				storage.PushErr(&pojo.SystemErr{
-					Type: "system/error/SgridPackageServer/op.Read(buf)",
-					Info: err.Error(),
-				})
-				break
-			} else {
-				// 打印输出
-				content := string(buf[:n])
-				var logReq = &logProto.LogTraceReq{
-					LogServerName: s.serverName,
-					LogHost:       globalConf.Server.Host,
-					LogGridId:     int64(s.gridId),
-					LogType:       public.LOG_TYPE_DATA,
-					LogContent:    content,
-					LogBytesLen:   int64(n),
-					CreateTime:    public.GetCurrTime(),
+		fmt.Printf("Log.stdoutLog.op %+v", ep)
+		for {
+			select {
+			case <-s.ctx.Done():
+				fmt.Printf("%s [%d] recieved done singal by ctx, return PrintLogger.ErrorPut \n", s.serverName, s.gridId)
+				return
+			default:
+				buf := make([]byte, 1024)
+				now := public.GetCurrTime()
+				n, err := ep.Read(buf)
+				if err != nil && !errors.Is(err, io.EOF) {
+					fmt.Println("system/error/SgridPackageServer/ep.Read.error", err.Error())
+					storage.PushErr(&pojo.SystemErr{
+						Type: "system/error/SgridPackageServer/ep.Read(buf)",
+						Info: err.Error(),
+					})
+					break
+				} else if errors.Is(err, io.EOF) {
+					break
+				} else {
+					// 打印输出
+					fmt.Printf("stdoerrLog [%d] \n", n)
+					content := string(buf[:n])
+					var logReq = &logProto.LogTraceReq{
+						LogServerName: s.serverName,
+						LogHost:       globalConf.Server.Host,
+						LogGridId:     int64(s.gridId),
+						LogType:       public.LOG_TYPE_ERROR,
+						LogContent:    content,
+						LogBytesLen:   int64(n),
+						CreateTime:    now,
+					}
+					fmt.Println("SgridPackageServer.read.error.content,", content)
+					var rpl logProto.BasicResp
+					NewSgridLogTraceServant.Request(rpc.RequestPack{
+						Method: "LogTrace",
+						Body:   logReq,
+						Reply:  &rpl,
+					})
 				}
-				fmt.Println("SgridPackageServer.read.data.content,", content)
-				var rpl logProto.BasicResp
-				NewSgridLogTraceServant.Request(rpc.RequestPack{
-					Method: "LogTrace",
-					Body:   logReq,
-					Reply:  &rpl,
-				})
 			}
 		}
 	}()
-	go func() {
-		select {
-		case <-s.ctx.Done():
-			fmt.Printf("%s [%d] recieved done singal by ctx, return PrintLogger.ErrorPut \n", s.serverName, s.gridId)
-			return
-		default:
-			buf := make([]byte, 1024)
-			now := public.GetCurrTime()
-			n, err := ep.Read(buf)
-			if err != nil && !errors.Is(err, io.EOF) {
-				fmt.Println("system/error/SgridPackageServer/ep.Read.error", err.Error())
-				storage.PushErr(&pojo.SystemErr{
-					Type: "system/error/SgridPackageServer/ep.Read(buf)",
-					Info: err.Error(),
-				})
-				break
-			} else {
-				// 打印输出
-				content := string(buf[:n])
-				var logReq = &logProto.LogTraceReq{
-					LogServerName: s.serverName,
-					LogHost:       globalConf.Server.Host,
-					LogGridId:     int64(s.gridId),
-					LogType:       public.LOG_TYPE_ERROR,
-					LogContent:    content,
-					LogBytesLen:   int64(n),
-					CreateTime:    now,
-				}
-				fmt.Println("SgridPackageServer.read.error.content,", content)
-				var rpl logProto.BasicResp
-				NewSgridLogTraceServant.Request(rpc.RequestPack{
-					Method: "LogTrace",
-					Body:   logReq,
-					Reply:  &rpl,
-				})
-			}
-		}
-	}()
+}
+
+func (s *SgridMonitor) PrintLogger() {
+	stdoutLog(s)
+	stderrLog(s)
 }
 
 func (s *SgridMonitor) kill() {
