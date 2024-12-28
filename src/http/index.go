@@ -20,6 +20,10 @@ type SgridServerCtx struct {
 	Context   context.Context
 }
 
+func (c *SgridServerCtx) GetEngine() {
+
+}
+
 func (c *SgridServerCtx) GetServerName() string {
 	return c.SgridConf.Server.Name
 }
