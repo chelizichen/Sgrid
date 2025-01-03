@@ -252,6 +252,13 @@ const api = {
       method: 'post',
       data
     }) as unknown as BasicResp<any>
+  },
+  getServerStatusByUser(data: any) {
+    return HttpReq({
+      url: '/main/status/getServerStatusByUser',
+      method: 'post',
+      data
+    }) as unknown as Promise<BasicResp<any>>
   }
 }
 

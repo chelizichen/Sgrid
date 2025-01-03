@@ -460,7 +460,62 @@ func GetSystemErrorLog(keyword string, offset int) (list []pojo.SystemErr, total
 
 func DeleteLogByLogType(dateTime string, logType string) {
 	pool.GORM.Debug().
-	Model(&pojo.TraceLog{}).
-	Where("date(create_time) = ? and log_type = ?", dateTime, logType).
-	Delete(&pojo.TraceLog{})
+		Model(&pojo.TraceLog{}).
+		Where("date(create_time) = ? and log_type = ?", dateTime, logType).
+		Delete(&pojo.TraceLog{})
+}
+
+type VoServerStatus struct {
+	GridId         int64  `gorm:"column:grid_id" json:"gridId"`
+	NodeId         int64  `gorm:"column:node_id" json:"nodeId"`
+	Ip             string `gorm:"column:ip" json:"ip"`
+	IsMain         string `gorm:"column:main" json:"isMain"`
+	Platform      string `gorm:"column:plat_form" json:"platForm"`
+	Port           int64  `gorm:"column:port" json:"port"`
+	ServerName     string `gorm:"column:server_name" json:"serverName"`
+	ServerStatus   string `gorm:"column:status" json:"serverStatus"`
+	UpdateTime     string `gorm:"column:update_time" json:"updateTime"`
+	UserId         int64  `gorm:"column:user_id" json:"userId"`
+	Pid            int64  `gorm:"column:pid" json:"pid"`
+	TagEnglishName string `gorm:"column:tag_english_name" json:"tagEnglishName"`
+	ServantId      int64  `gorm:"column:servant_id" json:"servantId"`
+	Lananguage     string `gorm:"column:language" json:"language"`
+}
+
+func GetServerStatusByUserId(userId int) (resp []VoServerStatus) {
+	where := " where 1 = 1 "
+	args := make([]interface{}, 10)
+
+	if userId > 1 {
+		where += " and user_id = ?"
+		args = append(args, userId)
+	}
+	c, err := replace.BuildReplaceChain(`
+	select 
+	gn.ip,
+	gn.main,
+	gn.plat_form,
+	gg.id as grid_id,
+	gg.node_id,
+	gg.port,
+	gg.status,
+	gg.pid,
+	gg.update_time ,
+	gs.server_name ,
+	gs.user_id,
+	gs.id as servant_id,
+	gs.language as language,
+	gsg.tag_english_name 
+	from grid_grid gg 
+	left join grid_node gn on gn.id  = gg.node_id 
+	left join grid_servant gs on gs.id = gg.servant_id 
+	left join grid_servant_group gsg on gsg.id = gs.servant_group_id 
+	${WHERE}
+	`)
+	if err != nil {
+		return resp
+	}
+	c.ReplaceWhere(where)
+	pool.GORM.Debug().Raw(c.Get(), public.Removenullvalue(args)...).Scan(&resp)
+	return resp
 }

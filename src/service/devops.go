@@ -59,6 +59,8 @@ func DevopsService(ctx *handlers.SgridServerCtx) {
 
 	// 主控日志
 	GROUP.POST("/main/logger/get", getMainLogger)
+
+	GROUP.POST("/main/status/getServerStatusByUser",getServerStatusByUser)
 }
 
 func getGroups(c *gin.Context) {
@@ -384,4 +386,16 @@ func getMainLogger(c *gin.Context) {
 	}
 	list, total := storage.GetSystemErrorLog(req.Keyword, req.Offset)
 	handlers.AbortWithSuccList(c, list, total)
+}
+
+
+func getServerStatusByUser(c *gin.Context){
+	user_id := c.DefaultQuery("id", "0")
+	userId, err := strconv.Atoi(user_id)
+	if err != nil {
+		handlers.AbortWithError(c, err.Error())
+		return
+	}
+	vsg := storage.GetServerStatusByUserId(userId)
+	handlers.AbortWithSucc(c, vsg)
 }

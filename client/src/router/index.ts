@@ -11,8 +11,8 @@ import { localGet, constants } from '@/constant'
 import { useUserStore } from '@/stores/counter'
 import api from '@/api/server'
 import { ElNotification } from 'element-plus'
-import NProgress from 'nprogress'; // Progress 进度条
-import 'nprogress/nprogress.css';// Progress 进度条样式
+import NProgress from 'nprogress' // Progress 进度条
+import 'nprogress/nprogress.css' // Progress 进度条样式
 
 export const adminMenu: RouteRecordRaw[] = [
   {
@@ -26,21 +26,21 @@ export const adminMenu: RouteRecordRaw[] = [
         icon: 'Grid',
         path: 'user',
         name: 'user',
-        component: ()=>import('@/views/devops/system/user_admin.vue')
+        component: () => import('@/views/devops/system/user_admin.vue')
       },
       {
         title: '角色管理',
         icon: 'Grid',
         path: 'role',
         name: 'role',
-        component: ()=>import('@/views/devops/system/role_admin.vue')
+        component: () => import('@/views/devops/system/role_admin.vue')
       },
       {
         title: '菜单管理',
         icon: 'Grid',
         path: 'menu',
         name: 'menu',
-        component: ()=>import('@/views/devops/system/menu_admin.vue')
+        component: () => import('@/views/devops/system/menu_admin.vue')
       }
     ]
   },
@@ -55,21 +55,21 @@ export const adminMenu: RouteRecordRaw[] = [
         icon: 'Grid',
         path: 'add_group',
         name: 'add_group',
-        component: ()=>import('@/views/devops/add_group.vue')
+        component: () => import('@/views/devops/add_group.vue')
       },
       {
         title: '添加服务',
         icon: 'Grid',
         path: 'add_servant',
         name: 'add_servant',
-        component: ()=>import('@/views/devops/add_servant.vue')
+        component: () => import('@/views/devops/add_servant.vue')
       },
       {
         title: '服务列表',
         icon: 'Grid',
         path: 'servant_admin',
         name: 'servant_admin',
-        component: ()=>import('@/views/devops/servant_list.vue')
+        component: () => import('@/views/devops/servant_list.vue')
       }
     ]
   },
@@ -84,7 +84,7 @@ export const adminMenu: RouteRecordRaw[] = [
         icon: 'Grid',
         path: 'add_node',
         name: 'add_node',
-        component: ()=>import('@/views/devops/add_node.vue')
+        component: () => import('@/views/devops/add_node.vue')
       }
     ]
   },
@@ -99,7 +99,7 @@ export const adminMenu: RouteRecordRaw[] = [
         icon: 'Grid',
         path: 'admin',
         name: 'admin',
-        component: ()=>import('@/views/devops/gateway_conf.vue')
+        component: () => import('@/views/devops/gateway_conf.vue')
       }
     ]
   },
@@ -114,7 +114,7 @@ export const adminMenu: RouteRecordRaw[] = [
         icon: 'Grid',
         path: 'set',
         name: 'set',
-        component: ()=>import('@/views/devops/property_admin.vue')
+        component: () => import('@/views/devops/property_admin.vue')
       }
     ]
   }
@@ -133,9 +133,9 @@ const router = createRouter({
       component: ServerView
     },
     {
-      path:"/dashboard",
-      name:"dashboard",
-      component:Dashboard
+      path: '/dashboard',
+      name: 'dashboard',
+      component: Dashboard
     },
     {
       path: '/login',
@@ -150,25 +150,25 @@ const router = createRouter({
     {
       path: '/devops',
       name: 'devops',
-      component: Devops,
+      component: Devops
       // children: adminMenu
     },
     {
-      path:"/devops/",
-      redirect:"/devops/servant/servant_admin"
+      path: '/devops/',
+      redirect: '/devops/servant/servant_admin'
     },
     {
       path: '/userInfo',
       name: 'userInfo',
-      component: UserInfo,
+      component: UserInfo
       // children: adminMenu
     },
     {
       path: '/mainLog',
       name: 'mainLog',
-      component: mainLog,
+      component: mainLog
       // children: adminMenu
-    },
+    }
   ]
 })
 

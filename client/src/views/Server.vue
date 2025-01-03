@@ -8,21 +8,14 @@ export default {
   <div>
     <el-container>
       <el-aside width="200px" class="py-2.5 h-full">
-        <aside-component
-          :server-list="state.serverList"
-          @handle-open="handleOpen"
-        ></aside-component>
+        <aside-component :server-list="state.serverList" @handle-open="handleOpen"></aside-component>
       </el-aside>
       <el-main>
         <div>
-          <gridsComponent
-            :grids-list="state.gridsList"
-            :server-name="state.serverName"
-            :servant-id="state.servantId"
-            :servantLanguage="state.servantLanguage"
-            @check-status="handleOpen(currentItem)"
-            :server-version="state.serverVersion"
-          ></gridsComponent>
+          <controller v-if="isShowHome" @handle-open="handleOpen"></controller>
+          <gridsComponent v-else :grids-list="state.gridsList" :server-name="state.serverName"
+            :servant-id="state.servantId" :servantLanguage="state.servantLanguage"
+            @check-status="handleOpen(currentItem)" :server-version="state.serverVersion"></gridsComponent>
         </div>
       </el-main>
       <router-view></router-view>
@@ -33,28 +26,30 @@ export default {
 <script setup lang="ts">
 import asideComponent from "@/components/aside.vue";
 import gridsComponent from "@/components/grids.vue";
-import { onMounted, reactive, ref } from "vue";
+import controller from "@/components/controller.vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import api from "../api/server";
 import type { Item } from "@/dto/dto";
 import { useUserStore } from "@/stores/counter";
 import _ from "lodash";
 
 const userStore = useUserStore();
+const isShowHome = computed(() => state.servantId == -1)
 const state = reactive({
   serverName: "",
   serverList: [],
   gridsList: [],
-  servantId: 0,
+  servantId: -1,
   servantLanguage: "",
   serverVersion: 0,
 });
 const currentItem = ref();
 async function handleOpen(item: Item) {
   currentItem.value = item;
+  state.servantId = item.id;
   console.log("item", item);
   const grids = await api.queryGrid({ id: item.id });
   state.gridsList = grids.data;
-  state.servantId = item.id;
   console.log("state.grids", state.gridsList);
   state.serverName = item.serverName;
   state.servantLanguage = item.language;
