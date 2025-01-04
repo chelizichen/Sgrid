@@ -78,8 +78,6 @@ function mergeCells({ rowIndex, columnIndex }) {
         const currentRow = list.value[rowIndex]
         const prevRow = list.value[rowIndex - 1]
         const nextRow = list.value[rowIndex + 1]
-        console.log('currentRow', currentRow);
-
         const isSameAsPrev = prevRow && currentRow.tagEnglishName === prevRow.tagEnglishName && currentRow.serverName === prevRow.serverName
         const isSameAsNext = nextRow && currentRow.tagEnglishName === nextRow.tagEnglishName && currentRow.serverName === nextRow.serverName
 

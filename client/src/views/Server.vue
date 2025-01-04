@@ -11,12 +11,18 @@ export default {
         <aside-component :server-list="state.serverList" @handle-open="handleOpen"></aside-component>
       </el-aside>
       <el-main>
-        <div>
-          <controller v-if="isShowHome" @handle-open="handleOpen"></controller>
-          <gridsComponent v-else :grids-list="state.gridsList" :server-name="state.serverName"
-            :servant-id="state.servantId" :servantLanguage="state.servantLanguage"
-            @check-status="handleOpen(currentItem)" :server-version="state.serverVersion"></gridsComponent>
-        </div>
+        <el-tabs v-model="editableTabsValue" type="card" class="demo-tabs" closable @tab-remove="removeTab">
+          <el-tab-pane v-for="item in editableTabs" :key="item.serverName" :label="item.serverName"
+            :name="item.serverName">
+            <controller v-if="editableTabsValue == HOME" @handle-open="handleOpen"></controller>
+            <template v-else>
+              <gridsComponent v-if="editableTabsValue == item.serverName && editableTabsValue != HOME"
+                :grids-list="state.gridsList" :server-name="state.serverName" :servant-id="state.servantId"
+                :servantLanguage="state.servantLanguage" @check-status="handleOpen(currentItem)"
+                :server-version="state.serverVersion"></gridsComponent>
+            </template>
+          </el-tab-pane>
+        </el-tabs>
       </el-main>
       <router-view></router-view>
     </el-container>
@@ -27,14 +33,13 @@ export default {
 import asideComponent from "@/components/aside.vue";
 import gridsComponent from "@/components/grids.vue";
 import controller from "@/components/controller.vue";
-import { computed, onMounted, reactive, ref } from "vue";
+import { onMounted, reactive, ref, watch } from "vue";
 import api from "../api/server";
 import type { Item } from "@/dto/dto";
 import { useUserStore } from "@/stores/counter";
 import _ from "lodash";
 
 const userStore = useUserStore();
-const isShowHome = computed(() => state.servantId == -1)
 const state = reactive({
   serverName: "",
   serverList: [],
@@ -44,22 +49,25 @@ const state = reactive({
   serverVersion: 0,
 });
 const currentItem = ref();
-async function handleOpen(item: Item) {
+async function handleOpen(item: Partial<Item>) {
+  console.log('debug.handleOpen', item);
   currentItem.value = item;
-  state.servantId = item.id;
-  console.log("item", item);
-  const grids = await api.queryGrid({ id: item.id });
-  state.gridsList = grids.data;
-  console.log("state.grids", state.gridsList);
-  state.serverName = item.serverName;
-  state.servantLanguage = item.language;
-  const serverVersion = await api.getPropertyByKey(`server.version.${item.id}`);
-  if (_.isArray(serverVersion.data)) {
-    state.serverVersion = Number(serverVersion.data[0].value) || 0;
-  } else {
-    state.serverVersion = 0;
+  state.servantId = item.id!;
+  if (item.serverName !== HOME) {
+    const grids = await api.queryGrid({ id: item.id });
+    state.gridsList = grids.data;
+    const serverVersion = await api.getPropertyByKey(`server.version.${item.id}`);
+    if (_.isArray(serverVersion.data)) {
+      state.serverVersion = Number(serverVersion.data[0].value) || 0;
+    } else {
+      state.serverVersion = 0;
+    }
   }
-  console.log("serverVersion", serverVersion);
+  state.serverName = item.serverName!;
+  state.servantLanguage = item.language!;
+  editableTabsValue.value = item.serverName!
+  if (editableTabs.value.find(tab => tab.serverName === item.serverName)) return
+  editableTabs.value.push(item)
 }
 
 async function fetchServerList() {
@@ -70,4 +78,30 @@ async function fetchServerList() {
 onMounted(() => {
   fetchServerList();
 });
+
+const HOME = "Home"
+const editableTabsValue = ref(HOME)
+const editableTabs = ref<Partial<Item>[]>([{
+  serverName: HOME,
+  id: -1,
+  language: "zh-cn",
+}])
+const removeTab = (targetName: string) => {
+  console.log('targetName', targetName);
+  if (targetName === HOME) {
+    return
+  }
+  editableTabs.value = editableTabs.value.filter((tab) => tab.serverName !== targetName)
+  editableTabsValue.value = HOME
+}
+
+watch(editableTabsValue, function (val, oldVal) {
+  if (val === oldVal) {
+    return
+  }
+  const item = editableTabs.value.find((item) => item.serverName === val);
+  if (item) {
+    handleOpen(item)
+  }
+})
 </script>
