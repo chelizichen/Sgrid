@@ -47,9 +47,13 @@ const state = reactive({
   servantId: -1,
   servantLanguage: "",
   serverVersion: 0,
+  isHandlingOpen: false, // 添加一个新的属性来标记是否正在处理 handleOpen
 });
 const currentItem = ref();
+
 async function handleOpen(item: Partial<Item>) {
+  if (state.isHandlingOpen) return; // 如果正在处理中，直接返回
+  state.isHandlingOpen = true; // 设置为正在处理
   console.log('debug.handleOpen', item);
   currentItem.value = item;
   state.servantId = item.id!;
@@ -68,6 +72,7 @@ async function handleOpen(item: Partial<Item>) {
   editableTabsValue.value = item.serverName!
   if (editableTabs.value.find(tab => tab.serverName === item.serverName)) return
   editableTabs.value.push(item)
+  state.isHandlingOpen = false; // 处理完成后重置标志
 }
 
 async function fetchServerList() {
