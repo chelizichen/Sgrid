@@ -12,13 +12,10 @@ export default {
           <div class="font-bold">ServerName</div>
           <div
             class="font-medium text-indigo-700 cursor-pointer hover:text-indigo-800 hover:font-bold transition-all duration-300"
-            @click="state.uploadVisible = true"
-          >
+            @click="state.uploadVisible = true">
             {{ props.serverName }}
-            <span
-              v-if="props.serverVersion"
-              class="font-medium text-red-700 cursor-pointer hover:text-red-900 hover:font-bold transition-all duration-300"
-            >
+            <span v-if="props.serverVersion"
+              class="font-medium text-red-700 cursor-pointer hover:text-red-900 hover:font-bold transition-all duration-300">
               @{{ props.serverVersion }}
             </span>
           </div>
@@ -26,76 +23,45 @@ export default {
         <div class="flex flex-col items-center">
           <el-button
             class="font-medium text-indigo-700 cursor-pointer hover:text-indigo-800 hover:font-bold transition-all duration-300 disabled:text-indigo-300"
-            type="text"
-            @click="releaseServer"
-            :disabled="selectionGrid.length == 0"
-            >Release</el-button
-          >
+            type="text" @click="releaseServer" :disabled="selectionGrid.length == 0">Release</el-button>
         </div>
         <div>
           <el-button
             class="font-medium text-indigo-700 cursor-pointer hover:text-indigo-800 hover:font-bold transition-all duration-300"
-            type="text"
-            @click="showConfiguration"
-            >Configuration</el-button
-          >
+            type="text" @click="showConfiguration">Configuration</el-button>
         </div>
         <div>
           <el-button
             class="font-medium text-indigo-700 cursor-pointer hover:text-indigo-800 hover:font-bold transition-all duration-300 disabled:text-indigo-300"
-            type="text"
-            @click="restartServer"
-            :disabled="selectionGrid.length == 0"
-            >Restart</el-button
-          >
+            type="text" @click="restartServer" :disabled="selectionGrid.length == 0">Restart</el-button>
         </div>
         <div>
           <el-button
             class="font-medium text-indigo-700 cursor-pointer hover:text-indigo-800 hover:font-bold transition-all duration-300 disabled:text-indigo-300"
-            type="text"
-            @click="batchShutdown"
-            :disabled="selectionGrid.length == 0"
-            >BatchShutDown</el-button
-          >
+            type="text" @click="batchShutdown" :disabled="selectionGrid.length == 0">BatchShutDown</el-button>
         </div>
         <div>
           <el-button
             class="font-medium text-indigo-700 cursor-pointer hover:text-indigo-800 hover:font-bold transition-all duration-300 disabled:text-indigo-300"
-            type="text"
-            @click="openInvokeCmdDialog"
-            :disabled="selectionGrid.length == 0"
-            >InvokeCmd</el-button
-          >
+            type="text" @click="openInvokeCmdDialog" :disabled="selectionGrid.length == 0">InvokeCmd</el-button>
         </div>
       </div>
     </div>
-    <el-table
-      :data="props.gridsList"
-      style="width: 100%"
-      border
-      @selection-change="handleSelectionChange"
-      stripe
-    >
+    <el-table :data="props.gridsList" style="width: 100%" border @selection-change="handleSelectionChange" stripe>
       <el-table-column type="selection" width="55" />
       <el-table-column label="Grid">
         <template #default="scoped">
-          <el-button
-            type="text"
+          <el-button type="text"
             class="font-medium text-indigo-700 cursor-pointer hover:text-indigo-800 hover:font-bold transition-all duration-300"
-            @click="toLog(scoped.row)"
-            >{{ scoped.row.gridNode.ip }}:{{ scoped.row.port }}</el-button
-          >
+            @click="toLog(scoped.row)">{{ scoped.row.gridNode.ip }}:{{ scoped.row.port }}</el-button>
         </template>
       </el-table-column>
       <el-table-column prop="gridServant.serverName" label="serverName">
         <template #default="scoped">
           <template v-if="scoped.row.gridServant.preview">
-            <el-button
-              type="text"
-              @click="toPreview(scoped.row.gridServant.preview)"
-              class="font-medium text-indigo-700 cursor-pointer hover:text-indigo-800 hover:font-bold transition-all duration-300"
-              >{{ scoped.row.gridServant.serverName }}</el-button
-            >
+            <el-button type="text" @click="toPreview(scoped.row.gridServant.preview)"
+              class="font-medium text-indigo-700 cursor-pointer hover:text-indigo-800 hover:font-bold transition-all duration-300">{{
+              scoped.row.gridServant.serverName }}</el-button>
           </template>
           <template v-else>
             <span>{{ scoped.row.gridServant.serverName }}</span>
@@ -104,11 +70,7 @@ export default {
       </el-table-column>
       <el-table-column label="Status">
         <template #default="scoped">
-          <div
-            @click="$emit('checkStatus')"
-            :class="getGridStatus(scoped.row.status)"
-            class="cursor-pointer"
-          >
+          <div @click="$emit('checkStatus')" :class="getGridStatus(scoped.row.status)" class="cursor-pointer">
             <div :class="getGridStatus(scoped.row.status) + '-icon'"></div>
             {{ getGridStatus(scoped.row.status) }}
             {{ scoped.row.pid ? ` (${scoped.row.pid})` : '' }}
@@ -125,14 +87,12 @@ export default {
           <div>
             <div
               class="font-medium text-indigo-700 cursor-pointer hover:text-indigo-800 hover:font-bold transition-all duration-300"
-              @click="shutDown(scoped.row)"
-            >
+              @click="shutDown(scoped.row)">
               Shutdown
             </div>
             <div
               class="font-medium text-red-500 cursor-pointer hover:text-text-800 hover:font-bold transition-all duration-300"
-              @click="deleteGridById(scoped.row)"
-            >
+              @click="deleteGridById(scoped.row)">
               Delete
             </div>
           </div>
@@ -140,8 +100,10 @@ export default {
       </el-table-column>
     </el-table>
     <el-divider content-position="left">
-      <el-button type="text" @click="getLogList($props.gridsList)"
-        ><el-icon style="font-size: large; font-weight: 900; color: gray"><Loading /></el-icon>
+      <el-button type="text" @click="getLogList($props.gridsList)"><el-icon
+          style="font-size: large; font-weight: 900; color: gray">
+          <Loading />
+        </el-icon>
       </el-button>
     </el-divider>
     <el-table :data="statLogList" style="width: 100%; margin-top: 20px" border height="450">
@@ -174,37 +136,21 @@ export default {
       <el-table-column prop="createTime" label="createTime" />
       <el-table-column prop="stat" label="behavior" />
     </el-table>
-    <uploadComponent
-      :upload-visible="state.uploadVisible"
-      :serverName="$props.serverName"
-      :servantId="$props.servantId"
-      :servantLanguage="$props.servantLanguage"
-      @CLOSE_UPLOAD_DIALOG="() => (state.uploadVisible = false)"
-    ></uploadComponent>
-    <releaseComponent
-      :releaseVisible="state.releaseVisible"
-      :serverName="$props.serverName"
-      :releaseList="releaseList"
-      :selectionGrid="selectionGrid"
-      @CLOSE_RELEASE_DIALOG="() => (state.releaseVisible = false)"
-      @RELEASE_SERVER_BY_ID="(val) => handleRelease(val)"
-    >
+    <uploadComponent :upload-visible="state.uploadVisible" :serverName="$props.serverName" :servantId="$props.servantId"
+      :servantLanguage="$props.servantLanguage" @CLOSE_UPLOAD_DIALOG="() => (state.uploadVisible = false)">
+    </uploadComponent>
+    <releaseComponent :releaseVisible="state.releaseVisible" :serverName="$props.serverName" :releaseList="releaseList"
+      :selectionGrid="selectionGrid" @CLOSE_RELEASE_DIALOG="() => (state.releaseVisible = false)"
+      @RELEASE_SERVER_BY_ID="(val: number) => handleRelease(val) ">
     </releaseComponent>
-    <servantConf
-      :servantId="showConfigurationId"
-      :dialogVisible="showConfigurationVisible"
-      @CLOSE_RELEASE_DIALOG="() => (showConfigurationVisible = false)"
-    ></servantConf>
-    <invokeCmd
-      :cmd-visible="cmdVisible"
-      :server-name="props.serverName"
-      :selection-grid="selectedGrid"
-      @CLOSE_CMD_DIALOG="cmdVisible = false"
-    />
+    <servantConf :servantId="showConfigurationId" :dialogVisible="showConfigurationVisible"
+      @CLOSE_RELEASE_DIALOG="() => (showConfigurationVisible = false)"></servantConf>
+    <invokeCmd :cmd-visible="cmdVisible" :server-name="props.serverName" :selection-grid="selectedGrid"
+      @CLOSE_CMD_DIALOG="cmdVisible = false" />
   </div>
 </template>
 <script lang="ts" setup>
-import { reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import uploadComponent from './upload.vue'
 import releaseComponent from './release.vue'
 import servantConf from './servantConf.vue'
@@ -213,22 +159,35 @@ import moment from 'moment'
 import api from '@/api/server'
 import { ElNotification, ElMessageBox, ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
+import type { T_Grid, T_RelaseItem, T_StatLogListItem, T_Status } from '@/dto/dto'
+import _ from 'lodash'
 
 const props = defineProps<{
-  gridsList: any[]
+  gridsList: T_Grid[]
   serverName: string
   servantId: number
   servantLanguage: string
-  serverVersion: string
+  serverVersion: number
 }>()
 const emits = defineEmits(['checkStatus'])
-async function getLogList(gridList) {
+const svrInfo = computed(() => {
+  const servantBaseInfo = _.first(props.gridsList)
+  return {
+    serverName: props.serverName,
+    serverLanguage: servantBaseInfo?.gridServant.language,
+    serverProtocol: servantBaseInfo?.gridServant.protocol,
+    execPath: servantBaseInfo?.gridServant.execPath,
+    servantId: Number(props.servantId),
+  }
+})
+
+async function getLogList(gridList: T_Grid[]) {
   const resp = await Promise.all(
-    gridList.map(async (v) => {
+    gridList.map(async (v: T_Grid) => {
       const list = await api.getStatLogList({
         id: v.id
       })
-      const ret = list.data.list.map((item) => {
+      const ret = list.data.list.map((item: T_Status) => {
         item.gridInfo = v
         return item
       })
@@ -248,7 +207,7 @@ async function getLogList(gridList) {
     .sort((a, b) => b.id - a.id)
 }
 
-const statLogList = ref([])
+const statLogList = ref<T_StatLogListItem[]>([])
 watch(
   () => props.gridsList,
   async function (newVal) {
@@ -261,7 +220,8 @@ const state = reactive({
   uploadVisible: false,
   releaseVisible: false
 })
-const releaseList = ref([])
+
+const releaseList = ref<T_RelaseItem[]>([])
 async function releaseServer() {
   const data = await api.getUploadList({
     id: props.servantId
@@ -271,21 +231,15 @@ async function releaseServer() {
 }
 async function handleRelease(id: number) {
   const releaseItem = releaseList.value.find((v) => v.id == id)
-  const servantBaseInfo = props.gridsList[0]
-  console.log('selectionGrid', selectionGrid)
-
+  console.log('selectionGrid', selectionGrid.value)
   const body = {
-    serverName: props.serverName,
-    filePath: releaseItem.filePath,
-    serverLanguage: servantBaseInfo.gridServant.language,
-    serverProtocol: servantBaseInfo.gridServant.protocol,
-    execPath: servantBaseInfo.gridServant.execPath,
+    filePath: releaseItem?.filePath,
     servantGrids: selectionGrid.value.map((v) => ({
       ip: v.gridNode.ip,
       port: v.port,
       gridId: v.id
     })),
-    servantId: Number(props.servantId)
+    ...svrInfo.value
   }
 
   console.log('body', body)
@@ -299,19 +253,14 @@ async function handleRelease(id: number) {
 }
 
 async function restartServer() {
-  const servantBaseInfo = props.gridsList[0]
   const body = {
-    serverName: props.serverName,
     filePath: '',
-    serverLanguage: servantBaseInfo.gridServant.language,
-    serverProtocol: servantBaseInfo.gridServant.protocol,
-    execPath: servantBaseInfo.gridServant.execPath,
     servantGrids: selectionGrid.value.map((v) => ({
       ip: v.gridNode.ip,
       port: v.port,
       gridId: v.id
     })),
-    servantId: Number(props.servantId)
+    ...svrInfo.value,
   }
   const data = await api.restartServer(body)
   if (data.code) {
@@ -319,9 +268,8 @@ async function restartServer() {
   }
   ElNotification.success('success!')
 }
-
-const selectionGrid = ref([])
-function handleSelectionChange(value) {
+const selectionGrid = ref<T_Grid[]>([])
+function handleSelectionChange(value: T_Grid[]) {
   selectionGrid.value = value
 }
 
@@ -343,14 +291,14 @@ async function batchShutdown() {
       }))
   }
 
-  const data = await api.shutdownServer(body)
+  const data = await api.shutdownServer(body) 
   if (data.code) {
     ElNotification.error(data.message)
   }
   ElNotification.success('关闭成功')
 }
 
-async function shutDown(v) {
+async function shutDown(v: T_Grid) {
   const body = {
     req: [
       {
@@ -369,7 +317,7 @@ async function shutDown(v) {
 }
 
 const router = useRouter()
-function toLog(row) {
+function toLog(row: T_Grid) {
   const text = router.resolve({
     path: '/logpage',
     query: {
@@ -385,7 +333,7 @@ function toPreview(path: string) {
   window.open(path, '_blank')
 }
 
-function checkStat(list) {
+function checkStat(list: T_Grid[]) {
   const body = list.map((v) => {
     return {
       pid: v.pid,
@@ -398,7 +346,7 @@ function checkStat(list) {
   })
 }
 
-async function deleteGridById(row) {
+async function deleteGridById(row: T_Grid) {
   ElMessageBox.prompt('确认删除该节点？删除后不可恢复!', 'Confirm', {
     confirmButtonText: 'OK',
     cancelButtonText: 'Cancel',
@@ -429,7 +377,7 @@ async function showConfiguration() {
 }
 
 const cmdVisible = ref(false)
-const selectedGrid = ref([])
+const selectedGrid = ref<T_Grid[]>([])
 
 function openInvokeCmdDialog() {
   cmdVisible.value = true

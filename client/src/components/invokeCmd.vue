@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '@/api/server'
 import { v4 as uuidv4 } from 'uuid'
+import type { T_Grid } from '@/dto/dto';
 
 // 定义类型
 interface GridNode {
@@ -13,10 +14,7 @@ interface GridNode {
 interface InvokeProps {
   cmdVisible: boolean
   serverName: string
-  selectionGrid: Array<{
-    id: string
-    gridNode: GridNode
-  }>
+  selectionGrid: T_Grid[]
 }
 const props = defineProps<InvokeProps>()
 const command = ref('')

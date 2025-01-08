@@ -35,15 +35,15 @@ import gridsComponent from "@/components/grids.vue";
 import controller from "@/components/controller.vue";
 import { onMounted, reactive, ref, watch } from "vue";
 import api from "../api/server";
-import type { Item } from "@/dto/dto";
+import type { Item, T_Grid, T_ServerList } from "@/dto/dto";
 import { useUserStore } from "@/stores/counter";
 import _ from "lodash";
 
 const userStore = useUserStore();
 const state = reactive({
   serverName: "",
-  serverList: [],
-  gridsList: [],
+  serverList: <T_ServerList[]>[],
+  gridsList: <T_Grid[]>[],
   servantId: -1,
   servantLanguage: "",
   serverVersion: 0,

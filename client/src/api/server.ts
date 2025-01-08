@@ -1,4 +1,4 @@
-import type { BasicResp } from '@/dto/dto'
+import type { BasicResp, T_Grid, T_ServerList, T_StatusLogList } from '@/dto/dto'
 import HttpReq from '@/utils/request'
 
 const api = {
@@ -9,7 +9,7 @@ const api = {
       timeout: 10 * 60 * 1000
     }) as unknown as BasicResp<any>
   },
-  releaseServer: function (data: any, params: { releaseId: string }) {
+  releaseServer: function (data: any, params: { releaseId: string | number }) {
     return HttpReq({
       url: '/release/server',
       data,
@@ -29,7 +29,7 @@ const api = {
       data: {
         id
       }
-    }) as unknown as BasicResp<any>
+    }) as unknown as BasicResp<T_ServerList[]>
   },
   getUploadList: function (params: any) {
     return HttpReq({
@@ -43,20 +43,20 @@ const api = {
       url: '/main/queryGrid',
       params,
       method: 'get'
-    })
+    }) as unknown as BasicResp<T_Grid[]>
   },
   shutdownServer: function (data: any) {
     return HttpReq({
       url: '/release/shutdown',
       data
-    })
+    }) as unknown as BasicResp<any>
   },
   getStatLogList: function (params: any) {
     return HttpReq({
       url: '/statlog/getlist',
       method: 'get',
       params
-    }) as unknown as BasicResp<any>
+    }) as unknown as BasicResp<T_StatusLogList>
   },
   getLogFileList: function (params: any) {
     return HttpReq({

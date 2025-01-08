@@ -78,7 +78,7 @@ import { defineEmits, ref, useAttrs, watch } from "vue";
 import _ from "lodash";
 
 const attrs = useAttrs();
-const selectValue = ref();
+const selectValue = ref<number>();
 const selectContent = ref("");
 const selectVersion = ref("");
 watch(selectValue, function (newVal) {
