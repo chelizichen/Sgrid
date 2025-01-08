@@ -106,7 +106,7 @@ export default {
         </el-icon>
       </el-button>
     </el-divider>
-    <el-table :data="statLogList" style="width: 100%; margin-top: 20px" border height="450">
+    <el-table :data="statLogList" style="width: 100%; margin-top: 20px" border height="450" stripe>
       <el-table-column prop="id" label="id" width="180" />
       <el-table-column label="name" width="180">
         <template #default>
@@ -150,7 +150,7 @@ export default {
   </div>
 </template>
 <script lang="ts" setup>
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import uploadComponent from './upload.vue'
 import releaseComponent from './release.vue'
 import servantConf from './servantConf.vue'
@@ -205,16 +205,15 @@ async function getLogList(gridList: T_Grid[]) {
       return v
     })
     .sort((a, b) => b.id - a.id)
+  console.log('statLogList', statLogList.value);
 }
 
 const statLogList = ref<T_StatLogListItem[]>([])
-watch(
-  () => props.gridsList,
-  async function (newVal) {
-    await checkStat(newVal)
-    await getLogList(newVal)
-  }
-)
+
+onMounted(async () => {
+  await checkStat(props.gridsList)
+  await getLogList(props.gridsList)
+})
 
 const state = reactive({
   uploadVisible: false,

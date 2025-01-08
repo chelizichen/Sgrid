@@ -33,11 +33,11 @@ export default {
 import asideComponent from "@/components/aside.vue";
 import gridsComponent from "@/components/grids.vue";
 import controller from "@/components/controller.vue";
-import { onMounted, reactive, ref, watch } from "vue";
+import { nextTick, onMounted, reactive, ref, watch } from "vue";
 import api from "../api/server";
 import type { Item, T_Grid, T_ServerList } from "@/dto/dto";
 import { useUserStore } from "@/stores/counter";
-import _ from "lodash";
+import _, { defer } from "lodash";
 
 const userStore = useUserStore();
 const state = reactive({
@@ -52,8 +52,11 @@ const state = reactive({
 const currentItem = ref();
 
 async function handleOpen(item: Partial<Item>) {
+  console.log('isHandlingOpen', state.isHandlingOpen);
   if (state.isHandlingOpen) return; // 如果正在处理中，直接返回
   state.isHandlingOpen = true; // 设置为正在处理
+
+
   console.log('debug.handleOpen', item);
   currentItem.value = item;
   state.servantId = item.id!;
@@ -70,9 +73,11 @@ async function handleOpen(item: Partial<Item>) {
   state.serverName = item.serverName!;
   state.servantLanguage = item.language!;
   editableTabsValue.value = item.serverName!
+  nextTick(() => {
+    state.isHandlingOpen = false; // 处理完成后设置为 false
+  })
   if (editableTabs.value.find(tab => tab.serverName === item.serverName)) return
   editableTabs.value.push(item)
-  state.isHandlingOpen = false; // 处理完成后重置标志
 }
 
 async function fetchServerList() {
