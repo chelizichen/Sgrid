@@ -80,26 +80,22 @@ message GetLogFileByHostReq{
     int64 gridId = 3;
 }
 
-message GetLogFileByHostVo{
-    string dateTime = 1;
-    string logType = 2;
-}
+
 
 message GetLogFileByHostResp{
-    repeated GetLogFileByHostVo data = 1;
+    repeated string data = 1;
     int64 code = 2;
     string message = 3;
 }
 
 message GetLogByFileReq{
-    string logType = 1;
-    string pattern = 2;
+    uint32 logType = 1;
+    string keyword = 2;
     string host = 3;
     string serverName = 4;
-    int32 offset = 5;
-    int32 size = 6;
-    int32 gridId = 7;
-    string dateTime = 8;
+    uint32 gridId = 5;
+    string logFileName = 6;
+    uint32 len = 7;
 }
 
 message GetLogByFileResp{

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"Sgrid/server/SgridLogTraceServer"
 	"Sgrid/server/SgridPackageServer"
 	h "Sgrid/src/http"
 	"Sgrid/src/public"
@@ -41,7 +40,6 @@ func main() {
 		h.WithCors(),
 	)
 	ctx.RegistryHttpRouter(service.InitService)
-	ctx.RegistrySubServer(SgridLogTraceServer.SgridLogTraceInstance)
 	ctx.RegistrySubServer(SgridPackageServer.SgridPackageInstance)
 	h.NewSgridServer(ctx, func(port string) {
 		ctx.Engine.Run(port)

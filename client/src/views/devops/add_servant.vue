@@ -51,12 +51,12 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref } from "vue";
 import api from "@/api/server";
 import { ElMessageBox, ElNotification } from "element-plus";
 import { useUserStore } from "@/stores/counter";
 
-const languages = ["node", "java", "java(jar)", "go", "exe", "custom command"];
+const languages = ["node", "java", "java(jar)", "go", "exe", "custom command", "python(tar)", "python(exe)"];
 const protocols = ["http", "grpc"];
 const selectOpt = () => {
   return `Group:ID :  ${groupId.value}

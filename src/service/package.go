@@ -328,7 +328,7 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 			}(client)
 		}
 		wg.Wait()
-		c.AbortWithStatusJSON(http.StatusOK, handlers.Resp(int(resp.Code), resp.Message, resp.Data))
+		handlers.AbortWithSucc(c, resp.Data)
 	})
 
 	router.POST("/statlog/getLog", func(c *gin.Context) {
@@ -350,12 +350,11 @@ func PackageService(ctx *handlers.SgridServerCtx) {
 					r, err := clt.GetLogByFile(&gin.Context{}, &protocol.GetLogByFileReq{
 						Host:       u.Host,
 						ServerName: req.ServerName,
-						Pattern:    req.Pattern,
-						Offset:     req.Offset,
-						Size:       req.Size,
+						Keyword:    req.Keyword,
 						GridId:     req.GridId,
 						LogType:    req.LogType,
-						DateTime:   req.DateTime,
+						LogFileName: req.LogFileName,
+						Len:        req.Len,
 					})
 					if err != nil {
 						fmt.Println("error", err.Error())

@@ -21,6 +21,7 @@ const (
 	SGRID_CONFIG           = "SGRID_CONFIG"
 	DEV_CONF_NAME          = "sgrid.yml"
 	PROD_CONF_NAME         = "sgridProd.yml"
+	ENV_LOG_DIR            = "SGRID_LOG_DIR"
 )
 
 const (
@@ -30,6 +31,8 @@ const (
 	RELEASE_EXE            = "exe"
 	RELEASE_JAVA_JAR       = "java(jar)"
 	RELEASE_CUSTOM_COMMAND = "custom command"
+	RELEASE_PYTHON_TAR     = "python(tar)"
+	RELEASE_PYTHON_EXE     = "python(exe)"
 )
 
 const (

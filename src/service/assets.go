@@ -11,10 +11,7 @@
 package service
 
 import (
-	protocol "Sgrid/server/SgridPackageServer/proto"
 	handlers "Sgrid/src/http"
-	"Sgrid/src/pool"
-	"Sgrid/src/rpc"
 	"Sgrid/src/storage"
 	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
@@ -24,7 +21,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/robfig/cron"
 )
 
 const (
@@ -95,81 +91,81 @@ func getAssert(c *gin.Context) {
 }
 
 func cronJob(ctx *handlers.SgridServerCtx) {
-	rds := pool.GRDB
-	rds_ctx := pool.RDBContext
-	packageServant := ctx.Context.Value(
-		PackageServantProxy{},
-	).(*rpc.SgridGrpcClient[protocol.FileTransferServiceClient])
-	var Job = func() {
-		t := time.Now()
-		fmt.Println("AssetsService.Job 开始加锁", t.Format(time.DateTime))
-		s := rds.Get(rds_ctx, CronAssetsAdminKey).Val()
-		if s == CronAssetsSetValue {
-			Info := fmt.Sprintf("加锁失败%v", CronAssetsAdminKey)
-			fmt.Println(Info)
-			storage.PushErr(&pojo.SystemErr{
-				Type: "system/error/AssetsService/c.AddJob",
-				Info: Info,
-			})
-			return
-		}
-		rds.SetNX(rds_ctx, CronAssetsAdminKey, CronAssetsSetValue, CronExpireTime)
-		if false != true {
-			sq := storage.QueryNeedShutDownAssets()
-			var ids []int
-			for _, aa := range sq {
-				ids = append(ids, aa.GridId)
-			}
-			fmt.Println("storage.QueryNeedShutDownAssets.ids", ids)
-			if len(ids) != 0 {
-				grids := storage.BatchQueryGridByStat(ids, 1)
-				Req := []*protocol.ShutdownGridInfo{}
-				for _, v := range grids {
-					Req = append(Req, &protocol.ShutdownGridInfo{
-						GridId: int32(v.GridId),
-						Pid:    int32(v.Pid),
-						Port:   int32(v.Port),
-						Host:   v.Host,
-					})
-				}
-				for _, client := range packageServant.GetClients() {
-					client.ShutdownGrid(ctx.Context, &protocol.ShutdownGridReq{
-						Req: Req,
-					})
-				}
-			}
-		}
-		if true != false {
-			np := storage.QueryNeedPullAssets()
-			var ids []int
-			for _, aa := range np {
-				ids = append(ids, aa.GridId)
-			}
-			fmt.Println("storage.QueryNeedPullAssets.ids", ids)
-			if len(ids) != 0 {
-				grids := storage.BatchQueryGridByStat(ids, 0)
-				Req := []*protocol.PatchServerDto{}
-				for _, v := range grids {
-					Req = append(Req, &protocol.PatchServerDto{
-						ServerName:     v.ServerName,
-						GridId:         int32(v.GridId),
-						ServantId:      int32(v.ServantId),
-						ExecPath:       v.ExecPath,
-						Host:           v.Host,
-						Port:           int32(v.Port),
-						ServerLanguage: v.ServerLanguage,
-						ServerProtocol: v.ServerProtocol,
-					})
-				}
-				for _, client := range packageServant.GetClients() {
-					client.PatchServer(ctx.Context, &protocol.PatchServerReq{
-						Req: Req,
-					})
-				}
-			}
-		}
-	}
-	c := cron.New()
-	c.AddFunc(CronSepcTime, Job)
-	go c.Start()
+	// rds := pool.GRDB
+	// rds_ctx := pool.RDBContext
+	// packageServant := ctx.Context.Value(
+	// 	PackageServantProxy{},
+	// ).(*rpc.SgridGrpcClient[protocol.FileTransferServiceClient])
+	// var Job = func() {
+	// 	t := time.Now()
+	// 	fmt.Println("AssetsService.Job 开始加锁", t.Format(time.DateTime))
+	// 	s := rds.Get(rds_ctx, CronAssetsAdminKey).Val()
+	// 	if s == CronAssetsSetValue {
+	// 		Info := fmt.Sprintf("加锁失败%v", CronAssetsAdminKey)
+	// 		fmt.Println(Info)
+	// 		storage.PushErr(&pojo.SystemErr{
+	// 			Type: "system/error/AssetsService/c.AddJob",
+	// 			Info: Info,
+	// 		})
+	// 		return
+	// 	}
+	// 	rds.SetNX(rds_ctx, CronAssetsAdminKey, CronAssetsSetValue, CronExpireTime)
+	// 	if false != true {
+	// 		sq := storage.QueryNeedShutDownAssets()
+	// 		var ids []int
+	// 		for _, aa := range sq {
+	// 			ids = append(ids, aa.GridId)
+	// 		}
+	// 		fmt.Println("storage.QueryNeedShutDownAssets.ids", ids)
+	// 		if len(ids) != 0 {
+	// 			grids := storage.BatchQueryGridByStat(ids, 1)
+	// 			Req := []*protocol.ShutdownGridInfo{}
+	// 			for _, v := range grids {
+	// 				Req = append(Req, &protocol.ShutdownGridInfo{
+	// 					GridId: int32(v.GridId),
+	// 					Pid:    int32(v.Pid),
+	// 					Port:   int32(v.Port),
+	// 					Host:   v.Host,
+	// 				})
+	// 			}
+	// 			for _, client := range packageServant.GetClients() {
+	// 				client.ShutdownGrid(ctx.Context, &protocol.ShutdownGridReq{
+	// 					Req: Req,
+	// 				})
+	// 			}
+	// 		}
+	// 	}
+	// 	if true != false {
+	// 		np := storage.QueryNeedPullAssets()
+	// 		var ids []int
+	// 		for _, aa := range np {
+	// 			ids = append(ids, aa.GridId)
+	// 		}
+	// 		fmt.Println("storage.QueryNeedPullAssets.ids", ids)
+	// 		if len(ids) != 0 {
+	// 			grids := storage.BatchQueryGridByStat(ids, 0)
+	// 			Req := []*protocol.PatchServerDto{}
+	// 			for _, v := range grids {
+	// 				Req = append(Req, &protocol.PatchServerDto{
+	// 					ServerName:     v.ServerName,
+	// 					GridId:         int32(v.GridId),
+	// 					ServantId:      int32(v.ServantId),
+	// 					ExecPath:       v.ExecPath,
+	// 					Host:           v.Host,
+	// 					Port:           int32(v.Port),
+	// 					ServerLanguage: v.ServerLanguage,
+	// 					ServerProtocol: v.ServerProtocol,
+	// 				})
+	// 			}
+	// 			for _, client := range packageServant.GetClients() {
+	// 				client.PatchServer(ctx.Context, &protocol.PatchServerReq{
+	// 					Req: Req,
+	// 				})
+	// 			}
+	// 		}
+	// 	}
+	// }
+	// c := cron.New()
+	// c.AddFunc(CronSepcTime, Job)
+	// go c.Start()
 }

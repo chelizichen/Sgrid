@@ -34,7 +34,7 @@
             </el-table-column>
             <el-table-column label="operate">
                 <template #default="scope">
-                    <span class="text-indigo-700  text-sm" @click="handleRowClick(scope.row)">跳转到该服务</span>
+                    <span class="text-indigo-700 text-sm cursor-pointer" @click="handleRowClick(scope.row)">Link</span>
                 </template>
             </el-table-column>
         </el-table>

@@ -1,26 +1,25 @@
 package SgridPackageServer
 
 import (
-	logProto "Sgrid/server/SgridLogTraceServer/proto"
 	protocol "Sgrid/server/SgridPackageServer/proto"
 	"Sgrid/src/config"
 	"Sgrid/src/pool"
 	"Sgrid/src/public"
-	"Sgrid/src/rpc"
 	"Sgrid/src/storage"
-	"Sgrid/src/storage/dto"
 	"Sgrid/src/storage/pojo"
 	"context"
 	"errors"
 	"fmt"
 	"io"
 	"net"
+	"net/url"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	pk "Sgrid/src/public/process"
@@ -32,7 +31,6 @@ import (
 	p "github.com/shirou/gopsutil/process"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -63,6 +61,7 @@ type SgridMonitor struct {
 	cronInstance *cron.Cron
 	port         int
 	stdin        io.WriteCloser // 添加stdin字段
+	language 	 string
 }
 
 func NewSgridMonitor(cmd *exec.Cmd, serverName string, id int, port int, t time.Duration) *SgridMonitor {
@@ -87,205 +86,6 @@ func NewSgridMonitor(cmd *exec.Cmd, serverName string, id int, port int, t time.
 func (s *SgridMonitor) Start() error{
 	return s.cmd.Start()
 }
-func (s *SgridMonitor) Report() {
-	s.cronInstance = cron.New()
-	isNeedCheckPortToPid := true
-	var job = func() {
-		select {
-		case <-s.ctx.Done():
-			fmt.Printf("%s [%d] recieved done singal by ctx, return Report \n", s.serverName, s.gridId)
-			return
-		default:
-			AntsPool.Submit(func() {
-				if isNeedCheckPortToPid {
-					err := pk.SgridProcessUtil.ValidatePortToPid(s.port, s.getPid())
-					if err != nil {
-						storage.PushErr(&pojo.SystemErr{
-							Type: "system/error/SgridPackageServer/pk.SgridProcessUtil.ValidatePortToPid",
-							Info: err.Error(),
-						})
-						s.kill()
-						return
-					}
-					isNeedCheckPortToPid = false
-				}
-				id := s.getPid()
-				statInfo := getStat(id)
-				if statInfo == nil {
-					return
-				}
-				status, _ := statInfo.Status()
-				var gridStat int = 0
-				if status == "Z" { // state is down , need kill
-					s.kill()
-					gridStat = 0
-				} else {
-					gridStat = 1
-				}
-				cpu, _ := statInfo.CPUPercent()
-				threads, _ := statInfo.NumThreads()
-				name, _ := statInfo.Name()
-				isRuning, _ := statInfo.IsRunning()
-				running := "not run"
-				if isRuning {
-					running = "running"
-				}
-				mis, _ := statInfo.MemoryInfo()
-				stack := mis.Stack
-				MemoryData := mis.Data
-				now := time.Now()
-				content := fmt.Sprintf("pid:%v | cpu:%v | thread:%v | status:%v \n", s.getPid(), cpu, threads, status)
-				storage.UpdateGrid(&pojo.Grid{
-					Id:         s.gridId,
-					Status:     gridStat,
-					Pid:        s.getPid(),
-					UpdateTime: &now,
-				})
-				storage.SaveStatLog(&pojo.StatLog{
-					GridId:      s.gridId,
-					Stat:        BEHAVIOR_ALIVE,
-					Pid:         s.getPid(),
-					CPU:         cpu,
-					Threads:     threads,
-					Name:        name,
-					IsRunning:   running,
-					MemoryStack: stack,
-					MemoryData:  MemoryData,
-				})
-				var logReq = &logProto.LogTraceReq{
-					LogServerName: s.serverName,
-					LogHost:       globalConf.Server.Host,
-					LogGridId:     int64(s.gridId),
-					LogType:       public.LOG_TYPE_STAT,
-					LogContent:    content,
-					LogBytesLen:   int64(len(content)),
-					CreateTime:    public.GetCurrTime(),
-				}
-				var rpl logProto.BasicResp
-				NewSgridLogTraceServant.Request(rpc.RequestPack{
-					Method: "LogTrace",
-					Body:   logReq,
-					Reply:  &rpl,
-				})
-			})
-		}
-	}
-	s.cronInstance.AddFunc("@every 30s", job)
-	s.cronInstance.Start()
-}
-
-func stdoutLog(s *SgridMonitor) {
-	op, err := s.cmd.StdoutPipe()
-	if err != nil {
-		storage.PushErr(&pojo.SystemErr{
-			Type: "system/error/SgridPackageServer/s.cmd.StdoutPipe()",
-			Info: err.Error(),
-		})
-	}
-	go func() {
-		fmt.Printf("Log.stdoutLog.op %+v", op)
-		for {
-			select {
-			case <-s.ctx.Done():
-				fmt.Printf("%s [%d] recieved done singal by ctx, return PrintLogger.Output \n", s.serverName, s.gridId)
-				return
-			default:
-				buf := make([]byte, 1024)
-				n, err := op.Read(buf)
-				if err != nil && !errors.Is(err, io.EOF) {
-					fmt.Println("system/error/SgridPackageServer/op.Read.error", err.Error())
-					storage.PushErr(&pojo.SystemErr{
-						Type: "system/error/SgridPackageServer/op.Read(buf)",
-						Info: err.Error(),
-					})
-					break
-				} else if errors.Is(err, io.EOF) {
-					break
-				} else {
-					// 打印输出
-					content := string(buf[:n])
-					var logReq = &logProto.LogTraceReq{
-						LogServerName: s.serverName,
-						LogHost:       globalConf.Server.Host,
-						LogGridId:     int64(s.gridId),
-						LogType:       public.LOG_TYPE_DATA,
-						LogContent:    content,
-						LogBytesLen:   int64(n),
-						CreateTime:    public.GetCurrTime(),
-					}
-					fmt.Println("SgridPackageServer.read.data.content,", content)
-					var rpl logProto.BasicResp
-					NewSgridLogTraceServant.Request(rpc.RequestPack{
-						Method: "LogTrace",
-						Body:   logReq,
-						Reply:  &rpl,
-					})
-				}
-			}
-		}
-	}()
-
-}
-
-func stderrLog(s *SgridMonitor) {
-	ep, err := s.cmd.StderrPipe()
-	if err != nil {
-		storage.PushErr(&pojo.SystemErr{
-			Type: "system/error/SgridPackageServer/s.cmd.StderrPipe()",
-			Info: err.Error(),
-		})
-	}
-
-	go func() {
-		fmt.Printf("Log.stdoutLog.op %+v", ep)
-		for {
-			select {
-			case <-s.ctx.Done():
-				fmt.Printf("%s [%d] recieved done singal by ctx, return PrintLogger.ErrorPut \n", s.serverName, s.gridId)
-				return
-			default:
-				buf := make([]byte, 1024)
-				now := public.GetCurrTime()
-				n, err := ep.Read(buf)
-				if err != nil && !errors.Is(err, io.EOF) {
-					fmt.Println("system/error/SgridPackageServer/ep.Read.error", err.Error())
-					storage.PushErr(&pojo.SystemErr{
-						Type: "system/error/SgridPackageServer/ep.Read(buf)",
-						Info: err.Error(),
-					})
-					break
-				} else if errors.Is(err, io.EOF) {
-					break
-				} else {
-					// 打印输出
-					fmt.Printf("stdoerrLog [%d] \n", n)
-					content := string(buf[:n])
-					var logReq = &logProto.LogTraceReq{
-						LogServerName: s.serverName,
-						LogHost:       globalConf.Server.Host,
-						LogGridId:     int64(s.gridId),
-						LogType:       public.LOG_TYPE_ERROR,
-						LogContent:    content,
-						LogBytesLen:   int64(n),
-						CreateTime:    now,
-					}
-					fmt.Println("SgridPackageServer.read.error.content,", content)
-					var rpl logProto.BasicResp
-					NewSgridLogTraceServant.Request(rpc.RequestPack{
-						Method: "LogTrace",
-						Body:   logReq,
-						Reply:  &rpl,
-					})
-				}
-			}
-		}
-	}()
-}
-
-func (s *SgridMonitor) PrintLogger() {
-	stdoutLog(s)
-	stderrLog(s)
-}
 
 func (s *SgridMonitor) kill() {
 	s.cancel()
@@ -296,15 +96,24 @@ func (s *SgridMonitor) kill() {
 		Stat:   BEHAVIOR_KILL,
 		Pid:    s.getPid(),
 	})
-	err := s.cmd.Process.Kill()
+	var err error
+	if(s.language == public.RELEASE_PYTHON_EXE || s.language == public.RELEASE_PYTHON_TAR){
+		err = s.cmd.Process.Signal(syscall.SIGINT)
+	}else{
+		err = s.cmd.Process.Kill()
+	}
 	if err != nil {
 		fmt.Println("system/err/process.kill | ", err.Error())
+		storage.PushErr(&pojo.SystemErr{
+			Type: "system/error/SgridPackageServer/s.cmd.Process.Kill()",
+			Info: err.Error(),
+		})
 	}
 }
 
 func (s *SgridMonitor) getPid() int {
-	if s.cmd != nil && s.cmd.Process != nil {
-		return s.cmd.Process.Pid
+	if process := s.cmd.Process; s.cmd != nil && process != nil {
+		return process.Pid
 	}
 	return 0
 }
@@ -394,35 +203,36 @@ func (s *fileTransferServer) StreamFile(stream protocol.FileTransferService_Stre
 }
 
 func (s *fileTransferServer) ShutdownGrid(ctx context.Context, req *protocol.ShutdownGridReq) (res *protocol.BasicResp, err error) {
-	for _, _grid := range req.GetReq() {
-		grid := _grid
-		h := grid.GetHost()
-		if globalConf.Server.Host != h {
-			continue
-		}
-		i := grid.GetGridId()
-		sm, ok := globalGrids.Load(int(i))
-		if ok && sm != nil {
-			fmt.Printf("Common Down [%d]", i)
-			storage.SaveStatLog(&pojo.StatLog{
-				GridId: int(i),
-				Stat:   BEHAVIOR_DOWN,
-				Pid:    sm.(*SgridMonitor).getPid(),
-			})
-			fmt.Printf("Killd with gridId[%d] \n", i)
-			sm.(*SgridMonitor).kill()
-			globalGrids.Delete(int(i))
-			continue
-		} else {
-			fmt.Printf("Force Down [%d]", i)
-			pk.SgridProcessUtil.QueryProcessPidThenKill(int(grid.GetPort())) // 有可能需要强制down
-			continue
-		}
-	}
-	return &protocol.BasicResp{
-		Code:    0,
-		Message: "ok",
-	}, nil
+    for _, grid := range req.GetReq() {
+        // 检查主机是否匹配
+        if grid.GetHost() != globalConf.Server.Host {
+            continue
+        }
+        
+        gridId := int(grid.GetGridId())
+        
+        // 尝试获取并关闭已存在的进程
+        if sm, ok := globalGrids.Load(gridId); ok && sm != nil {
+            monitor := sm.(*SgridMonitor)
+            fmt.Printf("Common Down [%d]\n", gridId)
+            storage.SaveStatLog(&pojo.StatLog{
+                GridId: gridId,
+                Stat:   BEHAVIOR_DOWN,
+                Pid:    monitor.getPid(),
+            })
+            monitor.kill()
+            globalGrids.Delete(gridId)
+        } else {
+            // 强制终止进程
+            fmt.Printf("Force Down [%d]\n", gridId)
+            pk.SgridProcessUtil.QueryProcessPidThenKill(int(grid.GetPort()))
+        }
+    }
+    
+    return &protocol.BasicResp{
+        Code:    0,
+        Message: "ok",
+    }, nil
 }
 
 // 发布 -> 上报给主控
@@ -451,6 +261,7 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 	execFilePath := req.ExecPath                                            // 执行路径
 	startDir := SgridPackageInstance.JoinPath(Servants, serverName)         // 解压目录
 	packageFile := SgridPackageInstance.JoinPath(App, serverName, filePath) // 路径
+	logDir := SgridPackageInstance.JoinPath(Logger,serverName) // 路径
 	servantId := req.ServantId                                              // 服务ID
 	err = public.CheckDirectoryOrCreate(startDir)                           // 检查并创建目录
 	if err != nil {
@@ -505,6 +316,7 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 			serverName,
 			serverLanguage,
 			startDir,
+			logDir,
 			servantConf,
 			execFilePath,
 			int(grid.Port),
@@ -517,8 +329,8 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 			}, err
 		}
 		monitor := NewSgridMonitor(cmd,serverName,int(id),int(grid.Port),time.Second * 60)
+		monitor.language = serverLanguage
 		globalGrids.LoadOrStore(int(id), monitor)
-		monitor.PrintLogger()
 		err = monitor.Start()
 		fmt.Println("*************服务启动**************")
 		if err != nil {
@@ -535,7 +347,6 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 		})
 
 		fmt.Println("*************开始日志上报**************")
-		go monitor.Report()
 	}
 
 	//  ********************** debug *********************
@@ -610,6 +421,7 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 			serverName := req.ServerName                                    // 服务名称
 			serverProtocol := req.ServerProtocol                            // 服务协议
 			startDir := SgridPackageInstance.JoinPath(Servants, serverName) // 工作目录
+			logDir := SgridPackageInstance.JoinPath(Logger,serverName) // 路径
 			isDir := public.IsDir(startDir)
 			if !isDir {
 				storage.PushErr(&pojo.SystemErr{
@@ -638,6 +450,7 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 				serverName,
 				serverLanguage,
 				startDir,
+				logDir,
 				servantConf,
 				execFilePath,
 				int(req.Port),
@@ -651,7 +464,6 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 			}
 			monitor := NewSgridMonitor(cmd,serverName,int(id),int(req.Port),time.Second * 60)
 			globalGrids.LoadOrStore(int(id), monitor)
-			monitor.PrintLogger()
 			err = monitor.Start()
 			fmt.Println("*************服务启动**************")
 			if err != nil {
@@ -666,7 +478,6 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 				// Pid:    monitor.getPid(),
 			})
 			fmt.Println("*************开始日志上报**************")
-			go monitor.Report()
 		}
 	}
 
@@ -677,43 +488,47 @@ func (s *fileTransferServer) PatchServer(ctx context.Context, in *protocol.Patch
 }
 
 func (s *fileTransferServer) GetLogFileByHost(ctx context.Context, in *protocol.GetLogFileByHostReq) (*protocol.GetLogFileByHostResp, error) {
-	files := storage.GetTraceLogFiles(int(in.GridId), in.ServerName)
-	var respList []*protocol.GetLogFileByHostVo
-	for _, v := range files {
-		t, _ := time.Parse(Layout, v.LogTime)
-		respList = append(respList, &protocol.GetLogFileByHostVo{
-			LogType:  v.LogType,
-			DateTime: t.Format(time.DateOnly),
-		})
+	logDir := SgridPackageInstance.JoinPath(Logger, in.ServerName)
+	local_host := fmt.Sprintf("%v://%v", "grpc", in.Host)
+	p,err := url.Parse(local_host)
+	if err != nil{
+		return nil,err
 	}
+	fmt.Println("p.Hostname()", p.Hostname())
+	fmt.Println("globalConf.Server.Host", globalConf.Server.Host)
+	if p.Hostname()!= globalConf.Server.Host {
+		return nil, nil
+	}
+	logList,err := GetLogFileList(logDir)
 	return &protocol.GetLogFileByHostResp{
-		Data:    respList,
+		Data:    logList,
 		Code:    0,
 		Message: "ok",
-	}, nil
+	}, err
 }
 
 func (s *fileTransferServer) GetLogByFile(ctx context.Context, in *protocol.GetLogByFileReq) (*protocol.GetLogByFileResp, error) {
-	var req = &dto.TraceLogDto{
-		Keyword:    in.Pattern,
-		Size:       int(in.Size),
-		SearchTime: in.DateTime,
-		Offset:     int(in.Offset),
-		TraceLog: pojo.TraceLog{
-			LogHost:       in.Host,
-			LogServerName: in.ServerName,
-			LogGridId:     int64(in.GridId),
-			LogType:       in.LogType,
-		},
+	logTargetPath := SgridPackageInstance.JoinPath(Logger, in.ServerName, in.LogFileName)
+	fmt.Println("logTargetPath", logTargetPath)
+	local_host := fmt.Sprintf("%v://%v", "grpc", in.Host)
+	p,err := url.Parse(local_host)
+	if err != nil{
+		return nil,err
 	}
-	Data, total, err := storage.GetTraceLog(req)
-	if err != nil {
-		return nil, err
+	fmt.Println("p.Hostname()", p.Hostname())
+	fmt.Println("globalConf.Server.Host", globalConf.Server.Host)
+	if p.Hostname()!= globalConf.Server.Host {
+		return nil, nil
 	}
+	if in.LogType == 0{
+		in.LogType = 2
+	}
+	fmt.Println("len",in.Len)
+	logContent ,err := SearchLog(logTargetPath,in.GetLogType(),in.GetKeyword(),in.GetLen())
 	return &protocol.GetLogByFileResp{
-		Data:  Data,
-		Total: total,
-	}, nil
+		Data:  logContent,
+		Total: int64(len(logContent)),
+	}, err
 }
 
 func (s *fileTransferServer) GetPidInfo(ctx context.Context, in *protocol.GetPidInfoReq) (resp *protocol.GetPidInfoResp, err error) {
@@ -900,35 +715,13 @@ func initDir() {
 	public.CheckDirectoryOrCreate(SgridPackageInstance.JoinPath(Servants))
 }
 
-var NewSgridLogTraceServant *rpc.SgridGrpcClient[logProto.SgridLogTraceServiceClient]
 
-func initClient() {
-	gn := storage.QueryPropertiesByKey(SgridLogTraceServerHosts)
-	addresses := []string{}
-	for _, v := range gn {
-		addresses = append(addresses, v.Value)
-	}
-	fmt.Println("SgridPackageServer.initClient.address", addresses)
-	packageServant, err := rpc.NewSgridGrpcClient[logProto.SgridLogTraceServiceClient](
-		addresses,
-		rpc.WithDiaoptions[logProto.SgridLogTraceServiceClient](
-			grpc.WithTransportCredentials(insecure.NewCredentials()),
-		),
-		rpc.WithClientService[logProto.SgridLogTraceServiceClient](logProto.NewSgridLogTraceServiceClient),
-		rpc.WithRequestPrefix[logProto.SgridLogTraceServiceClient]("/SgridLogTrace.SgridLogTraceService/"),
-	)
-	if err != nil {
-		fmt.Println("Error To NewSgridGrpcClient ", err.Error())
-	}
-	NewSgridLogTraceServant = packageServant
-}
 
 type SgridPackage struct{}
 
 func (s *SgridPackage) Registry(sc *config.SgridConf) {
 	globalConf = sc
 	initDir()
-	initClient()
 	AntsPool, _ = ants.NewPool(100, ants.WithPanicHandler(func(i interface{}) {
 		info := fmt.Sprintf("failed to listen: %v", i)
 		storage.PushErr(&pojo.SystemErr{
