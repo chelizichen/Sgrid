@@ -304,13 +304,12 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 			continue
 		}
 		item, ok := globalGrids.Load(int(id))
+        fmt.Printf("globalGrids item: %v, ok: %v\n", item, ok)
 		if ok && item != nil { // 终止
 			item.(*SgridMonitor).kill()
 			globalGrids.Delete(int(id))
 		}
-		if err != nil {
-			fmt.Println("error", err.Error())
-		}
+        fmt.Printf("invoke >> CreateCommand")
 		cmd,err := CreateCommand(
 			serverProtocol,
 			serverName,

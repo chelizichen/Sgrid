@@ -21,9 +21,11 @@ func CreateCommand(
 	port int,
 	processIndex int,
 ) (*exec.Cmd, error) {
+	// print params
+	fmt.Printf("CreateCommand| protocol:%s, name:%s, language:%s, startDir:%s, logDir:%s, conf:%s, execPath:%s, port:%d, index:%d\n",
+	serverProtocol, serverName, serverLanguage, startDir, logDir, servantConf, execFilePath, port, processIndex)
 	var cmd *exec.Cmd
 	var startFile string // 启动文件
-
 	if serverLanguage == public.RELEASE_NODE {
 		startFile = SgridPackageInstance.JoinPath(Servants, serverName, execFilePath) // 启动文件
 		cmd = exec.Command("node", startFile)
@@ -53,6 +55,7 @@ func CreateCommand(
 		fmt.Println("parseExecArgs", parseExecArgs)
 		cmd = exec.Command(parseExecArgs[0], parseExecArgs[1:]...)
 	}
+	
 	env := append(
 		os.Environ(),
 		fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, port),              // 指定端口
