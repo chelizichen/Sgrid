@@ -335,7 +335,6 @@ function toPreview(path: string) {
 function checkStat(list: T_Grid[]) {
   const body = list.map((v) => {
     return {
-      pid: v.pid,
       host: v.gridNode.ip,
       gridId: v.id
     }

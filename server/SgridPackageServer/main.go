@@ -74,6 +74,7 @@ func NewSgridMonitor(cmd *exec.Cmd, serverName string, id int, port int, t time.
 		serverName: serverName,
 		gridId: id,
 		port: port,
+		cronInstance: cron.New(), // 初始化 
 	}
 	stdin, err := monitor.cmd.StdinPipe()
 	if err != nil {
@@ -89,7 +90,9 @@ func (s *SgridMonitor) Start() error{
 
 func (s *SgridMonitor) kill() {
 	s.cancel()
-	s.cronInstance.Stop()
+    if s.cronInstance != nil {
+        s.cronInstance.Stop()
+    }
 	fmt.Println("system/log/server.kill |", s.serverName)
 	storage.SaveStatLog(&pojo.StatLog{
 		GridId: s.gridId,
@@ -537,13 +540,11 @@ func (s *fileTransferServer) GetPidInfo(ctx context.Context, in *protocol.GetPid
 	ret := &protocol.GetPidInfoResp{
 		Data: []*protocol.HostPidInfo{},
 	}
-	fmt.Println("in", in)
 	for _, v := range in.HostPids {
 		if v.Host != globalConf.Server.Host {
 			continue
 		}
-		statInfo := getStat(int(v.Pid))
-		_, ok := globalGrids.Load(int(v.GridId))
+		item, ok := globalGrids.Load(int(v.GridId))
 		if !ok {
 			now := time.Now()
 			storage.UpdateGrid(&pojo.Grid{
@@ -565,20 +566,21 @@ func (s *fileTransferServer) GetPidInfo(ctx context.Context, in *protocol.GetPid
 			})
 			continue
 		}
-		fmt.Println("int(v.Pid)", int(v.Pid))
+		pid := item.(*SgridMonitor).getPid()
+		statInfo := getStat(item.(*SgridMonitor).getPid())
 		if statInfo == nil {
-			fmt.Println("error process", v.Pid)
+			fmt.Println("error process", pid)
 			now := time.Now()
 			storage.UpdateGrid(&pojo.Grid{
 				Id:         int(v.GridId),
 				Status:     0,
-				Pid:        int(v.Pid),
+				Pid:        pid,
 				UpdateTime: &now,
 			})
 			storage.SaveStatLog(&pojo.StatLog{
 				GridId: int(v.GridId),
 				Stat:   BEHAVIOR_CHECK,
-				Pid:    int(v.Pid),
+				Pid:    pid,
 			})
 			continue
 		}
@@ -589,14 +591,13 @@ func (s *fileTransferServer) GetPidInfo(ctx context.Context, in *protocol.GetPid
 		isRuning, _ := statInfo.IsRunning()
 		mis, _ := statInfo.MemoryInfo()
 		stack := mis.Stack
-		fmt.Println("isRuning", isRuning)
-		running := "not run"
+		running := SERVER_NOT_RUN
 		if isRuning {
-			running = "running"
+			running = SERVER_RUNING
 		}
 		MemoryData := mis.Data
 		ret.Data = append(ret.Data, &protocol.HostPidInfo{
-			Pid:         v.Pid,
+			Pid:         int32(pid),
 			MemoryStack: stack,
 			MemoryData:  MemoryData,
 			Threads:     int64(threads),
@@ -606,7 +607,7 @@ func (s *fileTransferServer) GetPidInfo(ctx context.Context, in *protocol.GetPid
 			Stat:        Stat,
 		})
 		var gridStat int = 0
-		if Stat == "Z" { // down 了 进行物理kill
+		if Stat == PROCESS_DEAD {
 			gridStat = 0
 		} else {
 			gridStat = 1

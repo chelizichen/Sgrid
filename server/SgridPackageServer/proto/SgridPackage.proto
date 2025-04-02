@@ -108,9 +108,8 @@ message GetPidInfoReq{
 }
 
 message HostPids{
-    int32 pid = 1;
-    string host = 2;
-    int64 gridId = 3;
+    string host = 1;
+    int64 gridId = 2;
 }
 
 message HostPidInfo{

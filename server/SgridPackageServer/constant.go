@@ -15,6 +15,12 @@ const (
 	BEHAVIOR_SERVANT_REPORT = "servant-report"
 )
 
+const (
+	SERVER_RUNING = "servant-running"
+	SERVER_NOT_RUN = "servant-not-run"
+	PROCESS_DEAD = "Z"
+)
+
 const CONSTANT_MONITOR_INTERVAL = 30
 const SgridLogTraceServerHosts = "SgridLogTraceServerHosts"
 const Layout = "2006-01-02T15:04:05Z"
