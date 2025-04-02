@@ -24,6 +24,10 @@ func CreateCommand(
 	// print params
 	fmt.Printf("CreateCommand| protocol:%s, name:%s, language:%s, startDir:%s, logDir:%s, conf:%s, execPath:%s, port:%d, index:%d\n",
 	serverProtocol, serverName, serverLanguage, startDir, logDir, servantConf, execFilePath, port, processIndex)
+	err := public.CheckDirectoryOrCreate(logDir)
+	if err != nil{
+		return nil, err
+	}
 	var cmd *exec.Cmd
 	var startFile string // 启动文件
 	if serverLanguage == public.RELEASE_NODE {
