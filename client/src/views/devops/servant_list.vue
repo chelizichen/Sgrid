@@ -150,7 +150,8 @@ import _ from 'lodash'
 import moment from 'moment'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-const languages = ['node', 'java', 'java(jar)', 'go', 'exe', 'custom command']
+import { constants } from '@/constant'
+const languages = constants.LANGUAGES
 const protocols = ['http', 'grpc']
 
 const userStore = useUserStore()

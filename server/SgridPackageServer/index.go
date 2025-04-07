@@ -26,6 +26,8 @@ func CreateCommand(
 	serverProtocol, serverName, serverLanguage, startDir, logDir, servantConf, execFilePath, port, processIndex)
 	err := public.CheckDirectoryOrCreate(logDir)
 	if err != nil{
+		fmt.Println("CreateCommand.CheckDirectoryOrCreate logDir >> ", logDir)
+		fmt.Println("CreateCommand.CheckDirectoryOrCreate err >> ", err)
 		return nil, err
 	}
 	var cmd *exec.Cmd
@@ -59,7 +61,7 @@ func CreateCommand(
 		fmt.Println("parseExecArgs", parseExecArgs)
 		cmd = exec.Command(parseExecArgs[0], parseExecArgs[1:]...)
 	}
-	
+	fmt.Println("CreateCommand.startFile >> ", startFile)
 	env := append(
 		os.Environ(),
 		fmt.Sprintf("%v=%v", public.ENV_TARGET_PORT, port),              // 指定端口
@@ -71,7 +73,6 @@ func CreateCommand(
 	)
 	cmd.Dir = startDir // 指定工作目录
 	cmd.Env = env      // 指定环境变量
-	fmt.Println("startFile", startFile)
-	fmt.Println("cmd.Env", cmd.Env)
+	fmt.Println("CreateCommand.cmd.Env >> ", cmd.Env)
 	return cmd, nil
 }

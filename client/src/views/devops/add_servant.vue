@@ -55,8 +55,9 @@ import { onMounted, ref } from "vue";
 import api from "@/api/server";
 import { ElMessageBox, ElNotification } from "element-plus";
 import { useUserStore } from "@/stores/counter";
+import { constants } from "@/constant";
 
-const languages = ["node", "java", "java(jar)", "go", "exe", "custom command", "python(tar)", "python(exe)"];
+const languages = constants.LANGUAGES
 const protocols = ["http", "grpc"];
 const selectOpt = () => {
   return `Group:ID :  ${groupId.value}

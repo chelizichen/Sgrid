@@ -1,5 +1,15 @@
 export const constants = {
-  TOKEN: 'access_token'
+  TOKEN: 'access_token',
+  LANGUAGES: [
+    'node',
+    'java',
+    'java(jar)',
+    'go',
+    'exe',
+    'custom command',
+    'python(tar)',
+    'python(exe)'
+  ]
 }
 
 export function localGet(key: string) {

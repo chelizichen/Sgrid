@@ -100,6 +100,10 @@ func (s *SgridMonitor) kill() {
 		Pid:    s.getPid(),
 	})
 	var err error
+	if s.cmd == nil || s.cmd.Process == nil {
+        fmt.Println("system/warn/process.kill | process is already terminated")
+        return
+    }
 	if(s.language == public.RELEASE_PYTHON_EXE || s.language == public.RELEASE_PYTHON_TAR){
 		err = s.cmd.Process.Signal(syscall.SIGINT)
 	}else{
@@ -267,6 +271,7 @@ func (s *fileTransferServer) ReleaseServerByPackage(ctx context.Context, req *pr
 	logDir := SgridPackageInstance.JoinPath(Logger,serverName) // 路径
 	servantId := req.ServantId                                              // 服务ID
 	err = public.CheckDirectoryOrCreate(startDir)                           // 检查并创建目录
+	fmt.Println("packageFile", packageFile)
 	if err != nil {
 		return &protocol.BasicResp{
 			Code:    -1,
